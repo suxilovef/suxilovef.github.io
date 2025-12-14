@@ -1844,6 +1844,13 @@ a {
 a:hover {
   color: #6c5ce7;
 }
+#site-title,
+#site-subtitle,
+.site-name,
+#aside-content .author-info-name,
+#aside-content .author-info-description {
+  font-family: "Ma Shan Zheng","Zhi Mang Xing","KaiTi","STKaiti","Kaiti SC",cursive;
+}
 .text-center {
   text-align: center;
 }
