@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M430 430 C 520 300 640 300 730 430 C 820 560 940 560 1030 430 C 1120 300 1240 300 1330 430" stroke="#6DB33F" stroke-width="34"/>
+    <path d="M470 430 C 545 335 635 335 710 430 C 785 525 875 525 950 430 C 1025 335 1115 335 1190 430" stroke="#34D399" stroke-width="14" opacity="0.9"/>
+    <path d="M520 560 Q800 680 1080 560" stroke="#F59E0B" stroke-width="8" opacity="0.85"/>
+    <path d="M520 360 Q800 440 1080 360" stroke="#F59E0B" stroke-width="8" opacity="0.55"/>
+
+    <g transform="translate(800,370)">
+      <circle cx="0" cy="0" r="88" stroke="#6DB33F" stroke-width="12" fill="none"/>
+      <circle cx="0" cy="0" r="30" fill="#6DB33F" opacity="0.12"/>
+      <g fill="#34D399">
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(0)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(30)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(60)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(90)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(120)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(150)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(180)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(210)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(240)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(270)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(300)"/>
+        <rect x="-8" y="-134" width="16" height="46" rx="4" transform="rotate(330)"/>
+      </g>
+      <text x="0" y="12" text-anchor="middle" font-size="24" font-weight="700" fill="#6DB33F">BFPP</text>
+    </g>
+
+    <g transform="translate(620,245)">
+      <path d="M30 6 C -10 -30 -70 -24 -92 18 C -118 64 -82 120 -18 126 C 62 134 118 78 94 28 C 84 8 60 6 30 6 Z" stroke="#6DB33F" stroke-width="12"/>
+      <path d="M-18 98 C 18 80 54 46 78 10" stroke="#34D399" stroke-width="10" opacity="0.9"/>
+      <circle cx="94" cy="28" r="10" fill="#6DB33F"/>
+    </g>
+  </g>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M260 600 L1340 600" stroke="#6DB33F" stroke-width="10" opacity="0.8"/>
+    <circle cx="800" cy="600" r="18" fill="#34D399"/>
+    <g>
+      <rect x="360" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+      <rect x="520" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+      <rect x="680" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+      <rect x="960" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+      <rect x="1120" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+      <rect x="1280" y="580" width="48" height="40" rx="8" stroke="#34D399" stroke-width="6"/>
+    </g>
+    <path d="M818 582 Q860 560 920 580" stroke="#F59E0B" stroke-width="8" opacity="0.7"/>
+    <path d="M680 582 Q730 560 760 600" stroke="#F59E0B" stroke-width="8" opacity="0.5"/>
+  </g>
+
+  <g fill="#6DB33F">
+    <circle cx="430" cy="430" r="12"/>
+    <circle cx="1330" cy="430" r="12"/>
+    <circle cx="730" cy="430" r="10" fill="#34D399"/>
+    <circle cx="1030" cy="430" r="10" fill="#34D399"/>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="72" text-anchor="middle" font-weight="800">BeanFactoryPostProcessor</text>
+    <text x="800" y="840" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">Spring Framework</text>
+  </g>
+</svg>
