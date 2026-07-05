@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,192 +8,120 @@
   <meta name="description" content="九刻舟 剑涤尘 破心方">
   <link rel="icon" href="/image/favicon.jpg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;line-height:1.6;overflow-x:hidden}
-    :root{--code-bg:#0d1117;--code-card:#161b22;--code-accent:#58a6ff;--code-border:#30363d;--code-text:#c9d1d9;--code-muted:#8b949e;--heart-bg:#faf8f5;--heart-card:#fffefb;--heart-accent:#b8860b;--heart-border:#e8dcc8;--heart-text:#3d3226;--heart-muted:#8b7355}
-    body.dark-mode{--code-bg:#0a0c10;--code-card:#0d1117;--code-accent:#79c0ff;--code-border:#21262d;--code-text:#c9d1d9;--code-muted:#8b949e;--heart-bg:#1a1814;--heart-card:#1e1c16;--heart-accent:#d4a843;--heart-border:#3a3226;--heart-text:#d4c9b8;--heart-muted:#8b7e6a;background:#0a0c10}
-    /* Nav */
-    .top-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:0 2rem;height:60px;background:rgba(13,17,23,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(48,54,61,0.5)}
-    .nav-brand{font-family:"Ma Shan Zheng","KaiTi","STKaiti",cursive;font-size:1.5rem;color:#e6edf3;text-decoration:none;letter-spacing:.05em}
-    .nav-links{display:flex;gap:1.5rem;list-style:none;align-items:center}
-    .nav-links a{color:#8b949e;text-decoration:none;font-size:.9rem;transition:color .2s}
-    .nav-links a:hover{color:#e6edf3}
-    .dark-toggle{background:none;border:1px solid #30363d;color:#8b949e;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0;line-height:1}
-    .dark-toggle:hover{border-color:#58a6ff;color:#e6edf3}
-    .nav-toggle{display:none;background:none;border:none;color:#8b949e;font-size:1.3rem;cursor:pointer}
-    /* Mobile menu */
-    .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;bottom:0;background:rgba(13,17,23,0.98);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:2rem}
-    .mobile-menu.active{display:flex}
-    .mobile-menu a{color:#8b949e;text-decoration:none;font-size:1.3rem}
-    .mobile-menu a:hover{color:#e6edf3}
-    /* Hero */
-    .custom-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;position:relative;overflow:hidden;background:linear-gradient(180deg,#0d1117 0%,#111827 40%,#1a1a2e 70%,#faf8f5 100%)}
-    body.dark-mode .custom-hero{background:linear-gradient(180deg,#0a0c10 0%,#0d1117 40%,#161b22 70%,#1a1814 100%)}
-    .hero-content{position:relative;z-index:1;padding:2rem}
-    .hero-brand{font-family:"ZCOOL XiaoWei","Ma Shan Zheng","KaiTi","STKaiti",serif;font-size:clamp(4rem,12vw,8rem);font-weight:400;color:#e6edf3;text-shadow:0 0 80px rgba(88,166,255,0.25),0 0 20px rgba(88,166,255,0.1);letter-spacing:.08em;line-height:1.1;animation:heroFadeIn 1.2s cubic-bezier(.23,1,.32,1)}
-    body.dark-mode .hero-brand{text-shadow:0 0 100px rgba(121,192,255,0.3),0 0 30px rgba(121,192,255,0.15)}
-    .hero-tagline{font-family:"Noto Serif SC","Ma Shan Zheng","KaiTi","STKaiti",serif;font-size:clamp(1.1rem,3vw,1.5rem);color:#8b949e;margin:1.5rem 0;letter-spacing:.15em;animation:heroFadeIn 1.2s .2s cubic-bezier(.23,1,.32,1) backwards}
-    .tag-sep{color:#30363d;margin:0 .6em}
-    body.dark-mode .tag-sep{color:#484f58}
-    .hero-sub{font-family:"Noto Serif SC",serif;font-size:1rem;color:#484f58;margin-top:.8rem;letter-spacing:.2em;animation:heroFadeIn 1.2s .4s cubic-bezier(.23,1,.32,1) backwards}
-    body.dark-mode .hero-sub{color:#6e7681}
-    .hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);font-size:1.5rem;color:#30363d;cursor:pointer;animation:heroFadeIn 1.2s .8s cubic-bezier(.23,1,.32,1) backwards}
-    body.dark-mode .hero-scroll{color:#484f58}
-    .bounce{animation:bounce 2s infinite}
-    @keyframes heroFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes bounce{0%,20%,50%,80%,100%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-10px)}60%{transform:translateX(-50%) translateY(-5px)}}
+    :root{--bg:#fff;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--accent-blue:#2563eb;--accent-gold:#b8860b;--code-bg:#f8f9fa;--code-card:#fff;--code-border:#e5e7eb;--code-text:#1a1a2e;--code-muted:#6b7280;--heart-bg:#fef9f0;--heart-card:#fffefb;--heart-border:#e8dcc8;--heart-text:#3d3226;--heart-muted:#8b7355}
+    body.dark-mode{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--border:#30363d;--accent-blue:#58a6ff;--accent-gold:#d4a843;--code-bg:#0d1117;--code-card:#161b22;--code-border:#30363d;--code-text:#c9d1d9;--code-muted:#8b949e;--heart-bg:#1a1814;--heart-card:#1e1c16;--heart-border:#3a3226;--heart-text:#d4c9b8;--heart-muted:#8b7e6a}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
+
+    .dark-toggle{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1;vertical-align:middle}
+    .dark-toggle:hover{border-color:var(--accent-blue);color:var(--text)}
+
+    /* Main container */
+    .main-container{max-width:1100px;margin:0 auto;padding:18vh 1.5rem 0;min-height:100vh}
+
+    /* Page header */
+    .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.8rem}
+    .page-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:1.6rem;font-weight:700;color:var(--text)}
+    .page-sub{font-size:.85rem;color:var(--muted);margin-top:.25rem}
+
     /* Sticky */
-    .custom-sticky{max-width:1100px;margin:0 auto;padding:4rem 1.5rem 0}
-    .sticky-label{font-size:.85rem;color:var(--code-muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
-    .sticky-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-    .sticky-card{display:flex;gap:1rem;padding:1.1rem;border-radius:14px;background:var(--code-card);border:1px solid var(--code-border);text-decoration:none;transition:all .25s}
-    .sticky-card:hover{border-color:var(--code-accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
-    .sticky-cover{width:70px;height:70px;border-radius:8px;background-size:cover;background-position:center;flex-shrink:0;background-color:var(--code-border)}
+    .section-wrap{margin-bottom:1.8rem}
+    .section-label{font-size:.78rem;color:var(--muted);margin-bottom:.6rem;display:flex;align-items:center;gap:.3rem}
+    .sticky-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem}
+    .sticky-card{display:flex;gap:.7rem;padding:.75rem;border-radius:8px;background:var(--card);border:1px solid var(--border);text-decoration:none;transition:border-color .15s}
+    .sticky-card:hover{border-color:var(--accent-blue)}
+    .sticky-cover{width:48px;height:48px;border-radius:5px;background-size:cover;background-position:center;flex-shrink:0;background-color:var(--border)}
     .sticky-info{flex:1;min-width:0}
-    .sticky-title{font-size:1.05rem;font-weight:600;color:var(--code-text);margin-bottom:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .sticky-desc{font-size:.85rem;color:var(--code-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .sticky-title{font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sticky-desc{font-size:.78rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
     /* Dual */
-    .custom-dual{max-width:1100px;margin:0 auto;padding:3rem 1.5rem 5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-    .realm{border-radius:18px;padding:1.8rem;transition:all .3s}
-    .realm-code{background:var(--code-bg);border:1px solid var(--code-border)}
-    .realm-heart{background:var(--heart-bg);border:1px solid var(--heart-border)}
-    .realm-header{display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px solid}
+    .custom-dual{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+    .realm{border-radius:10px;padding:1.2rem;border:1px solid}
+    .realm-code{border-color:var(--code-border)}
+    .realm-heart{border-color:var(--heart-border)}
+    .realm-header{display:flex;align-items:center;gap:.4rem;margin-bottom:.8rem;padding-bottom:.6rem;border-bottom:1px solid}
     .realm-code .realm-header{border-bottom-color:var(--code-border)}
     .realm-heart .realm-header{border-bottom-color:var(--heart-border)}
-    .realm-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem}
-    .realm-code .realm-icon{background:rgba(88,166,255,0.12);color:var(--code-accent)}
-    .realm-heart .realm-icon{background:rgba(184,134,11,0.12);color:var(--heart-accent)}
-    .realm-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:1.4rem;font-weight:700;color:var(--code-text)}
-    .realm-heart .realm-title{color:var(--heart-text)}
-    .realm-tagline{font-size:.8rem;margin-left:auto;color:var(--code-muted);opacity:.7}
-    .realm-heart .realm-tagline{color:var(--heart-muted)}
-    .realm-posts{display:flex;flex-direction:column;gap:.8rem}
-    .realm-card{display:flex;gap:1rem;padding:1rem;border-radius:10px;text-decoration:none;transition:all .2s}
-    .code-card{background:var(--code-card);border:1px solid var(--code-border)}
-    .code-card:hover{border-color:var(--code-accent);transform:translateX(4px)}
-    .heart-card{background:var(--heart-card);border:1px solid var(--heart-border)}
-    .heart-card:hover{border-color:var(--heart-accent);transform:translateX(4px)}
-    .card-cover-img{width:55px;height:55px;border-radius:8px;background-size:cover;background-position:center;flex-shrink:0}
+    .realm-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+    .realm-code .realm-icon{background:rgba(37,99,235,0.1);color:var(--accent-blue)}
+    .realm-heart .realm-icon{background:rgba(184,134,11,0.1);color:var(--accent-gold)}
+    .realm-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:1.1rem;font-weight:700;color:var(--text)}
+    .realm-tagline{font-size:.7rem;margin-left:auto;color:var(--muted);opacity:.6}
+    .realm-posts{display:flex;flex-direction:column;gap:.5rem}
+    .realm-card{display:flex;gap:.65rem;padding:.65rem;border-radius:7px;text-decoration:none;transition:all .15s;border:1px solid}
+    .code-card{border-color:var(--code-border)}
+    .code-card:hover{border-color:var(--accent-blue)}
+    .heart-card{border-color:var(--heart-border)}
+    .heart-card:hover{border-color:var(--accent-gold)}
+    .card-cover-img{width:42px;height:42px;border-radius:5px;background-size:cover;background-position:center;flex-shrink:0}
     .code-card .card-cover-img{background-color:var(--code-border)}
     .heart-card .card-cover-img{background-color:var(--heart-border)}
     .card-body{flex:1;min-width:0}
-    .card-title{font-size:1rem;font-weight:600;margin:0 0 .25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .code-card .card-title{color:var(--code-text);font-family:"SF Mono","Fira Code","Consolas","Cascadia Code",monospace}
-    .heart-card .card-title{color:var(--heart-text);font-family:"Noto Serif SC","Ma Shan Zheng",serif}
-    .card-desc{font-size:.8rem;margin:0 0 .4rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-    .code-card .card-desc{color:var(--code-muted)}
-    .heart-card .card-desc{color:var(--heart-muted)}
-    .card-meta{font-size:.75rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap}
-    .code-card .card-meta{color:var(--code-muted)}
-    .heart-card .card-meta{color:var(--heart-muted)}
+    .card-title{font-size:.9rem;font-weight:600;margin:0 0 .1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+    .code-card .card-title{font-family:"SF Mono","Fira Code","Consolas",monospace}
+    .heart-card .card-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif}
+    .card-desc{font-size:.75rem;color:var(--muted);margin:0 0 .25rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+    .card-meta{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:.2rem;flex-wrap:wrap}
     .card-divider{opacity:.3}
-    .meta-cat{opacity:.7}
-    .meta-sep{opacity:.4}
+    .meta-cat{opacity:.6}
+
     /* Footer */
-    .site-footer{text-align:center;padding:2.5rem;color:var(--code-muted);font-size:.85rem;border-top:1px solid var(--code-border);line-height:2}
-    body.dark-mode .site-footer{border-top-color:var(--code-border)}
-    .footer-links{display:flex;gap:1rem;justify-content:center;list-style:none;flex-wrap:wrap}
-    .footer-links a{color:var(--code-muted);text-decoration:none;font-size:.8rem;transition:color .2s}
-    .footer-links a:hover{color:var(--code-accent)}
-    /* Responsive */
+    .site-footer{text-align:center;padding:1.2rem 1.5rem;margin-top:2rem;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border)}
+
     @media screen and (max-width:768px){
-      .nav-links{display:none}.nav-toggle{display:block}
-      .custom-dual{grid-template-columns:1fr;gap:1.5rem;padding:2rem 1rem}
-      .custom-hero{min-height:85vh}
-      .hero-brand{font-size:3rem}
+      .custom-dual{grid-template-columns:1fr;gap:.8rem}
       .sticky-cards{grid-template-columns:1fr}
-      .custom-sticky{padding:3rem 1rem 0}
-      .realm{padding:1.2rem}
+      .main-container{padding:2rem 1rem}
+      .page-header{flex-direction:column;gap:.6rem;margin-bottom:1.4rem}
+      .page-title{font-size:1.3rem}
     }
     @media screen and (max-width:480px){
       .realm-card{flex-direction:column}
-      .card-cover-img{width:100%;height:120px}
-      .custom-hero{min-height:75vh}
-      .top-nav{padding:0 1rem}
+      .card-cover-img{width:100%;height:90px}
     }
   </style>
 </head>
 <body>
-  <div id="custom-home">
+<div class="main-container">
 
-    <nav class="top-nav">
-      <a href="/" class="nav-brand">九方</a>
-      <ul class="nav-links">
-        <li><a href="/posts/"><i class="fas fa-stream"></i> 文章</a></li>
-        <li><a href="/archives/"><i class="fas fa-archive"></i> 归档</a></li>
-        <li><a href="/tags/"><i class="fas fa-tags"></i> 标签</a></li>
-        <li><a href="/categories/"><i class="fas fa-folder-open"></i> 分类</a></li>
-        <li><a href="/link/"><i class="fas fa-link"></i> 友链</a></li>
-        <li><button class="dark-toggle" id="darkToggle" title="暗色模式" aria-label="切换暗色模式"><i class="fas fa-moon"></i></button></li>
-      </ul>
-      <button class="nav-toggle" id="navToggle" aria-label="菜单"><i class="fas fa-bars"></i></button>
-    </nav>
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="/posts/"><i class="fas fa-stream"></i> 文章</a>
-      <a href="/archives/"><i class="fas fa-archive"></i> 归档</a>
-      <a href="/tags/"><i class="fas fa-tags"></i> 标签</a>
-      <a href="/categories/"><i class="fas fa-folder-open"></i> 分类</a>
-      <a href="/link/"><i class="fas fa-link"></i> 友链</a>
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">九方</h1>
+      <p class="page-sub">九刻舟 · 剑涤尘 · 破心方</p>
     </div>
+    <button class="dark-toggle" id="darkToggle" title="暗色模式" aria-label="切换暗色模式"><i class="fas fa-moon"></i></button>
+  </header>
 
-    <!-- Hero -->
-    <section class="custom-hero">
-      <div class="hero-content">
-        <h1 class="hero-brand">九方</h1>
-        <div class="hero-tagline">
-          <span class="tag-item">九刻舟</span>
-          <span class="tag-sep">·</span>
-          <span class="tag-item">剑涤尘</span>
-          <span class="tag-sep">·</span>
-          <span class="tag-item">破心方</span>
-        </div>
-        <div class="hero-sub">代码为舟 · 心境作岸</div>
-      </div>
-      <div class="hero-scroll">
-        <i class="fas fa-angle-down bounce"></i>
-      </div>
-    </section>
-
-    <!-- 置顶文章 -->
-    <section class="custom-sticky">
-      <div class="sticky-label"><i class="fas fa-thumbtack"></i> <span>置顶</span></div>
-      <div class="sticky-cards" id="stickyCards"></div>
-    </section>
-
-    <!-- 双境 -->
-    <section class="custom-dual">
-      <div class="realm realm-code">
-        <div class="realm-header">
-          <div class="realm-icon"><i class="fas fa-code"></i></div>
-          <h2 class="realm-title">代码境</h2>
-          <div class="realm-tagline">格物致知 · 理以载道</div>
-        </div>
-        <div class="realm-posts" id="javaPosts"></div>
-      </div>
-      <div class="realm realm-heart">
-        <div class="realm-header">
-          <div class="realm-icon"><i class="fas fa-feather-alt"></i></div>
-          <h2 class="realm-title">心境</h2>
-          <div class="realm-tagline">心之所向 · 素履以往</div>
-        </div>
-        <div class="realm-posts" id="scripturePosts"></div>
-      </div>
-    </section>
-
-    <footer class="site-footer">
-      <div>&copy; 2025–2026 九方</div>
-      <ul class="footer-links">
-        <li><a href="/posts/">文章</a></li>
-        <li><a href="/archives/">归档</a></li>
-        <li><a href="/tags/">标签</a></li>
-        <li><a href="/categories/">分类</a></li>
-        <li><a href="/link/">友链</a></li>
-      </ul>
-    </footer>
-
+  <div class="section-wrap" id="stickySection">
+    <div class="section-label"><i class="fas fa-thumbtack"></i> <span>置顶</span></div>
+    <div class="sticky-cards" id="stickyCards"></div>
   </div>
+
+  <section class="custom-dual">
+    <div class="realm realm-code">
+      <div class="realm-header">
+        <div class="realm-icon"><i class="fas fa-cube"></i></div>
+        <h2 class="realm-title">物境</h2>
+        <div class="realm-tagline">格物致知 · 理以载道</div>
+      </div>
+      <div class="realm-posts" id="javaPosts"></div>
+    </div>
+    <div class="realm realm-heart">
+      <div class="realm-header">
+        <div class="realm-icon"><i class="fas fa-feather-alt"></i></div>
+        <h2 class="realm-title">心境</h2>
+        <div class="realm-tagline">心之所向 · 素履以往</div>
+      </div>
+      <div class="realm-posts" id="scripturePosts"></div>
+    </div>
+  </section>
+
+  <footer class="site-footer">&copy; 2025–2026 九方</footer>
+
+</div>
 
   <script>
   (function(){
@@ -201,55 +129,40 @@
       .then(function(r){ return r.json() })
       .then(function(posts){
 
-    function postCard(post, type) {
-      var cc = type === 'code' ? 'code-card' : 'heart-card';
-      var coverHtml = post.cover ? '<div class="card-cover-img" style="background-image:url(' + post.cover + ')"></div>' : '';
-      var descHtml = post.description ? '<p class="card-desc">' + post.description + '</p>' : '';
-      var catsHtml = post.categories.length ? '<span class="card-divider">|</span>' + post.categories.map(function(c,i,a){ return '<span class="meta-cat">' + c + '</span>' + (i < a.length-1 ? '<span class="meta-sep">&rsaquo;</span>' : ''); }).join('') : '';
-      return '<a class="realm-card ' + cc + '" href="' + post.path + '">'
-        + coverHtml
+    function card(post, type) {
+      var cls = type === 'code' ? 'code-card' : 'heart-card';
+      var cover = post.cover ? '<div class="card-cover-img" style="background-image:url(' + post.cover + ')"></div>' : '';
+      var desc = post.description ? '<p class="card-desc">' + post.description + '</p>' : '';
+      var cats = post.categories.length ? '<span class="card-divider">|</span>' + post.categories.map(function(c,i,a){ return '<span class="meta-cat">' + c + '</span>' + (i < a.length-1 ? ' <span class="card-divider">|</span> ' : ''); }).join('') : '';
+      return '<a class="realm-card ' + cls + '" href="' + post.path + '">'
+        + cover
         + '<div class="card-body">'
         + '<h3 class="card-title">' + post.title + '</h3>'
-        + descHtml
-        + '<div class="card-meta"><i class="far fa-calendar-alt"></i><time>' + post.date + '</time>' + catsHtml + '</div>'
+        + desc
+        + '<div class="card-meta"><i class="far fa-calendar-alt"></i> <time>' + post.date + '</time>' + cats + '</div>'
         + '</div></a>';
     }
 
-    /* Sticky */
     var stickies = posts.filter(function(p){ return p.sticky > 0 }).sort(function(a,b){ return b.sticky - a.sticky });
     var stickyEl = document.getElementById('stickyCards');
     if (stickies.length && stickyEl) {
       stickyEl.innerHTML = stickies.map(function(p){
-        var coverHtml = p.cover ? '<div class="sticky-cover" style="background-image:url(' + p.cover + ')"></div>' : '';
-        var descHtml = p.description ? '<div class="sticky-desc">' + p.description + '</div>' : '';
-        return '<a class="sticky-card" href="' + p.path + '">' + coverHtml + '<div class="sticky-info"><div class="sticky-title">' + p.title + '</div>' + descHtml + '</div></a>';
+        var cover = p.cover ? '<div class="sticky-cover" style="background-image:url(' + p.cover + ')"></div>' : '';
+        var desc = p.description ? '<div class="sticky-desc">' + p.description + '</div>' : '';
+        return '<a class="sticky-card" href="' + p.path + '">' + cover + '<div class="sticky-info"><div class="sticky-title">' + p.title + '</div>' + desc + '</div></a>';
       }).join('');
-    } else if (stickyEl) {
-      stickyEl.parentElement.style.display = 'none';
+    } else {
+      document.getElementById('stickySection').style.display = 'none';
     }
 
-    /* Java */
     var javaPosts = posts.filter(function(p){ return p.categories.some(function(c){ return c === 'Java' }) });
-    var javaEl = document.getElementById('javaPosts');
-    if (javaPosts.length && javaEl) {
-      javaEl.innerHTML = javaPosts.map(function(p){ return postCard(p, 'code'); }).join('');
-    }
+    document.getElementById('javaPosts').innerHTML = javaPosts.map(function(p){ return card(p, 'code'); }).join('');
 
-    /* Scripture */
     var scripturePosts = posts.filter(function(p){ return p.categories.some(function(c){ return c === '经文集' }) });
-    var scriptureEl = document.getElementById('scripturePosts');
-    if (scripturePosts.length && scriptureEl) {
-      scriptureEl.innerHTML = scripturePosts.map(function(p){ return postCard(p, 'heart'); }).join('');
-    }
+    document.getElementById('scripturePosts').innerHTML = scripturePosts.map(function(p){ return card(p, 'heart'); }).join('');
 
-    }).catch(function(err){ console.error('Failed to load posts:', err); });
+    }).catch(function(err){ console.error(err); });
 
-    /* Mobile menu */
-    document.getElementById('navToggle').addEventListener('click', function(){
-      document.getElementById('mobileMenu').classList.toggle('active');
-    });
-
-    /* Dark mode */
     var darkToggle = document.getElementById('darkToggle');
     if (localStorage.getItem('darkMode') === 'true') {
       document.body.classList.add('dark-mode');
