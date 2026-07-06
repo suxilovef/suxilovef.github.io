@@ -21,7 +21,9 @@
     .nav a{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--deep);background:rgba(255,253,248,.8);transition:all .15s}
     .nav a:hover{background:var(--deep);border-color:var(--deep);color:#fff}
     .nav a:focus-visible,
-    .article-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+    .article-card:focus-visible,
+    .sort:focus-visible,
+    .filter-chip:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     .hero{margin-bottom:2.4rem;padding:2.4rem 0 1.4rem;border-bottom:1px solid var(--line);position:relative}
     .hero::after{content:"";position:absolute;right:0;bottom:1.4rem;width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--accent))}
     .eyebrow{font-size:.78rem;color:var(--rose);font-weight:600;margin-bottom:.55rem}
@@ -29,6 +31,13 @@
     .tagline{font-family:"Noto Serif SC",serif;font-size:1.08rem;color:var(--muted);margin-top:.75rem}
     .summary{display:inline-flex;align-items:baseline;gap:.45rem;margin-top:1.2rem;color:var(--muted);font-size:.9rem}
     .summary strong{font-size:1.6rem;color:var(--text)}
+    .toolbar{display:flex;justify-content:flex-end;align-items:center;margin:0 0 1rem}
+    .sort{height:38px;border:1px solid var(--line);border-radius:8px;background:rgba(255,253,248,.86);color:var(--deep);padding:0 .65rem;font:inherit;outline:none}
+    .filters{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.1rem}
+    .filter-chip{border:1px solid var(--line);border-radius:999px;background:rgba(255,253,248,.76);color:var(--muted);padding:.28rem .72rem;font:inherit;font-size:.8rem;cursor:pointer;transition:all .15s}
+    .filter-chip:hover,
+    .filter-chip[aria-pressed=true]{border-color:var(--accent);background:var(--deep);color:#fff}
+    .list-status{color:var(--muted);font-size:.78rem;margin:0 0 .75rem}
     .article-list{display:grid;gap:.8rem}
     .article-card{display:grid;grid-template-columns:120px minmax(0,1fr);gap:1rem;align-items:stretch;padding:.9rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,253,248,.82);text-decoration:none;box-shadow:0 14px 34px rgba(99,65,35,.07);transition:transform .15s,border-color .15s,box-shadow .15s}
     .article-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 18px 42px rgba(99,65,35,.11)}
@@ -42,11 +51,14 @@
     .meta{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.76rem;margin-top:.85rem}
     .tag{padding:.12rem .42rem;border-radius:999px;background:var(--soft);color:var(--deep)}
     .empty{padding:1rem;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+    .load-sentinel{height:32px;margin-top:1rem}
     @media screen and (max-width:720px){
       .wrap{padding:1.2rem 1rem 2.4rem}
       .topbar{margin-bottom:2.2rem}
       .hero{padding-top:1.2rem}
       .hero::after{width:110px}
+      .toolbar{justify-content:stretch}
+      .sort{width:100%}
       .article-card,.article-card:first-child{grid-template-columns:1fr}
       .cover{height:150px}
     }
@@ -69,18 +81,35 @@
       <p class="summary"><strong id="postCount">0</strong><span>篇文章按设定顺序展开</span></p>
     </section>
 
+    <section class="toolbar" aria-label="文章筛选">
+      <select class="sort" id="articleSort" aria-label="排序方式">
+        <option value="rank">设定顺序</option>
+        <option value="date">最新优先</option>
+        <option value="title">标题顺序</option>
+      </select>
+    </section>
+    <section class="filters" id="articleFilters" aria-label="标签筛选"></section>
+    <p class="list-status">显示 <span id="shownCount">0</span> / <span id="postCountInline">0</span></p>
     <section class="article-list" id="articleList"></section>
+    <div class="load-sentinel" id="autoLoadSentinel" aria-hidden="true"></div>
   </main>
 
   <script src="/js/realm-posts.js"></script>
   <script>
   (function(){
     RealmPosts.fetch().then(function(posts){
-      RealmPosts.renderRealmPage(posts, {
+      RealmPosts.renderManagedRealmPage(posts, {
         realm: 'xinjing',
         fallbackCategory: '经文集',
         fallbackPath: '/scriptures/',
         countId: 'postCount',
+        countIds: ['postCountInline'],
+        shownId: 'shownCount',
+        filterId: 'articleFilters',
+        sortId: 'articleSort',
+        sentinelId: 'autoLoadSentinel',
+        pageSize: 12,
+        filterSource: 'tags',
         listId: 'articleList',
         placeholderIcon: 'fas fa-feather-alt'
       });
