@@ -263,10 +263,14 @@ body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--acc
 .post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
 
 /* 标签 */
-.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.tag_share{border-top:1px solid var(--border);padding-top:1.2rem;margin-top:2rem}
+.tag_share:empty{display:none}
 .post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
 .post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
 .post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+/* 顶部 meta 中的标签 */
+.meta-firstline .post-meta__tag-list{display:inline-flex;vertical-align:middle;margin-left:0}
+.meta-firstline .post-meta__tags{padding:.12rem .55rem;font-size:.72rem}
 
 /* 页脚 */
 #body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
@@ -923,6 +927,21 @@ body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
       links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
     });
   }
+
+  /* ---- 标签移到顶部 ---- */
+  (function(){
+    var tagList = document.querySelector('.tag_share .post-meta__tag-list');
+    var metaLine = document.querySelector('.meta-firstline');
+    if (tagList && metaLine) {
+      var sep = document.createElement('span');
+      sep.className = 'post-meta-separator';
+      sep.textContent = '|';
+      metaLine.appendChild(sep);
+      metaLine.appendChild(tagList);
+      var tagShare = document.querySelector('.tag_share');
+      if (tagShare && tagShare.textContent.trim() === '') tagShare.style.display = 'none';
+    }
+  })();
 
   /* ---- 暗色模式 ---- */
   if (localStorage.getItem('darkMode') === 'true') {
