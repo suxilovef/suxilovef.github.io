@@ -1,0 +1,721 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Redis七阶段学习路线 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Redis七阶段学习路线">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis七阶段学习路线">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/Redis%E4%B8%83%E9%98%B6%E6%AE%B5%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Redis七阶段学习路线">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/redis-7stage-roadmap-min.svg">
+<meta property="article:published_time" content="2026-07-06T12:07:05.000Z">
+<meta property="article:modified_time" content="2026-07-06T15:09:22.256Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/redis-7stage-roadmap-min.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Redis七阶段学习路线",
+  "url": "https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/Redis%E4%B8%83%E9%98%B6%E6%AE%B5%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/",
+  "image": "https://suxilovef.github.io/image/post_cover/redis-7stage-roadmap-min.svg",
+  "datePublished": "2026-07-06T12:07:05.000Z",
+  "dateModified": "2026-07-06T15:09:22.256Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/Redis%E4%B8%83%E9%98%B6%E6%AE%B5%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Redis七阶段学习路线',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;right:max(1.5rem,calc((100vw - 1020px)/ 2 - 200px));top:50%;transform:translateY(-50%);width:178px;max-height:55vh;overflow-y:auto;z-index:50;font-size:.8rem;line-height:2;padding-left:1rem;border-left:1px solid var(--border);opacity:.78;transition:opacity .2s}
+.custom-toc:hover{opacity:1}
+.custom-toc a{color:var(--faint);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .1s}
+.custom-toc a:hover{color:var(--text)}
+.custom-toc a.active{color:var(--accent);font-weight:600}
+.custom-toc .toc-h3{padding-left:.7rem;font-size:.76rem}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2rem;padding:1rem 1.2rem;border:1px solid var(--border);border-radius:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;opacity:1;box-shadow:var(--shadow);border-left:1px solid var(--border)}
+  .custom-toc a{display:inline-block;white-space:nowrap}
+  .custom-toc .toc-h3{padding-left:.3rem}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">Redis七阶段学习路线</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Redis七阶段学习路线</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-06T12:07:05.000Z" title="发表于 2026-07-06 20:07:05">2026-07-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-06T15:09:22.256Z" title="更新于 2026-07-06 23:09:22">2026-07-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Redis/">Redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Redis-七阶段学习路线"><a href="#Redis-七阶段学习路线" class="headerlink" title="Redis 七阶段学习路线"></a>Redis 七阶段学习路线</h1><h2 id="1-路线定位"><a href="#1-路线定位" class="headerlink" title="1. 路线定位"></a>1. 路线定位</h2><p>这份文档用于记录 Redis 从入门部署到生产实践、源码理解的完整学习路线。后续学习建议按阶段推进，不要跳着学。</p>
+<p>学习目标不是“会敲 Redis 命令”，而是达到下面几个能力：</p>
+<ul>
+<li>能独立部署 Redis 单机、Sentinel 和 Cluster。</li>
+<li>能解释 Redis 核心机制，而不是只背配置。</li>
+<li>能做故障演练，并根据日志和命令定位问题。</li>
+<li>能把 Redis 正确接入 Java 业务系统。</li>
+<li>能做容量评估、性能压测和生产运维方案。</li>
+<li>能读懂关键源码机制，理解 Redis 为什么这样设计。</li>
+</ul>
+<h2 id="2-总体阶段"><a href="#2-总体阶段" class="headerlink" title="2. 总体阶段"></a>2. 总体阶段</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>名称</th>
+<th>核心目标</th>
+<th>完成后的水平</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 阶段</td>
+<td>单机认知</td>
+<td>理解 Redis 单实例部署、配置、持久化、内存和性能基础</td>
+<td>会部署、会配置、会基础排查</td>
+</tr>
+<tr>
+<td>第 2 阶段</td>
+<td>高可用阶段</td>
+<td>理解主从复制、Sentinel、自动故障转移</td>
+<td>能搭建高可用 Redis</td>
+</tr>
+<tr>
+<td>第 3 阶段</td>
+<td>集群阶段</td>
+<td>理解 Redis Cluster、分片、slot、故障转移、迁槽</td>
+<td>能搭建三主三从集群</td>
+</tr>
+<tr>
+<td>第 4 阶段</td>
+<td>线上问题排查与运维治理</td>
+<td>掌握 big key、hot key、慢查询、延迟、内存、连接等生产问题</td>
+<td>能守 Redis</td>
+</tr>
+<tr>
+<td>第 5 阶段</td>
+<td>Java 工程接入与缓存架构</td>
+<td>掌握客户端配置、缓存一致性、分布式锁、缓存问题治理</td>
+<td>能把 Redis 用对</td>
+</tr>
+<tr>
+<td>第 6 阶段</td>
+<td>容量评估与性能压测</td>
+<td>掌握容量规划、压测、扩缩容、资源评估</td>
+<td>能做 Redis 技术方案</td>
+</tr>
+<tr>
+<td>第 7 阶段</td>
+<td>源码与底层机制</td>
+<td>理解 Redis 内部数据结构、事件模型、持久化、复制、Cluster 实现</td>
+<td>接近专家级理解</td>
+</tr>
+</tbody></table>
+<p>完成前三个阶段后，可以认为具备 Redis 中级偏上的部署和架构基础。真正走向资深，需要继续补第 4 到第 7 阶段。</p>
+<h2 id="3-第-1-阶段：单机认知"><a href="#3-第-1-阶段：单机认知" class="headerlink" title="3. 第 1 阶段：单机认知"></a>3. 第 1 阶段：单机认知</h2><p>对应目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/01-单机认知/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>理解 Redis 是内存数据库。</li>
+<li>掌握 Redis 单机部署、配置文件、日志、数据目录。</li>
+<li>理解 RDB、AOF、混合持久化。</li>
+<li>理解过期删除、内存淘汰、慢查询、大 key、热 key 的基础概念。</li>
+<li>能使用 <code>redis-cli</code>、<code>info</code>、<code>slowlog</code>、<code>memory</code> 等命令排查基础问题。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li><code>redis.conf</code> 关键配置。</li>
+<li><code>requirepass</code>、<code>bind</code>、<code>protected-mode</code>。</li>
+<li>RDB 和 AOF 的区别。</li>
+<li><code>maxmemory</code> 和 <code>maxmemory-policy</code>。</li>
+<li>Redis 为什么快，什么时候会慢。</li>
+<li>单机 Redis 的容量和性能边界。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>单机源码安装 Redis。</li>
+<li>使用 systemd 管理 Redis。</li>
+<li>开启 RDB 和 AOF，验证数据恢复。</li>
+<li>制造慢查询并用 <code>slowlog</code> 查看。</li>
+<li>制造大 key 并观察内存变化。</li>
+<li>从宿主机连接虚拟机 Redis。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能独立部署一台 Redis。</li>
+<li>能解释 <code>/etc/redis</code>、<code>/data/redis</code>、<code>/var/log/redis</code> 的作用。</li>
+<li>能说明 RDB、AOF 的优缺点。</li>
+<li>能排查 Redis 启动失败和远程连接失败。</li>
+</ul>
+<h2 id="4-第-2-阶段：高可用阶段"><a href="#4-第-2-阶段：高可用阶段" class="headerlink" title="4. 第 2 阶段：高可用阶段"></a>4. 第 2 阶段：高可用阶段</h2><p>对应目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/02-高可用阶段/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>理解主从复制。</li>
+<li>理解 Sentinel 的故障检测和自动切换。</li>
+<li>理解 Redis 高可用能降低不可用时间，但不能保证零丢失。</li>
+<li>掌握客户端为什么要连接 Sentinel，而不是写死 master IP。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li><code>replicaof</code> 和 <code>masterauth</code>。</li>
+<li>全量复制和部分复制。</li>
+<li>复制延迟和数据丢失窗口。</li>
+<li>Sentinel 的 S_DOWN、O_DOWN、quorum、多数派。</li>
+<li>failover 期间业务为什么会短暂失败。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>搭建 1 master + 2 replica。</li>
+<li>搭建 3 个 Sentinel。</li>
+<li>停止 master，观察 Sentinel 自动切换。</li>
+<li>恢复旧 master，观察它重新变成 replica。</li>
+<li>使用 <code>sentinel get-master-addr-by-name</code> 查询当前 master。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能独立部署 Redis Sentinel 高可用环境。</li>
+<li>能解释主从复制和 Sentinel 的职责边界。</li>
+<li>能通过日志说明一次 failover 的完整过程。</li>
+<li>能说明 Java 客户端为什么不能写死 Redis master IP。</li>
+</ul>
+<h2 id="5-第-3-阶段：集群阶段"><a href="#5-第-3-阶段：集群阶段" class="headerlink" title="5. 第 3 阶段：集群阶段"></a>5. 第 3 阶段：集群阶段</h2><p>对应目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/03-集群阶段/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>理解 Redis Cluster 的分片机制。</li>
+<li>掌握 16384 个 slot 和 key 映射关系。</li>
+<li>理解 MOVED、ASK、CROSSSLOT。</li>
+<li>掌握三主三从集群部署。</li>
+<li>掌握 master 故障转移和迁槽。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li><code>cluster-enabled yes</code>。</li>
+<li><code>cluster-announce-ip</code>。</li>
+<li><code>6379</code> 和 <code>16379</code> 的区别。</li>
+<li><code>redis-cli --cluster create</code>。</li>
+<li><code>cluster info</code>、<code>cluster nodes</code>、<code>cluster slots</code>。</li>
+<li>hash tag 的正确使用方式。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>使用 6 台机器搭建三主三从集群。</li>
+<li>写入 key，观察 slot 分布。</li>
+<li>不加 <code>-c</code> 观察 MOVED。</li>
+<li>制造 CROSSSLOT，并用 hash tag 解决。</li>
+<li>停止一个 master，观察 replica 自动提升。</li>
+<li>执行少量 slot 迁移。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能独立部署 Redis Cluster。</li>
+<li>能解释 Cluster 和 Sentinel 的区别。</li>
+<li>能说明客户端为什么必须使用 Cluster 模式。</li>
+<li>能完成故障转移和迁槽实验。</li>
+</ul>
+<h2 id="6-第-4-阶段：线上问题排查与运维治理"><a href="#6-第-4-阶段：线上问题排查与运维治理" class="headerlink" title="6. 第 4 阶段：线上问题排查与运维治理"></a>6. 第 4 阶段：线上问题排查与运维治理</h2><p>建议目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/04-线上问题排查与运维治理/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>从“会搭 Redis”进入“能守 Redis”。</li>
+<li>掌握生产 Redis 常见问题的发现、定位和处理。</li>
+<li>建立监控、告警、巡检、备份、恢复和故障演练意识。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li>big key 发现与治理。</li>
+<li>hot key 发现与治理。</li>
+<li>慢查询和阻塞命令排查。</li>
+<li>延迟抖动分析。</li>
+<li>内存打满、淘汰、碎片率分析。</li>
+<li>AOF rewrite、RDB fork、COW 对性能的影响。</li>
+<li>连接数暴涨和客户端超时排查。</li>
+<li>Redis 监控指标和告警规则。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>制造 big key，并用 <code>--bigkeys</code>、<code>memory usage</code> 分析。</li>
+<li>制造 hot key，观察单节点压力。</li>
+<li>制造慢查询并分析 <code>slowlog</code>。</li>
+<li>使用 <code>latency doctor</code> 分析延迟。</li>
+<li>配置 maxmemory，观察淘汰策略。</li>
+<li>模拟连接数暴涨。</li>
+<li>制定一份 Redis 巡检清单。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能定位 Redis 慢是服务端问题、网络问题还是客户端问题。</li>
+<li>能处理 big key、hot key、内存打满、连接数异常。</li>
+<li>能设计基本监控告警项。</li>
+<li>能写出 Redis 故障排查 SOP。</li>
+</ul>
+<h2 id="7-第-5-阶段：Java-工程接入与缓存架构"><a href="#7-第-5-阶段：Java-工程接入与缓存架构" class="headerlink" title="7. 第 5 阶段：Java 工程接入与缓存架构"></a>7. 第 5 阶段：Java 工程接入与缓存架构</h2><p>建议目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/05-Java工程接入与缓存架构/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>从“Redis 会部署”进入“Redis 能被业务正确使用”。</li>
+<li>掌握 Java 客户端配置、连接池、超时、重试和拓扑刷新。</li>
+<li>掌握缓存架构中的典型问题和解决方案。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li>Lettuce、Redisson、Jedis 的定位和差异。</li>
+<li>单机、Sentinel、Cluster 三种连接模式。</li>
+<li>连接池、超时、重试、读写分离。</li>
+<li>缓存穿透、击穿、雪崩。</li>
+<li>缓存一致性和 Cache Aside。</li>
+<li>分布式锁的正确使用边界。</li>
+<li>Lua 脚本和 Pipeline。</li>
+<li>Redis 在排行榜、计数器、限流、会话、幂等等场景中的设计方式。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>Java 连接单机 Redis。</li>
+<li>Java 连接 Sentinel。</li>
+<li>Java 连接 Cluster。</li>
+<li>模拟 Redis failover，观察客户端恢复过程。</li>
+<li>实现缓存穿透保护。</li>
+<li>实现热点 key 互斥重建。</li>
+<li>实现一个 Redisson 分布式锁案例。</li>
+<li>实现 Lua 原子扣减库存实验。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能正确配置 Java Redis 客户端。</li>
+<li>能解释连接池过大或过小的风险。</li>
+<li>能设计缓存一致性方案。</li>
+<li>能说明分布式锁不能解决哪些问题。</li>
+<li>能避免把 Redis 当数据库滥用。</li>
+</ul>
+<h2 id="8-第-6-阶段：容量评估与性能压测"><a href="#8-第-6-阶段：容量评估与性能压测" class="headerlink" title="8. 第 6 阶段：容量评估与性能压测"></a>8. 第 6 阶段：容量评估与性能压测</h2><p>建议目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/06-容量评估与性能压测/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>从“会用 Redis”进入“能做 Redis 技术方案”。</li>
+<li>掌握容量规划、节点规划、压测方法和扩缩容策略。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li>key 数量和 value 大小估算。</li>
+<li>内存容量、安全水位和增长趋势。</li>
+<li>QPS、RT、P95、P99、带宽、CPU 的关系。</li>
+<li><code>redis-benchmark</code> 的使用边界。</li>
+<li>Pipeline 对吞吐和延迟的影响。</li>
+<li>Cluster 节点数规划。</li>
+<li>replica 数量规划。</li>
+<li>持久化策略对性能的影响。</li>
+<li>扩容、缩容、迁槽和数据迁移。</li>
+</ul>
+<p>必做实验：</p>
+<ul>
+<li>用 <code>redis-benchmark</code> 压测不同 value 大小。</li>
+<li>对比普通写入和 Pipeline 写入。</li>
+<li>观察 CPU、内存、网络带宽变化。</li>
+<li>估算 1000 万 key 的内存占用。</li>
+<li>给一个业务场景设计 Redis 节点规模。</li>
+<li>模拟 Cluster 扩容和迁槽。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能根据业务 QPS 和数据量估算 Redis 资源。</li>
+<li>能设计 Redis Cluster 节点规模。</li>
+<li>能说明压测数据和真实业务流量的差距。</li>
+<li>能写出 Redis 容量评估文档。</li>
+</ul>
+<h2 id="9-第-7-阶段：源码与底层机制"><a href="#9-第-7-阶段：源码与底层机制" class="headerlink" title="9. 第 7 阶段：源码与底层机制"></a>9. 第 7 阶段：源码与底层机制</h2><p>建议目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docs/07-源码与底层机制/</span><br></pre></td></tr></table></figure>
+
+<p>核心目标：</p>
+<ul>
+<li>从“会部署、会排查、会设计”进入“理解 Redis 为什么这样实现”。</li>
+<li>重点看核心路径，不追求一开始读完整个源码。</li>
+</ul>
+<p>必须掌握：</p>
+<ul>
+<li>SDS。</li>
+<li>dict。</li>
+<li>listpack。</li>
+<li>skiplist。</li>
+<li>quicklist。</li>
+<li>事件循环。</li>
+<li>IO 多路复用。</li>
+<li>命令执行流程。</li>
+<li>RDB 和 AOF 实现。</li>
+<li>AOF rewrite。</li>
+<li>主从复制 PSYNC。</li>
+<li>Sentinel 故障判断。</li>
+<li>Cluster gossip、slot、failover。</li>
+<li>过期删除和内存淘汰。</li>
+<li>lazyfree。</li>
+</ul>
+<p>建议阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">数据结构</span><br><span class="line">  -&gt; 命令执行流程</span><br><span class="line">  -&gt; 网络事件模型</span><br><span class="line">  -&gt; 持久化</span><br><span class="line">  -&gt; 复制</span><br><span class="line">  -&gt; Sentinel</span><br><span class="line">  -&gt; Cluster</span><br><span class="line">  -&gt; 内存管理和淘汰</span><br></pre></td></tr></table></figure>
+
+<p>必做实验：</p>
+<ul>
+<li>对照源码理解 String、Hash、ZSet 的底层结构。</li>
+<li>跟踪一次 Redis 命令执行流程。</li>
+<li>跟踪一次 RDB 生成流程。</li>
+<li>跟踪一次 AOF rewrite 流程。</li>
+<li>跟踪一次主从复制握手流程。</li>
+<li>跟踪一次 Cluster MOVED 返回流程。</li>
+</ul>
+<p>过关标准：</p>
+<ul>
+<li>能从源码角度解释 Redis 为什么快。</li>
+<li>能解释 Redis 单线程模型的真实含义。</li>
+<li>能解释 RDB、AOF、复制、Cluster 的核心实现流程。</li>
+<li>遇到复杂问题时，知道应该去源码哪个模块找答案。</li>
+</ul>
+<h2 id="10-推荐学习顺序"><a href="#10-推荐学习顺序" class="headerlink" title="10. 推荐学习顺序"></a>10. 推荐学习顺序</h2><p>建议严格按下面顺序推进：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">01 单机认知</span><br><span class="line">  -&gt; 02 高可用阶段</span><br><span class="line">  -&gt; 03 集群阶段</span><br><span class="line">  -&gt; 04 线上问题排查与运维治理</span><br><span class="line">  -&gt; 05 Java 工程接入与缓存架构</span><br><span class="line">  -&gt; 06 容量评估与性能压测</span><br><span class="line">  -&gt; 07 源码与底层机制</span><br></pre></td></tr></table></figure>
+
+<p>不要过早进入源码。前三阶段解决部署和架构基础，第四到第六阶段解决生产实践，第七阶段再回到源码，理解会更稳。</p>
+<h2 id="11-最终能力定位"><a href="#11-最终能力定位" class="headerlink" title="11. 最终能力定位"></a>11. 最终能力定位</h2><p>如果只完成前三阶段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Redis 中级偏上</span><br><span class="line">具备部署、基础架构和实验环境排查能力</span><br></pre></td></tr></table></figure>
+
+<p>如果完成前五阶段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Redis 高级应用能力</span><br><span class="line">能在 Java 业务系统中正确设计和使用 Redis</span><br></pre></td></tr></table></figure>
+
+<p>如果完成前六阶段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Redis 生产方案能力</span><br><span class="line">能做容量评估、压测、扩缩容和生产治理</span><br></pre></td></tr></table></figure>
+
+<p>如果完成全部七阶段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Redis 高级工程师到专家入门水平</span><br><span class="line">具备部署、排查、架构、容量、客户端和源码综合能力</span><br></pre></td></tr></table></figure>
+
+<p>真正的专家水平还需要持续积累线上故障经验、业务架构经验和源码级问题定位经验。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Redis/">Redis</a></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      toc.appendChild(a);
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = toc.querySelectorAll('a');
+    window.addEventListener('scroll', function() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+    });
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

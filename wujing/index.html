@@ -25,19 +25,15 @@
     .article-card:focus-visible,
     .sort:focus-visible,
     .filter-chip:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-    .hero{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:2rem;align-items:end;margin-bottom:2.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line)}
+    .hero{margin-bottom:2.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line)}
     .eyebrow{font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.55rem}
     h1{font-family:"Noto Serif SC",serif;font-size:clamp(2.4rem,7vw,5rem);line-height:1;letter-spacing:0;color:var(--deep)}
     .tagline{font-family:"Noto Serif SC",serif;font-size:1.05rem;color:var(--muted);margin-top:.75rem}
-    .summary{border-left:3px solid var(--accent);padding-left:1rem;color:var(--muted);font-size:.92rem}
-    .summary strong{display:block;color:var(--text);font-size:1.5rem;line-height:1.2;margin-bottom:.2rem}
-    .toolbar{display:flex;justify-content:flex-end;align-items:center;margin:0 0 1rem}
-    .sort{height:38px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.82);color:var(--deep);padding:0 .65rem;font:inherit;outline:none}
-    .filters{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.1rem}
-    .filter-chip{border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.72);color:var(--muted);padding:.28rem .72rem;font:inherit;font-size:.8rem;cursor:pointer;transition:all .15s}
-    .filter-chip:hover,
-    .filter-chip[aria-pressed=true]{border-color:var(--accent);background:var(--deep);color:#fff}
-    .list-status{color:var(--muted);font-size:.78rem;margin:0 0 .75rem}
+    .cat-tabs{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.1rem}
+    .cat-tab{border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.72);color:var(--muted);padding:.28rem .72rem;font:inherit;font-size:.8rem;cursor:pointer;transition:all .15s}
+    .cat-tab:hover,
+    .cat-tab[aria-pressed=true]{border-color:var(--accent);background:var(--deep);color:#fff}
+    .cat-count{opacity:.6;font-size:.75rem}
     .article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
     .article-card{min-height:150px;display:flex;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.82);text-decoration:none;box-shadow:0 14px 34px rgba(31,59,73,.07);transition:transform .15s,border-color .15s,box-shadow .15s}
     .article-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 18px 42px rgba(31,59,73,.11)}
@@ -57,9 +53,6 @@
       .wrap{padding:1.2rem 1rem 2.4rem}
       .topbar{margin-bottom:2.8rem}
       .hero{grid-template-columns:1fr;gap:1.2rem}
-      .summary{border-left:0;border-top:3px solid var(--accent);padding:.85rem 0 0}
-      .toolbar{justify-content:stretch}
-      .sort{width:100%}
       .article-grid{grid-template-columns:1fr}
       .article-card,.article-card:first-child{grid-column:auto;min-height:auto;flex-direction:column}
       .cover,.article-card:first-child .cover{width:100%;height:150px}
@@ -82,21 +75,9 @@
         <h1>物境</h1>
         <p class="tagline">格物致知 · 理以载道</p>
       </div>
-      <div class="summary">
-        <strong id="postCount">0</strong>
-        <span>篇文章按设定顺序展开</span>
-      </div>
     </section>
 
-    <section class="toolbar" aria-label="文章筛选">
-      <select class="sort" id="articleSort" aria-label="排序方式">
-        <option value="rank">设定顺序</option>
-        <option value="date">最新优先</option>
-        <option value="title">标题顺序</option>
-      </select>
-    </section>
-    <section class="filters" id="articleFilters" aria-label="标签筛选"></section>
-    <p class="list-status">显示 <span id="shownCount">0</span> / <span id="postCountInline">0</span></p>
+    <section class="cat-tabs" id="articleTabs" aria-label="分类切换"></section>
     <section class="article-grid" id="articleGrid"></section>
     <div class="load-sentinel" id="autoLoadSentinel" aria-hidden="true"></div>
   </main>
@@ -104,19 +85,14 @@
   <script src="/js/realm-posts.js"></script>
   <script>
   (function(){
-    RealmPosts.fetch().then(function(posts){
-      RealmPosts.renderManagedRealmPage(posts, {
-        realm: 'wujing',
-        fallbackCategory: 'Java',
-        fallbackPath: '/java/',
-        countId: 'postCount',
-        countIds: ['postCountInline'],
-        shownId: 'shownCount',
-        filterId: 'articleFilters',
-        sortId: 'articleSort',
+    RealmPosts.fetch().then(function(data){
+        RealmPosts.renderManagedRealmPage(data, {
+          realm: 'wujing',
+        fallbackCategory: ['Spring', 'Mybatis'],
+        fallbackPath: '/物境/',
+          tabId: 'articleTabs',
         sentinelId: 'autoLoadSentinel',
         pageSize: 12,
-        filterSource: 'tags',
         listId: 'articleGrid',
         placeholderIcon: 'fas fa-cube'
       });

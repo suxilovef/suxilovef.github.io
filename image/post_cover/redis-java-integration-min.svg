@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Java logo hint (coffee cup shape) left -->
+    <path d="M340 340 Q340 240 440 240 Q540 240 540 340 L540 460 Q540 560 440 560 Q340 560 340 460 Z" stroke="#E76F00" stroke-width="18"/>
+    <path d="M390 220 Q440 180 490 220" stroke="#E76F00" stroke-width="12"/>
+
+    <!-- Redis cube right -->
+    <rect x="920" y="300" width="200" height="200" rx="14" stroke="#DC382D" stroke-width="22"/>
+    <text x="1020" y="425" text-anchor="middle" font-size="68" font-weight="900" fill="#DC382D" font-family="sans-serif">R</text>
+
+    <!-- Bridge / connection between Java and Redis -->
+    <path d="M540 400 L920 400" stroke="#DC382D" stroke-width="8" stroke-dasharray="16 10"/>
+    <path d="M540 370 L920 370" stroke="#34D399" stroke-width="4" stroke-dasharray="8 6" opacity="0.6"/>
+
+    <!-- Data flow arrows -->
+    <path d="M890 380 L920 400 L890 420" stroke="#DC382D" stroke-width="5" fill="none"/>
+    <path d="M550 350 L540 370 L550 390" stroke="#34D399" stroke-width="4" fill="none" opacity="0.6"/>
+
+    <!-- Connection integration nodes -->
+    <rect x="680" y="340" width="80" height="120" rx="8" stroke="#F59E0B" stroke-width="6" opacity="0.6"/>
+    <circle cx="720" cy="400" r="16" fill="#F59E0B" stroke="none" opacity="0.35"/>
+    <text x="720" y="395" text-anchor="middle" font-size="14" fill="#F59E0B" stroke="none" font-weight="700">API</text>
+
+    <!-- Decorative arcs -->
+    <path d="M300 580 Q800 700 1300 580" stroke="#F59E0B" stroke-width="5" opacity="0.3"/>
+    <path d="M350 180 Q800 100 1250 180" stroke="#34D399" stroke-width="3" opacity="0.2"/>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="770" font-size="72" text-anchor="middle" font-weight="800">Java 工程接入 Redis</text>
+    <text x="800" y="835" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">Spring Data · Jedis/Lettuce · 缓存架构</text>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Central cube / node -->
+    <rect x="680" y="260" width="240" height="240" rx="16" stroke="#DC382D" stroke-width="22"/>
+    <rect x="710" y="290" width="180" height="180" rx="12" stroke="#DC382D" stroke-width="8" opacity="0.4"/>
+
+    <!-- Pulse rings -->
+    <rect x="640" y="220" width="320" height="320" rx="20" stroke="#DC382D" stroke-width="3" opacity="0.15"/>
+    <rect x="600" y="180" width="400" height="400" rx="24" stroke="#DC382D" stroke-width="2" opacity="0.08"/>
+
+    <!-- Connection lines to peripheral dots -->
+    <path d="M680 320 L420 280" stroke="#DC382D" stroke-width="5" opacity="0.4"/>
+    <path d="M920 320 L1180 280" stroke="#DC382D" stroke-width="5" opacity="0.4"/>
+    <path d="M800 500 L800 620" stroke="#DC382D" stroke-width="5" opacity="0.4"/>
+
+    <!-- Decorative arc -->
+    <path d="M360 280 Q560 160 760 240 Q960 320 1180 280" stroke="#F59E0B" stroke-width="6" opacity="0.45"/>
+  </g>
+
+  <!-- Peripheral dots -->
+  <circle cx="420" cy="280" r="10" fill="#34D399"/>
+  <circle cx="1180" cy="280" r="10" fill="#34D399"/>
+  <circle cx="800" cy="620" r="10" fill="#F59E0B"/>
+
+  <!-- Redis icon inside cube -->
+  <text x="800" y="410" text-anchor="middle" font-size="64" font-weight="900" fill="#DC382D" font-family="sans-serif">R</text>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="770" font-size="78" text-anchor="middle" font-weight="800">Redis 单机认知概述</text>
+    <text x="800" y="835" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">核心概念 · 基础认知 · 架构理解</text>
+  </g>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 6 cluster nodes arranged in two rows -->
+    <!-- Row 1 -->
+    <rect x="280" y="220" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="350" y="310" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S1</text>
+
+    <rect x="500" y="220" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="570" y="310" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S2</text>
+
+    <rect x="720" y="220" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="790" y="310" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S3</text>
+
+    <rect x="940" y="220" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="1010" y="310" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S4</text>
+
+    <!-- Row 2 -->
+    <rect x="390" y="440" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="460" y="530" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S5</text>
+
+    <rect x="830" y="440" width="140" height="140" rx="10" stroke="#DC382D" stroke-width="14"/>
+    <text x="900" y="530" text-anchor="middle" font-size="42" font-weight="900" fill="#DC382D" font-family="sans-serif">S6</text>
+
+    <!-- Inter-node connections (gossip mesh) -->
+    <path d="M420 290 L500 290" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+    <path d="M640 290 L720 290" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+    <path d="M860 290 L940 290" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+
+    <path d="M350 360 L420 440" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+    <path d="M570 360 L640 440" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+    <path d="M790 360 L860 440" stroke="#DC382D" stroke-width="3" opacity="0.25"/>
+    <path d="M350 360 L530 500" stroke="#DC382D" stroke-width="3" opacity="0.15"/>
+
+    <path d="M430 360 L390 440" stroke="#DC382D" stroke-width="3" opacity="0.2"/>
+    <path d="M650 360 L600 440" stroke="#DC382D" stroke-width="3" opacity="0.2"/>
+    <path d="M870 360 L830 440" stroke="#DC382D" stroke-width="3" opacity="0.2"/>
+
+    <!-- Decorative arcs -->
+    <path d="M260 180 Q800 80 1340 180" stroke="#F59E0B" stroke-width="4" opacity="0.3"/>
+    <path d="M260 620 Q800 720 1340 620" stroke="#34D399" stroke-width="4" opacity="0.25"/>
+
+    <!-- Cluster boundary ring -->
+    <path d="M240 180 Q800 120 1360 180 Q1440 400 1360 620 Q800 680 240 620 Q160 400 240 180" stroke="#DC382D" stroke-width="2" stroke-dasharray="20 12" opacity="0.15"/>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="770" font-size="76" text-anchor="middle" font-weight="800">Redis 集群阶段概述</text>
+    <text x="800" y="835" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">分片架构 · 槽位分配 · Gossip 协议</text>
+  </g>
+</svg>

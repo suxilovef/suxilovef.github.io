@@ -22,22 +22,26 @@
   }
 
   function fetchPosts() {
-    return fetch('/posts.json').then(function (r) { return r.json() })
+    return fetch('/posts.json').then(function (r) { return r.json() }).then(normalizeData)
   }
 
-  function rankSort(a, b, key) {
-    var ar = Number(a[key] || 0)
-    var br = Number(b[key] || 0)
+  function normalizeData(data) {
+    if (Array.isArray(data)) return { posts: data, realms: {} }
+    return {
+      posts: data && Array.isArray(data.posts) ? data.posts : [],
+      realms: data && data.realms ? data.realms : {}
+    }
+  }
+
+  function postList(data) {
+    return normalizeData(data).posts
+  }
+
+  function rankSort(a, b) {
+    var ar = Number(a.rank || 0)
+    var br = Number(b.rank || 0)
     if (br !== ar) return br - ar
     return String(b.date || '').localeCompare(String(a.date || ''))
-  }
-
-  function dateSort(a, b) {
-    return String(b.date || '').localeCompare(String(a.date || ''))
-  }
-
-  function titleSort(a, b) {
-    return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN')
   }
 
   function hasCategory(post, name) {
@@ -48,24 +52,28 @@
     return post.path && post.path.indexOf(part) !== -1
   }
 
+  function toList(value) {
+    if (Array.isArray(value)) return value
+    return value ? [value] : []
+  }
+
   function realmPosts(posts, realm, fallbackCategory, fallbackPath) {
+    var fallbackCategories = toList(fallbackCategory)
+    var fallbackPaths = toList(fallbackPath)
     return posts.filter(function (post) {
-      return post.realm === realm || hasCategory(post, fallbackCategory) || pathIncludes(post, fallbackPath)
+      return post.realm === realm
+        || fallbackCategories.some(function (category) { return hasCategory(post, category) })
+        || fallbackPaths.some(function (path) { return pathIncludes(post, path) })
     })
   }
 
+  // Top 2 by rank
   function homePosts(list) {
-    var ranked = list.filter(function (post) {
-      return Number(post.home_rank || 0) > 0
-    }).sort(function (a, b) {
-      return rankSort(a, b, 'home_rank')
-    })
-
-    if (ranked.length) return ranked.slice(0, 2)
-    return list.slice().sort(function (a, b) { return rankSort(a, b, 'realm_rank') }).slice(0, 2)
+    return list.slice().sort(rankSort).slice(0, 2)
   }
 
   function renderSticky(posts, cardsId, sectionId) {
+    posts = postList(posts)
     var stickyEl = document.getElementById(cardsId)
     var sectionEl = document.getElementById(sectionId)
     var stickies = posts.filter(function (post) {
@@ -114,6 +122,7 @@
   }
 
   function renderHomeRealm(posts, options) {
+    posts = postList(posts)
     var el = document.getElementById(options.containerId)
     if (!el) return
 
@@ -138,83 +147,62 @@
       + '<div class="meta"><i class="far fa-calendar-alt"></i><time>' + escapeHtml(post.date) + '</time>' + tags + '</div></div></a>'
   }
 
-  function renderRealmPage(posts, options) {
-    var countEl = document.getElementById(options.countId)
-    var listEl = document.getElementById(options.listId)
-    if (!listEl) return
-
-    var list = realmPosts(posts, options.realm, options.fallbackCategory, options.fallbackPath)
-      .sort(function (a, b) { return rankSort(a, b, 'realm_rank') })
-
-    if (countEl) countEl.textContent = list.length
-    listEl.innerHTML = list.length
-      ? list.map(function (post) { return realmPageCard(post, options) }).join('')
-      : '<div class="empty">暂无文章</div>'
-  }
-
-  function uniqueValues(posts, key) {
-    var map = {}
-    posts.forEach(function (post) {
-      ;(post[key] || []).forEach(function (item) {
-        if (item) map[item] = true
-      })
-    })
-    return Object.keys(map).sort(function (a, b) { return a.localeCompare(b, 'zh-CN') })
-  }
-
-  function postMatchesFilter(post, filter) {
-    if (!filter || filter === 'all') return true
-    return (post.categories || []).indexOf(filter) !== -1 || (post.tags || []).indexOf(filter) !== -1
-  }
-
-  function sortPosts(posts, mode) {
-    var list = posts.slice()
-    if (mode === 'date') return list.sort(dateSort)
-    if (mode === 'title') return list.sort(titleSort)
-    return list.sort(function (a, b) { return rankSort(a, b, 'realm_rank') })
-  }
-
-  function renderFilters(container, filters, active) {
-    if (!container) return
-    container.innerHTML = ['all'].concat(filters).map(function (filter) {
-      var label = filter === 'all' ? '全部' : filter
-      var pressed = filter === active ? 'true' : 'false'
-      return '<button class="filter-chip" type="button" data-filter="' + escapeAttr(filter) + '" aria-pressed="' + pressed + '">' + escapeHtml(label) + '</button>'
-    }).join('')
-  }
-
-  function renderManagedRealmPage(posts, options) {
-    var state = {
-      filter: 'all',
-      sort: 'rank',
-      visible: Number(options.pageSize || 12)
-    }
+  // Category tab based realm page
+  function renderManagedRealmPage(data, options) {
+    var normalized = normalizeData(data)
+    var posts = normalized.posts
+    var realms = normalized.realms
+    var realmConfig = realms[options.realm] || {}
+    var catOrder = realmConfig.categories || []
 
     var base = realmPosts(posts, options.realm, options.fallbackCategory, options.fallbackPath)
     var listEl = document.getElementById(options.listId)
-    var countEl = document.getElementById(options.countId)
-    var countEls = (options.countIds || []).map(function (id) { return document.getElementById(id) }).filter(Boolean)
-    var shownEl = document.getElementById(options.shownId)
-    var filterEl = document.getElementById(options.filterId)
-    var sortEl = document.getElementById(options.sortId)
+    var tabEl = document.getElementById(options.tabId)
     var sentinelEl = document.getElementById(options.sentinelId)
 
     if (!listEl) return
 
-    renderFilters(filterEl, uniqueValues(base, options.filterSource || 'tags'), state.filter)
+    // Use configured category order; fall back to all categories found in posts
+    var allCategories = catOrder.length ? catOrder : (function () {
+      var map = {}
+      base.forEach(function (post) {
+        (post.categories || []).forEach(function (c) { if (c) map[c] = true })
+      })
+      return Object.keys(map).sort(function (a, b) { return a.localeCompare(b, 'zh-CN') })
+    })()
+
+    var activeCategory = allCategories[0] || ''
+
+    function catPosts(cat) {
+      return base.filter(function (post) {
+        return post.categories && post.categories.indexOf(cat) !== -1
+      })
+    }
+
+    var state = {
+      visible: Number(options.pageSize || 12)
+    }
 
     function currentList() {
-      return sortPosts(base.filter(function (post) {
-        return postMatchesFilter(post, state.filter)
-      }), state.sort)
+      return catPosts(activeCategory).sort(rankSort)
+    }
+
+    function renderTabs() {
+      if (!tabEl || allCategories.length <= 1) {
+        if (tabEl) tabEl.style.display = 'none'
+        return
+      }
+      tabEl.style.display = ''
+      tabEl.innerHTML = allCategories.map(function (cat) {
+        var count = catPosts(cat).length
+        var active = cat === activeCategory ? 'true' : 'false'
+        return '<button class="cat-tab" type="button" data-cat="' + escapeAttr(cat) + '" aria-pressed="' + active + '">' + escapeHtml(cat) + ' <span class="cat-count">' + count + '</span></button>'
+      }).join('')
     }
 
     function render() {
       var filtered = currentList()
       var visible = filtered.slice(0, state.visible)
-      if (countEl) countEl.textContent = filtered.length
-      countEls.forEach(function (el) { el.textContent = filtered.length })
-      if (shownEl) shownEl.textContent = visible.length
       listEl.innerHTML = visible.length
         ? visible.map(function (post) { return realmPageCard(post, options) }).join('')
         : '<div class="empty">暂无匹配文章</div>'
@@ -223,25 +211,19 @@
       }
     }
 
-    if (filterEl) {
-      filterEl.addEventListener('click', function (event) {
-        var target = event.target.closest('[data-filter]')
+    // Tab click
+    if (tabEl) {
+      tabEl.addEventListener('click', function (event) {
+        var target = event.target.closest('[data-cat]')
         if (!target) return
-        state.filter = target.getAttribute('data-filter')
+        activeCategory = target.getAttribute('data-cat')
         state.visible = Number(options.pageSize || 12)
-        renderFilters(filterEl, uniqueValues(base, options.filterSource || 'tags'), state.filter)
+        renderTabs()
         render()
       })
     }
 
-    if (sortEl) {
-      sortEl.addEventListener('change', function () {
-        state.sort = sortEl.value
-        state.visible = Number(options.pageSize || 12)
-        render()
-      })
-    }
-
+    // Infinite scroll
     function loadNextPage() {
       var filtered = currentList()
       if (state.visible >= filtered.length) return
@@ -262,6 +244,7 @@
       }, { passive: true })
     }
 
+    renderTabs()
     render()
   }
 
@@ -269,7 +252,6 @@
     fetch: fetchPosts,
     renderSticky: renderSticky,
     renderHomeRealm: renderHomeRealm,
-    renderRealmPage: renderRealmPage,
     renderManagedRealmPage: renderManagedRealmPage
   }
 })(window)

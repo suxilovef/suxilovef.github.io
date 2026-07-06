@@ -1,0 +1,1330 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>04-01-Redis-线上问题排查与运维治理 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Redis-线上问题排查与运维治理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="04-01-Redis-线上问题排查与运维治理">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/04-01-Redis%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E4%B8%8E%E8%BF%90%E7%BB%B4%E6%B2%BB%E7%90%86/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Redis-线上问题排查与运维治理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/redis-ops-troubleshoot-min.svg">
+<meta property="article:published_time" content="2026-07-06T12:07:05.000Z">
+<meta property="article:modified_time" content="2026-07-06T15:09:22.545Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/redis-ops-troubleshoot-min.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "04-01-Redis-线上问题排查与运维治理",
+  "url": "https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/04-01-Redis%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E4%B8%8E%E8%BF%90%E7%BB%B4%E6%B2%BB%E7%90%86/",
+  "image": "https://suxilovef.github.io/image/post_cover/redis-ops-troubleshoot-min.svg",
+  "datePublished": "2026-07-06T12:07:05.000Z",
+  "dateModified": "2026-07-06T15:09:22.545Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/04-01-Redis%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E4%B8%8E%E8%BF%90%E7%BB%B4%E6%B2%BB%E7%90%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '04-01-Redis-线上问题排查与运维治理',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;right:max(1.5rem,calc((100vw - 1020px)/ 2 - 200px));top:50%;transform:translateY(-50%);width:178px;max-height:55vh;overflow-y:auto;z-index:50;font-size:.8rem;line-height:2;padding-left:1rem;border-left:1px solid var(--border);opacity:.78;transition:opacity .2s}
+.custom-toc:hover{opacity:1}
+.custom-toc a{color:var(--faint);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .1s}
+.custom-toc a:hover{color:var(--text)}
+.custom-toc a.active{color:var(--accent);font-weight:600}
+.custom-toc .toc-h3{padding-left:.7rem;font-size:.76rem}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2rem;padding:1rem 1.2rem;border:1px solid var(--border);border-radius:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;opacity:1;box-shadow:var(--shadow);border-left:1px solid var(--border)}
+  .custom-toc a{display:inline-block;white-space:nowrap}
+  .custom-toc .toc-h3{padding-left:.3rem}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">04-01-Redis-线上问题排查与运维治理</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">04-01-Redis-线上问题排查与运维治理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-06T12:07:05.000Z" title="发表于 2026-07-06 20:07:05">2026-07-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-06T15:09:22.545Z" title="更新于 2026-07-06 23:09:22">2026-07-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Redis/">Redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">6.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>26分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Redis-线上问题排查与运维治理"><a href="#Redis-线上问题排查与运维治理" class="headerlink" title="Redis 线上问题排查与运维治理"></a>Redis 线上问题排查与运维治理</h1><h2 id="1-这份文档解决什么问题"><a href="#1-这份文档解决什么问题" class="headerlink" title="1. 这份文档解决什么问题"></a>1. 这份文档解决什么问题</h2><p>前三个阶段已经解决了 Redis 单机、Sentinel 高可用和 Cluster 集群的部署与基础架构问题。进入第 4 阶段后，学习重点要从“会搭 Redis”转向“能守 Redis”。</p>
+<p>线上 Redis 的难点通常不是某个命令不会用，而是出现问题时能不能快速判断：</p>
+<ul>
+<li>是 Redis 服务端真的慢，还是客户端线程池、连接池、网络链路慢。</li>
+<li>是单个 key 太大，还是某个 key 被集中访问。</li>
+<li>是命令本身慢，还是 fork、AOF rewrite、内存回收、系统抖动导致的延迟。</li>
+<li>是 Redis 内存不足，还是配置的淘汰策略和业务预期不一致。</li>
+<li>是连接数暴涨，还是客户端没有正确复用连接。</li>
+<li>是集群某个节点有热点，还是整体容量规划不够。</li>
+</ul>
+<p>本阶段的目标不是背命令，而是形成一套稳定的排查路径：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">发现现象</span><br><span class="line">  -&gt; 判断影响范围</span><br><span class="line">  -&gt; 定位问题方向</span><br><span class="line">  -&gt; 使用命令验证</span><br><span class="line">  -&gt; 临时止血</span><br><span class="line">  -&gt; 根因治理</span><br><span class="line">  -&gt; 复盘并补监控</span><br></pre></td></tr></table></figure>
+
+<p>完成本阶段后，你应该能写出 Redis 故障排查 SOP，并能独立处理 big key、hot key、慢查询、延迟抖动、内存打满、连接数异常等常见生产问题。</p>
+<h2 id="2-环境建议"><a href="#2-环境建议" class="headerlink" title="2. 环境建议"></a>2. 环境建议</h2><p>第 4 阶段可以复用前面任意一种 Redis 环境：</p>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>适合内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单机 Redis</td>
+<td>big key、慢查询、延迟、内存淘汰、连接数实验</td>
+</tr>
+<tr>
+<td>Sentinel 环境</td>
+<td>主从复制延迟、failover 后客户端问题</td>
+</tr>
+<tr>
+<td>Cluster 环境</td>
+<td>热点节点、slot 倾斜、集群节点局部故障</td>
+</tr>
+</tbody></table>
+<p>如果只是学习排查方法，建议先使用单机 Redis，避免 Cluster 拓扑增加干扰。等单机排查路径熟练后，再放到 Cluster 环境中观察节点差异。</p>
+<p>本文示例沿用前面阶段的基础约定：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Redis 端口: 6379</span><br><span class="line">Redis 密码: Redis@123456</span><br><span class="line">Redis 配置: /etc/redis/redis-6379.conf</span><br><span class="line">Redis 日志: /var/log/redis/redis-6379.log</span><br><span class="line">Redis 数据目录: /data/redis/6379</span><br><span class="line">systemd 服务: redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>连接示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 127.0.0.1 -p 6379 -a Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>如果是 Cluster 环境，客户端命令需要增加 <code>-c</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -c -h 192.168.88.121 -p 6379 -a Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>部分实验会用 Python 批量写入测试数据。如果虚拟机没有安装 Redis Python 客户端，可以先准备：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install -y python3-pip</span><br><span class="line">python3 -m pip install redis</span><br></pre></td></tr></table></figure>
+
+<p>如果系统提示不允许直接安装到全局 Python 环境，可以创建虚拟环境后再安装，或者改用 <code>redis-cli</code> 循环写入。</p>
+<h2 id="3-线上排查总方法"><a href="#3-线上排查总方法" class="headerlink" title="3. 线上排查总方法"></a>3. 线上排查总方法</h2><h3 id="3-1-先判断是不是-Redis-问题"><a href="#3-1-先判断是不是-Redis-问题" class="headerlink" title="3.1 先判断是不是 Redis 问题"></a>3.1 先判断是不是 Redis 问题</h3><p>业务反馈“Redis 慢”时，不要直接进入 Redis 服务器改配置。第一步要先确认慢在哪里。</p>
+<p>常见可能性：</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>典型原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>业务代码</td>
+<td>线程池耗尽、同步等待、序列化慢、批量调用方式错误</td>
+</tr>
+<tr>
+<td>客户端连接池</td>
+<td>连接池太小、连接泄漏、频繁创建短连接</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>跨机房访问、丢包、DNS、NAT、负载均衡异常</td>
+</tr>
+<tr>
+<td>Redis 服务端</td>
+<td>慢命令、big key、hot key、内存、fork、持久化、连接数</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>CPU 抢占、内存压力、磁盘 IO、透明大页、文件描述符限制</td>
+</tr>
+</tbody></table>
+<p>基础判断命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 ping</span><br><span class="line">redis-cli -a Redis@123456 info server</span><br><span class="line">redis-cli -a Redis@123456 info clients</span><br><span class="line">redis-cli -a Redis@123456 info stats</span><br><span class="line">redis-cli -a Redis@123456 info commandstats</span><br><span class="line">redis-cli -a Redis@123456 info memory</span><br><span class="line">redis-cli -a Redis@123456 info persistence</span><br><span class="line">redis-cli -a Redis@123456 slowlog get 10</span><br><span class="line">redis-cli -a Redis@123456 latency latest</span><br></pre></td></tr></table></figure>
+
+<p>系统侧同步观察：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">top</span><br><span class="line">free -h</span><br><span class="line"><span class="built_in">df</span> -h</span><br><span class="line">vmstat 1</span><br><span class="line">iostat -x 1</span><br><span class="line">ss -antp | grep 6379</span><br><span class="line"><span class="built_in">sudo</span> journalctl -u redis-6379 -n 100 --no-pager</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -n 100 /var/log/redis/redis-6379.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-推荐排查顺序"><a href="#3-2-推荐排查顺序" class="headerlink" title="3.2 推荐排查顺序"></a>3.2 推荐排查顺序</h3><p>生产环境中建议按下面顺序排查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">1. 是否只有 Redis 慢，还是整个业务链路都慢</span><br><span class="line">2. Redis ping 延迟是否异常</span><br><span class="line">3. Redis CPU、内存、连接数是否异常</span><br><span class="line">4. slowlog 是否出现慢命令</span><br><span class="line">5. latency 是否记录延迟事件</span><br><span class="line">6. 是否存在 big key 或 hot key</span><br><span class="line">7. 是否正在 RDB、AOF rewrite、全量复制</span><br><span class="line">8. 客户端连接池、超时配置、重试策略是否异常</span><br><span class="line">9. Cluster 环境是否只有个别节点异常</span><br><span class="line">10. 是否需要限流、降级、扩容或迁移热点</span><br></pre></td></tr></table></figure>
+
+<p>不要一上来就重启 Redis。重启可能暂时缓解连接和内存问题，但也可能触发数据加载、主从切换、缓存雪崩和业务超时。</p>
+<h2 id="4-big-key-排查与治理"><a href="#4-big-key-排查与治理" class="headerlink" title="4. big key 排查与治理"></a>4. big key 排查与治理</h2><h3 id="4-1-big-key-是什么"><a href="#4-1-big-key-是什么" class="headerlink" title="4.1 big key 是什么"></a>4.1 big key 是什么</h3><p>big key 不是指 key 名字长，而是 value 太大，或者集合元素太多。</p>
+<p>常见例子：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>big key 示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>string</td>
+<td>单个 value 几 MB 到几十 MB</td>
+</tr>
+<tr>
+<td>hash</td>
+<td>一个 hash 中有几十万 field</td>
+</tr>
+<tr>
+<td>list</td>
+<td>一个 list 中堆积几十万元素</td>
+</tr>
+<tr>
+<td>set</td>
+<td>一个 set 中有大量 member</td>
+</tr>
+<tr>
+<td>zset</td>
+<td>一个 zset 中有大量 member</td>
+</tr>
+</tbody></table>
+<p>big key 的风险：</p>
+<ul>
+<li>读写耗时变长，阻塞 Redis 主线程。</li>
+<li>删除时可能造成明显延迟。</li>
+<li>主从复制和 AOF rewrite 成本变高。</li>
+<li>Cluster 迁槽时迁移成本变高。</li>
+<li>客户端一次拉取大量数据，造成网络和内存压力。</li>
+</ul>
+<h3 id="4-2-发现-big-key"><a href="#4-2-发现-big-key" class="headerlink" title="4.2 发现 big key"></a>4.2 发现 big key</h3><p>快速扫描：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --bigkeys</span><br></pre></td></tr></table></figure>
+
+<p>查看单个 key 内存：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 memory usage user:1001</span><br></pre></td></tr></table></figure>
+
+<p>查看集合长度：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 strlen big:string:key</span><br><span class="line">redis-cli -a Redis@123456 hlen big:<span class="built_in">hash</span>:key</span><br><span class="line">redis-cli -a Redis@123456 llen big:list:key</span><br><span class="line">redis-cli -a Redis@123456 scard big:<span class="built_in">set</span>:key</span><br><span class="line">redis-cli -a Redis@123456 zcard big:zset:key</span><br></pre></td></tr></table></figure>
+
+<p>抽样扫描：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --scan --pattern <span class="string">&quot;user:*&quot;</span> | <span class="built_in">head</span> -n 100</span><br></pre></td></tr></table></figure>
+
+<p>注意：不要在线上使用 <code>KEYS *</code> 查找 big key。<code>KEYS</code> 会遍历整个 keyspace，在数据量大时会阻塞 Redis。</p>
+<h3 id="4-3-big-key-实验"><a href="#4-3-big-key-实验" class="headerlink" title="4.3 big key 实验"></a>4.3 big key 实验</h3><p>制造一个较大的 string：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">python3 - &lt;&lt;<span class="string">&#x27;PY&#x27;</span></span><br><span class="line">import redis</span><br><span class="line">r = redis.Redis(host=<span class="string">&#x27;127.0.0.1&#x27;</span>, port=6379, password=<span class="string">&#x27;Redis@123456&#x27;</span>, decode_responses=False)</span><br><span class="line">r.set(<span class="string">&#x27;lab:big:string&#x27;</span>, b<span class="string">&#x27;a&#x27;</span> * 1024 * 1024 * 10)</span><br><span class="line"><span class="built_in">print</span>(r.memory_usage(<span class="string">&#x27;lab:big:string&#x27;</span>))</span><br><span class="line">PY</span><br></pre></td></tr></table></figure>
+
+<p>制造一个较大的 hash：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">python3 - &lt;&lt;<span class="string">&#x27;PY&#x27;</span></span><br><span class="line">import redis</span><br><span class="line">r = redis.Redis(host=<span class="string">&#x27;127.0.0.1&#x27;</span>, port=6379, password=<span class="string">&#x27;Redis@123456&#x27;</span>, decode_responses=True)</span><br><span class="line">pipe = r.pipeline()</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(100000):</span><br><span class="line">    pipe.hset(<span class="string">&#x27;lab:big:hash&#x27;</span>, f<span class="string">&#x27;f&#123;i&#125;&#x27;</span>, f<span class="string">&#x27;v&#123;i&#125;&#x27;</span>)</span><br><span class="line">    <span class="keyword">if</span> i % 1000 == 0:</span><br><span class="line">        pipe.execute()</span><br><span class="line">pipe.execute()</span><br><span class="line"><span class="built_in">print</span>(r.hlen(<span class="string">&#x27;lab:big:hash&#x27;</span>))</span><br><span class="line"><span class="built_in">print</span>(r.memory_usage(<span class="string">&#x27;lab:big:hash&#x27;</span>))</span><br><span class="line">PY</span><br></pre></td></tr></table></figure>
+
+<p>分析：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --bigkeys</span><br><span class="line">redis-cli -a Redis@123456 memory usage lab:big:string</span><br><span class="line">redis-cli -a Redis@123456 hlen lab:big:<span class="built_in">hash</span></span><br><span class="line">redis-cli -a Redis@123456 memory usage lab:big:<span class="built_in">hash</span></span><br></pre></td></tr></table></figure>
+
+<p>清理实验数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 <span class="built_in">unlink</span> lab:big:string</span><br><span class="line">redis-cli -a Redis@123456 <span class="built_in">unlink</span> lab:big:<span class="built_in">hash</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-4-big-key-治理"><a href="#4-4-big-key-治理" class="headerlink" title="4.4 big key 治理"></a>4.4 big key 治理</h3><p>治理思路：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单个 value 太大</td>
+<td>拆分为多个小 key</td>
+</tr>
+<tr>
+<td>hash&#x2F;list&#x2F;set&#x2F;zset 元素太多</td>
+<td>按业务维度分片</td>
+</tr>
+<tr>
+<td>一次读取太多</td>
+<td>分页、游标、批量大小限制</td>
+</tr>
+<tr>
+<td>删除阻塞</td>
+<td>使用 <code>UNLINK</code> 替代 <code>DEL</code></td>
+</tr>
+<tr>
+<td>Cluster 迁槽慢</td>
+<td>先治理 big key，再做迁槽</td>
+</tr>
+</tbody></table>
+<p>示例拆分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">原始 key:</span><br><span class="line">user:profile:all</span><br><span class="line"></span><br><span class="line">拆分后:</span><br><span class="line">user:profile:1001</span><br><span class="line">user:profile:1002</span><br><span class="line">user:profile:1003</span><br></pre></td></tr></table></figure>
+
+<p>对于集合类数据，可以按时间、用户 ID、业务分区拆分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">order:list:2026-07-05</span><br><span class="line">order:list:2026-07-06</span><br><span class="line"></span><br><span class="line">user:&#123;1001&#125;:messages:0</span><br><span class="line">user:&#123;1001&#125;:messages:1</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-hot-key-排查与治理"><a href="#5-hot-key-排查与治理" class="headerlink" title="5. hot key 排查与治理"></a>5. hot key 排查与治理</h2><h3 id="5-1-hot-key-是什么"><a href="#5-1-hot-key-是什么" class="headerlink" title="5.1 hot key 是什么"></a>5.1 hot key 是什么</h3><p>hot key 指某个 key 被大量请求集中访问。它不一定大，但访问频率极高。</p>
+<p>典型场景：</p>
+<ul>
+<li>秒杀商品库存。</li>
+<li>热门文章、热门视频、热门商品详情。</li>
+<li>全局配置 key。</li>
+<li>首页推荐结果。</li>
+<li>某个接口把所有请求都打到同一个计数 key。</li>
+</ul>
+<p>hot key 的风险：</p>
+<ul>
+<li>单个 Redis 实例 CPU 飙高。</li>
+<li>Cluster 中某个 master 负载远高于其他节点。</li>
+<li>客户端超时、连接池排队。</li>
+<li>业务重试进一步放大流量。</li>
+</ul>
+<h3 id="5-2-发现-hot-key"><a href="#5-2-发现-hot-key" class="headerlink" title="5.2 发现 hot key"></a>5.2 发现 hot key</h3><p>Redis 4.0+ 在 LFU 淘汰策略下可以使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --hotkeys</span><br></pre></td></tr></table></figure>
+
+<p>使用前需要配置近似 LFU 策略，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">maxmemory-policy allkeys-lfu</span><br></pre></td></tr></table></figure>
+
+<p>查看命令统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info commandstats</span><br></pre></td></tr></table></figure>
+
+<p>观察整体吞吐：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info stats | grep instantaneous</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>MONITOR</code> 可以看到实时命令，但生产环境要谨慎：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 monitor</span><br></pre></td></tr></table></figure>
+
+<p><code>MONITOR</code> 会显著增加 Redis 输出压力，只适合短时间、低峰期、明确授权后使用。</p>
+<p>Cluster 环境中要逐个节点看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 info stats</span><br><span class="line">redis-cli -h 192.168.88.122 -p 6379 -a Redis@123456 info stats</span><br><span class="line">redis-cli -h 192.168.88.123 -p 6379 -a Redis@123456 info stats</span><br></pre></td></tr></table></figure>
+
+<p>如果只有某个 master 的 QPS、CPU、网络明显偏高，很可能存在热点 key 或 slot 倾斜。</p>
+<h3 id="5-3-hot-key-实验"><a href="#5-3-hot-key-实验" class="headerlink" title="5.3 hot key 实验"></a>5.3 hot key 实验</h3><p>准备 key：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 <span class="built_in">set</span> lab:hot:key 1</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>redis-benchmark</code> 模拟大量访问：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-benchmark -h 127.0.0.1 -p 6379 -a Redis@123456 -n 100000 -c 100 get lab:hot:key</span><br></pre></td></tr></table></figure>
+
+<p>同时观察：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info stats | grep instantaneous</span><br><span class="line">redis-cli -a Redis@123456 info commandstats | grep cmdstat_get</span><br><span class="line">top -p $(pidof redis-server)</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-4-hot-key-治理"><a href="#5-4-hot-key-治理" class="headerlink" title="5.4 hot key 治理"></a>5.4 hot key 治理</h3><p>常见治理方式：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>治理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>读热点</td>
+<td>本地缓存、多级缓存、短 TTL</td>
+</tr>
+<tr>
+<td>单 key 读压力过大</td>
+<td>key 副本拆分，例如 <code>hot:key:0</code> 到 <code>hot:key:9</code></td>
+</tr>
+<tr>
+<td>写热点</td>
+<td>合并写、异步写、分片计数</td>
+</tr>
+<tr>
+<td>Cluster 单 slot 热</td>
+<td>hash tag 设计调整，避免所有热点落同槽</td>
+</tr>
+<tr>
+<td>秒杀库存</td>
+<td>预扣、限流、队列化、Lua 控制原子逻辑</td>
+</tr>
+</tbody></table>
+<p>读热点副本拆分示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">hot:product:1001:0</span><br><span class="line">hot:product:1001:1</span><br><span class="line">hot:product:1001:2</span><br><span class="line">...</span><br><span class="line">hot:product:1001:9</span><br></pre></td></tr></table></figure>
+
+<p>客户端随机读其中一个副本。更新时需要同步更新多个副本，或者允许短时间不一致。</p>
+<p>计数类写热点可以拆分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">counter:article:1001:0</span><br><span class="line">counter:article:1001:1</span><br><span class="line">counter:article:1001:2</span><br></pre></td></tr></table></figure>
+
+<p>读取总数时再汇总多个分片。</p>
+<h2 id="6-慢查询和阻塞命令"><a href="#6-慢查询和阻塞命令" class="headerlink" title="6. 慢查询和阻塞命令"></a>6. 慢查询和阻塞命令</h2><h3 id="6-1-slowlog-的作用"><a href="#6-1-slowlog-的作用" class="headerlink" title="6.1 slowlog 的作用"></a>6.1 slowlog 的作用</h3><p><code>SLOWLOG</code> 记录的是 Redis 命令执行耗时，不包含网络传输时间和客户端排队时间。</p>
+<p>查看配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config get slowlog-log-slower-than</span><br><span class="line">redis-cli -a Redis@123456 config get slowlog-max-len</span><br></pre></td></tr></table></figure>
+
+<p>学习环境可以临时降低阈值：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> slowlog-log-slower-than 10000</span><br><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> slowlog-max-len 256</span><br></pre></td></tr></table></figure>
+
+<p>含义：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>slowlog-log-slower-than</code></td>
+<td>超过多少微秒记录慢查询</td>
+</tr>
+<tr>
+<td><code>slowlog-max-len</code></td>
+<td>最多保留多少条慢查询</td>
+</tr>
+</tbody></table>
+<p>查看慢查询：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 slowlog len</span><br><span class="line">redis-cli -a Redis@123456 slowlog get 10</span><br></pre></td></tr></table></figure>
+
+<p>清理慢查询：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 slowlog reset</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-常见慢命令"><a href="#6-2-常见慢命令" class="headerlink" title="6.2 常见慢命令"></a>6.2 常见慢命令</h3><p>高风险命令：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>KEYS</code></td>
+<td>全量遍历 keyspace</td>
+</tr>
+<tr>
+<td><code>HGETALL</code></td>
+<td>hash 很大时返回大量 field</td>
+</tr>
+<tr>
+<td><code>LRANGE key 0 -1</code></td>
+<td>list 很大时返回全部元素</td>
+</tr>
+<tr>
+<td><code>SMEMBERS</code></td>
+<td>set 很大时返回全部 member</td>
+</tr>
+<tr>
+<td><code>ZRANGE</code> 大范围</td>
+<td>zset 很大时返回大量 member</td>
+</tr>
+<tr>
+<td><code>SORT</code></td>
+<td>CPU 和内存开销较高</td>
+</tr>
+<tr>
+<td><code>DEL</code> big key</td>
+<td>同步释放大对象可能阻塞</td>
+</tr>
+<tr>
+<td>复杂 Lua</td>
+<td>Lua 脚本执行期间阻塞主线程</td>
+</tr>
+</tbody></table>
+<p>替代方式：</p>
+<table>
+<thead>
+<tr>
+<th>慢命令</th>
+<th>替代方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>KEYS</code></td>
+<td><code>SCAN</code></td>
+</tr>
+<tr>
+<td><code>HGETALL</code></td>
+<td><code>HSCAN</code> 或按 field 精确获取</td>
+</tr>
+<tr>
+<td><code>SMEMBERS</code></td>
+<td><code>SSCAN</code></td>
+</tr>
+<tr>
+<td><code>LRANGE 0 -1</code></td>
+<td>分页 <code>LRANGE start stop</code></td>
+</tr>
+<tr>
+<td><code>DEL bigkey</code></td>
+<td><code>UNLINK bigkey</code></td>
+</tr>
+</tbody></table>
+<h3 id="6-3-慢查询实验"><a href="#6-3-慢查询实验" class="headerlink" title="6.3 慢查询实验"></a>6.3 慢查询实验</h3><p>制造大量 key：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">python3 - &lt;&lt;<span class="string">&#x27;PY&#x27;</span></span><br><span class="line">import redis</span><br><span class="line">r = redis.Redis(host=<span class="string">&#x27;127.0.0.1&#x27;</span>, port=6379, password=<span class="string">&#x27;Redis@123456&#x27;</span>, decode_responses=True)</span><br><span class="line">pipe = r.pipeline()</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(200000):</span><br><span class="line">    pipe.set(f<span class="string">&#x27;lab:scan:&#123;i&#125;&#x27;</span>, i)</span><br><span class="line">    <span class="keyword">if</span> i % 1000 == 0:</span><br><span class="line">        pipe.execute()</span><br><span class="line">pipe.execute()</span><br><span class="line">PY</span><br></pre></td></tr></table></figure>
+
+<p>降低 slowlog 阈值：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> slowlog-log-slower-than 1000</span><br><span class="line">redis-cli -a Redis@123456 slowlog reset</span><br></pre></td></tr></table></figure>
+
+<p>执行高风险命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 keys <span class="string">&quot;lab:scan:*&quot;</span> &gt; /dev/null</span><br><span class="line">redis-cli -a Redis@123456 slowlog get 5</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>SCAN</code> 替代：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --scan --pattern <span class="string">&quot;lab:scan:*&quot;</span> | <span class="built_in">head</span></span><br></pre></td></tr></table></figure>
+
+<p>清理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --scan --pattern <span class="string">&quot;lab:scan:*&quot;</span> | xargs -r -n 100 redis-cli -a Redis@123456 <span class="built_in">unlink</span></span><br></pre></td></tr></table></figure>
+
+<p>生产环境清理大量 key 时，不要一次性 <code>xargs</code> 打爆 Redis，应该控制批次和速率。</p>
+<h2 id="7-延迟抖动分析"><a href="#7-延迟抖动分析" class="headerlink" title="7. 延迟抖动分析"></a>7. 延迟抖动分析</h2><h3 id="7-1-延迟来源"><a href="#7-1-延迟来源" class="headerlink" title="7.1 延迟来源"></a>7.1 延迟来源</h3><p>Redis 延迟可能来自：</p>
+<ul>
+<li>慢命令阻塞主线程。</li>
+<li>big key 删除或读取。</li>
+<li>RDB <code>BGSAVE</code> fork。</li>
+<li>AOF rewrite fork 和磁盘写入。</li>
+<li>内存达到上限后频繁淘汰。</li>
+<li>Linux 内存压力和 swap。</li>
+<li>Transparent Huge Pages。</li>
+<li>客户端连接数过多。</li>
+<li>网络抖动或跨机房访问。</li>
+</ul>
+<h3 id="7-2-latency-命令"><a href="#7-2-latency-命令" class="headerlink" title="7.2 latency 命令"></a>7.2 latency 命令</h3><p>查看最新延迟事件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency latest</span><br></pre></td></tr></table></figure>
+
+<p>查看诊断建议：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency doctor</span><br></pre></td></tr></table></figure>
+
+<p>查看某类事件历史：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency <span class="built_in">history</span> <span class="built_in">command</span></span><br><span class="line">redis-cli -a Redis@123456 latency <span class="built_in">history</span> fork</span><br></pre></td></tr></table></figure>
+
+<p>重置延迟统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency reset</span><br></pre></td></tr></table></figure>
+
+<p>学习环境可以打开延迟监控：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> latency-monitor-threshold 10</span><br></pre></td></tr></table></figure>
+
+<p>含义：超过 10 毫秒的延迟事件会被记录。生产环境阈值要结合业务 SLA 设置。</p>
+<h3 id="7-3-延迟排查路径"><a href="#7-3-延迟排查路径" class="headerlink" title="7.3 延迟排查路径"></a>7.3 延迟排查路径</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">业务超时</span><br><span class="line">  -&gt; redis-cli ping 是否慢</span><br><span class="line">  -&gt; slowlog 是否有慢命令</span><br><span class="line">  -&gt; latency latest 是否有事件</span><br><span class="line">  -&gt; info persistence 是否正在 fork 或 rewrite</span><br><span class="line">  -&gt; info memory 是否内存紧张</span><br><span class="line">  -&gt; info clients 是否连接异常</span><br><span class="line">  -&gt; 系统 CPU、内存、磁盘 IO 是否异常</span><br></pre></td></tr></table></figure>
+
+<p>常用命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --latency</span><br><span class="line">redis-cli -a Redis@123456 --latency-history</span><br><span class="line">redis-cli -a Redis@123456 --intrinsic-latency 100</span><br></pre></td></tr></table></figure>
+
+<p>说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--latency</code></td>
+<td>测 Redis 请求响应延迟</td>
+</tr>
+<tr>
+<td><code>--latency-history</code></td>
+<td>持续输出延迟变化</td>
+</tr>
+<tr>
+<td><code>--intrinsic-latency</code></td>
+<td>测 Redis 所在机器的内在调度延迟</td>
+</tr>
+</tbody></table>
+<p><code>--intrinsic-latency</code> 不经过网络，主要用于判断操作系统调度是否本身就有抖动。</p>
+<h2 id="8-内存打满、淘汰和碎片率"><a href="#8-内存打满、淘汰和碎片率" class="headerlink" title="8. 内存打满、淘汰和碎片率"></a>8. 内存打满、淘汰和碎片率</h2><h3 id="8-1-关键内存指标"><a href="#8-1-关键内存指标" class="headerlink" title="8.1 关键内存指标"></a>8.1 关键内存指标</h3><p>查看内存：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info memory</span><br></pre></td></tr></table></figure>
+
+<p>重点指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>used_memory_human</code></td>
+<td>Redis 分配器使用的内存</td>
+</tr>
+<tr>
+<td><code>used_memory_rss_human</code></td>
+<td>操作系统看到的 Redis 常驻内存</td>
+</tr>
+<tr>
+<td><code>maxmemory_human</code></td>
+<td>Redis 配置的最大内存</td>
+</tr>
+<tr>
+<td><code>mem_fragmentation_ratio</code></td>
+<td>内存碎片率</td>
+</tr>
+<tr>
+<td><code>evicted_keys</code></td>
+<td>被淘汰的 key 数量</td>
+</tr>
+<tr>
+<td><code>expired_keys</code></td>
+<td>过期删除的 key 数量</td>
+</tr>
+</tbody></table>
+<p>查看淘汰统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info stats | grep evicted_keys</span><br><span class="line">redis-cli -a Redis@123456 config get maxmemory</span><br><span class="line">redis-cli -a Redis@123456 config get maxmemory-policy</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-maxmemory-和淘汰策略"><a href="#8-2-maxmemory-和淘汰策略" class="headerlink" title="8.2 maxmemory 和淘汰策略"></a>8.2 maxmemory 和淘汰策略</h3><p>常见策略：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>noeviction</code></td>
+<td>不淘汰，写入时报错</td>
+</tr>
+<tr>
+<td><code>allkeys-lru</code></td>
+<td>在所有 key 中按 LRU 近似淘汰</td>
+</tr>
+<tr>
+<td><code>volatile-lru</code></td>
+<td>只在设置了过期时间的 key 中按 LRU 近似淘汰</td>
+</tr>
+<tr>
+<td><code>allkeys-lfu</code></td>
+<td>在所有 key 中按 LFU 近似淘汰</td>
+</tr>
+<tr>
+<td><code>volatile-lfu</code></td>
+<td>只在设置了过期时间的 key 中按 LFU 近似淘汰</td>
+</tr>
+<tr>
+<td><code>allkeys-random</code></td>
+<td>在所有 key 中随机淘汰</td>
+</tr>
+<tr>
+<td><code>volatile-ttl</code></td>
+<td>优先淘汰 TTL 更小的 key</td>
+</tr>
+</tbody></table>
+<p>缓存场景常用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">maxmemory-policy allkeys-lru</span><br></pre></td></tr></table></figure>
+
+<p>热点访问明显的缓存场景可以考虑：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">maxmemory-policy allkeys-lfu</span><br></pre></td></tr></table></figure>
+
+<p>如果 Redis 存放的是不能丢的数据，不应该依赖淘汰策略兜底，而应该做容量规划、拆分或迁移。</p>
+<h3 id="8-3-内存淘汰实验"><a href="#8-3-内存淘汰实验" class="headerlink" title="8.3 内存淘汰实验"></a>8.3 内存淘汰实验</h3><p>学习环境临时配置最大内存：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> maxmemory 100mb</span><br><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> maxmemory-policy allkeys-lru</span><br></pre></td></tr></table></figure>
+
+<p>持续写入数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">python3 - &lt;&lt;<span class="string">&#x27;PY&#x27;</span></span><br><span class="line">import redis</span><br><span class="line">r = redis.Redis(host=<span class="string">&#x27;127.0.0.1&#x27;</span>, port=6379, password=<span class="string">&#x27;Redis@123456&#x27;</span>, decode_responses=False)</span><br><span class="line">value = b<span class="string">&#x27;x&#x27;</span> * 1024</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(200000):</span><br><span class="line">    r.set(f<span class="string">&#x27;lab:mem:&#123;i&#125;&#x27;</span>, value)</span><br><span class="line">    <span class="keyword">if</span> i % 10000 == 0:</span><br><span class="line">        <span class="built_in">print</span>(i, r.info(<span class="string">&#x27;stats&#x27;</span>)[<span class="string">&#x27;evicted_keys&#x27;</span>], r.info(<span class="string">&#x27;memory&#x27;</span>)[<span class="string">&#x27;used_memory_human&#x27;</span>])</span><br><span class="line">PY</span><br></pre></td></tr></table></figure>
+
+<p>观察：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info memory</span><br><span class="line">redis-cli -a Redis@123456 info stats | grep evicted_keys</span><br></pre></td></tr></table></figure>
+
+<p>恢复配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> maxmemory 0</span><br><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> maxmemory-policy noeviction</span><br></pre></td></tr></table></figure>
+
+<p>清理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 --scan --pattern <span class="string">&quot;lab:mem:*&quot;</span> | xargs -r -n 100 redis-cli -a Redis@123456 <span class="built_in">unlink</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="8-4-碎片率治理"><a href="#8-4-碎片率治理" class="headerlink" title="8.4 碎片率治理"></a>8.4 碎片率治理</h3><p><code>mem_fragmentation_ratio</code> 过高时，说明 Redis 申请的内存和实际使用情况出现较多碎片。</p>
+<p>判断参考：</p>
+<table>
+<thead>
+<tr>
+<th>碎片率</th>
+<th>判断</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.0 到 1.5</td>
+<td>通常可以接受</td>
+</tr>
+<tr>
+<td>1.5 到 2.0</td>
+<td>需要观察</td>
+</tr>
+<tr>
+<td>大于 2.0</td>
+<td>需要结合内存和业务波动分析</td>
+</tr>
+</tbody></table>
+<p>治理方式：</p>
+<ul>
+<li>避免频繁创建和删除大量不同大小的对象。</li>
+<li>使用合理的数据结构，避免超大集合频繁变更。</li>
+<li>评估是否开启主动碎片整理。</li>
+<li>低峰期重启从节点，再做主从切换释放碎片。</li>
+</ul>
+<p>主动碎片整理配置示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">activedefrag yes</span><br></pre></td></tr></table></figure>
+
+<p>开启前要评估 CPU 影响。碎片整理会消耗额外 CPU，不适合在业务高峰期盲目打开。</p>
+<h2 id="9-RDB、AOF-rewrite、fork-和-COW"><a href="#9-RDB、AOF-rewrite、fork-和-COW" class="headerlink" title="9. RDB、AOF rewrite、fork 和 COW"></a>9. RDB、AOF rewrite、fork 和 COW</h2><h3 id="9-1-为什么持久化会影响延迟"><a href="#9-1-为什么持久化会影响延迟" class="headerlink" title="9.1 为什么持久化会影响延迟"></a>9.1 为什么持久化会影响延迟</h3><p>Redis 执行 RDB <code>BGSAVE</code>、AOF rewrite、主从全量复制时，通常会 fork 子进程。</p>
+<p>fork 的风险：</p>
+<ul>
+<li>Redis 主进程内存越大，fork 成本越高。</li>
+<li>fork 期间可能出现短暂阻塞。</li>
+<li>fork 后如果主进程持续写入，会触发 COW，占用额外内存。</li>
+<li>磁盘 IO 压力可能影响 AOF fsync 和 rewrite。</li>
+</ul>
+<p>查看持久化状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info persistence</span><br></pre></td></tr></table></figure>
+
+<p>重点指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>rdb_bgsave_in_progress</code></td>
+<td>是否正在 RDB 后台保存</td>
+</tr>
+<tr>
+<td><code>rdb_last_bgsave_status</code></td>
+<td>上次 RDB 是否成功</td>
+</tr>
+<tr>
+<td><code>rdb_last_cow_size</code></td>
+<td>上次 RDB COW 内存大小</td>
+</tr>
+<tr>
+<td><code>aof_rewrite_in_progress</code></td>
+<td>是否正在 AOF rewrite</td>
+</tr>
+<tr>
+<td><code>aof_last_bgrewrite_status</code></td>
+<td>上次 AOF rewrite 是否成功</td>
+</tr>
+<tr>
+<td><code>aof_last_cow_size</code></td>
+<td>上次 AOF rewrite COW 内存大小</td>
+</tr>
+<tr>
+<td><code>latest_fork_usec</code></td>
+<td>最近一次 fork 耗时</td>
+</tr>
+</tbody></table>
+<h3 id="9-2-排查持久化导致的抖动"><a href="#9-2-排查持久化导致的抖动" class="headerlink" title="9.2 排查持久化导致的抖动"></a>9.2 排查持久化导致的抖动</h3><p>查看延迟：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency latest</span><br><span class="line">redis-cli -a Redis@123456 latency <span class="built_in">history</span> fork</span><br></pre></td></tr></table></figure>
+
+<p>查看日志：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -n 200 /var/log/redis/redis-6379.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<p>查看磁盘：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">iostat -x 1</span><br><span class="line"><span class="built_in">df</span> -h</span><br><span class="line"><span class="built_in">du</span> -sh /data/redis/6379</span><br></pre></td></tr></table></figure>
+
+<p>常见日志现象：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Background saving started by pid ...</span><br><span class="line">DB saved on disk</span><br><span class="line">Background AOF rewrite started by pid ...</span><br><span class="line">Background AOF rewrite terminated with success</span><br></pre></td></tr></table></figure>
+
+<h3 id="9-3-治理建议"><a href="#9-3-治理建议" class="headerlink" title="9.3 治理建议"></a>9.3 治理建议</h3><ul>
+<li>给 Redis 预留足够内存，不要让机器内存刚好等于 Redis 数据量。</li>
+<li>大实例要谨慎设置 RDB 频率和 AOF rewrite 阈值。</li>
+<li>避免业务高峰期触发 rewrite。</li>
+<li>监控 <code>latest_fork_usec</code>、COW 大小、AOF 文件大小。</li>
+<li>大规模写入、导入、删除前要关注持久化影响。</li>
+<li>Cluster 可以通过分片降低单实例内存，从而降低 fork 成本。</li>
+</ul>
+<h2 id="10-连接数暴涨和客户端超时"><a href="#10-连接数暴涨和客户端超时" class="headerlink" title="10. 连接数暴涨和客户端超时"></a>10. 连接数暴涨和客户端超时</h2><h3 id="10-1-服务端连接指标"><a href="#10-1-服务端连接指标" class="headerlink" title="10.1 服务端连接指标"></a>10.1 服务端连接指标</h3><p>查看客户端：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info clients</span><br><span class="line">redis-cli -a Redis@123456 client list</span><br></pre></td></tr></table></figure>
+
+<p>重点指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>connected_clients</code></td>
+<td>当前客户端连接数</td>
+</tr>
+<tr>
+<td><code>blocked_clients</code></td>
+<td>阻塞等待的客户端数</td>
+</tr>
+<tr>
+<td><code>maxclients</code></td>
+<td>最大客户端连接数</td>
+</tr>
+<tr>
+<td><code>client_recent_max_input_buffer</code></td>
+<td>最近客户端输入缓冲峰值</td>
+</tr>
+<tr>
+<td><code>client_recent_max_output_buffer</code></td>
+<td>最近客户端输出缓冲峰值</td>
+</tr>
+</tbody></table>
+<p>查看最大连接配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config get maxclients</span><br><span class="line"><span class="built_in">ulimit</span> -n</span><br></pre></td></tr></table></figure>
+
+<p>查看系统连接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ss -antp | grep 6379 | <span class="built_in">wc</span> -l</span><br><span class="line">ss -antp | grep 6379 | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-2-常见原因"><a href="#10-2-常见原因" class="headerlink" title="10.2 常见原因"></a>10.2 常见原因</h3><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>可能原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>连接数持续上涨</td>
+<td>客户端连接泄漏</td>
+</tr>
+<tr>
+<td>大量短连接</td>
+<td>每次请求都新建连接</td>
+</tr>
+<tr>
+<td><code>blocked_clients</code> 增加</td>
+<td>阻塞命令、BLPOP 等等待</td>
+</tr>
+<tr>
+<td>连接池等待超时</td>
+<td>池太小或 Redis 响应慢</td>
+</tr>
+<tr>
+<td>Redis CPU 不高但业务超时</td>
+<td>客户端线程池、网络或连接池排队</td>
+</tr>
+</tbody></table>
+<h3 id="10-3-连接数实验"><a href="#10-3-连接数实验" class="headerlink" title="10.3 连接数实验"></a>10.3 连接数实验</h3><p>使用 redis-benchmark 模拟并发连接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-benchmark -h 127.0.0.1 -p 6379 -a Redis@123456 -c 1000 -n 100000 ping</span><br></pre></td></tr></table></figure>
+
+<p>观察：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info clients</span><br><span class="line">ss -antp | grep 6379 | <span class="built_in">wc</span> -l</span><br></pre></td></tr></table></figure>
+
+<p>如果要模拟更高连接数，需要同时确认 Linux 文件描述符限制和 Redis <code>maxclients</code>。</p>
+<h3 id="10-4-治理建议"><a href="#10-4-治理建议" class="headerlink" title="10.4 治理建议"></a>10.4 治理建议</h3><ul>
+<li>Java 客户端必须复用连接，不要每次请求创建连接。</li>
+<li>合理设置连接池最大连接数、最小空闲连接数、获取连接超时。</li>
+<li>设置命令超时，避免无限等待。</li>
+<li>对重试策略做限制，避免 Redis 抖动时业务疯狂重试。</li>
+<li>监控 <code>connected_clients</code>、<code>blocked_clients</code>、连接池等待时间。</li>
+<li>对批量任务限速，避免瞬间打满连接。</li>
+</ul>
+<h2 id="11-Cluster-环境下的运维排查"><a href="#11-Cluster-环境下的运维排查" class="headerlink" title="11. Cluster 环境下的运维排查"></a>11. Cluster 环境下的运维排查</h2><p>Cluster 环境中不能只看一个节点，要按节点维度排查。</p>
+<h3 id="11-1-集群状态"><a href="#11-1-集群状态" class="headerlink" title="11.1 集群状态"></a>11.1 集群状态</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 cluster info</span><br><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 cluster nodes</span><br><span class="line">redis-cli --cluster check 192.168.88.121:6379 -a Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cluster_state</code></td>
+<td>是否为 <code>ok</code></td>
+</tr>
+<tr>
+<td><code>cluster_slots_assigned</code></td>
+<td>slot 是否全部分配</td>
+</tr>
+<tr>
+<td><code>cluster_slots_fail</code></td>
+<td>是否有故障 slot</td>
+</tr>
+<tr>
+<td><code>cluster_known_nodes</code></td>
+<td>已知节点数</td>
+</tr>
+</tbody></table>
+<h3 id="11-2-节点差异"><a href="#11-2-节点差异" class="headerlink" title="11.2 节点差异"></a>11.2 节点差异</h3><p>逐个 master 观察：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 info stats</span><br><span class="line">redis-cli -h 192.168.88.122 -p 6379 -a Redis@123456 info stats</span><br><span class="line">redis-cli -h 192.168.88.123 -p 6379 -a Redis@123456 info stats</span><br><span class="line"></span><br><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 info memory</span><br><span class="line">redis-cli -h 192.168.88.122 -p 6379 -a Redis@123456 info memory</span><br><span class="line">redis-cli -h 192.168.88.123 -p 6379 -a Redis@123456 info memory</span><br></pre></td></tr></table></figure>
+
+<p>如果某个节点明显异常，要进一步判断：</p>
+<ul>
+<li>slot 是否分配过多。</li>
+<li>是否存在 hot key。</li>
+<li>是否存在 big key。</li>
+<li>是否有业务 hash tag 把大量 key 固定到同一个 slot。</li>
+<li>是否正在迁槽或故障恢复。</li>
+</ul>
+<h3 id="11-3-hash-tag-风险"><a href="#11-3-hash-tag-风险" class="headerlink" title="11.3 hash tag 风险"></a>11.3 hash tag 风险</h3><p>hash tag 可以让多个 key 落到同一个 slot，但滥用会造成热点。</p>
+<p>风险示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">order:&#123;global&#125;:1001</span><br><span class="line">order:&#123;global&#125;:1002</span><br><span class="line">order:&#123;global&#125;:1003</span><br></pre></td></tr></table></figure>
+
+<p>这些 key 都会按照 <code>{global}</code> 计算 slot，容易集中到一个 master。</p>
+<p>合理示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">user:&#123;1001&#125;:profile</span><br><span class="line">user:&#123;1001&#125;:cart</span><br><span class="line">user:&#123;1001&#125;:orders</span><br></pre></td></tr></table></figure>
+
+<p>同一个用户的数据同槽，便于多 key 操作，同时不同用户可以分散到不同 slot。</p>
+<h2 id="12-监控指标和告警规则"><a href="#12-监控指标和告警规则" class="headerlink" title="12. 监控指标和告警规则"></a>12. 监控指标和告警规则</h2><h3 id="12-1-必须监控的-Redis-指标"><a href="#12-1-必须监控的-Redis-指标" class="headerlink" title="12.1 必须监控的 Redis 指标"></a>12.1 必须监控的 Redis 指标</h3><table>
+<thead>
+<tr>
+<th>分类</th>
+<th>指标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存活</td>
+<td><code>PING</code>、进程状态、端口状态</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>QPS、命令耗时、slowlog 数量、延迟</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>used memory、maxmemory、碎片率、evicted keys</td>
+</tr>
+<tr>
+<td>连接</td>
+<td>connected clients、blocked clients、rejected connections</td>
+</tr>
+<tr>
+<td>持久化</td>
+<td>RDB&#x2F;AOF 状态、fork 耗时、COW 大小、AOF rewrite</td>
+</tr>
+<tr>
+<td>复制</td>
+<td>master&#x2F;replica 状态、复制延迟、复制断开次数</td>
+</tr>
+<tr>
+<td>Cluster</td>
+<td>cluster_state、slot 状态、fail 节点</td>
+</tr>
+<tr>
+<td>系统</td>
+<td>CPU、内存、磁盘 IO、网络、文件描述符</td>
+</tr>
+</tbody></table>
+<h3 id="12-2-建议告警项"><a href="#12-2-建议告警项" class="headerlink" title="12.2 建议告警项"></a>12.2 建议告警项</h3><table>
+<thead>
+<tr>
+<th>告警项</th>
+<th>建议规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Redis 不可用</td>
+<td>连续多次 PING 失败</td>
+</tr>
+<tr>
+<td>延迟过高</td>
+<td>P99 或探测延迟超过业务阈值</td>
+</tr>
+<tr>
+<td>慢查询增加</td>
+<td>slowlog 持续出现高耗时命令</td>
+</tr>
+<tr>
+<td>内存接近上限</td>
+<td>used_memory &#x2F; maxmemory 超过 80%</td>
+</tr>
+<tr>
+<td>发生淘汰</td>
+<td>evicted_keys 持续增加</td>
+</tr>
+<tr>
+<td>碎片率过高</td>
+<td>mem_fragmentation_ratio 长时间大于 1.5 或 2</td>
+</tr>
+<tr>
+<td>连接数过高</td>
+<td>connected_clients 接近 maxclients</td>
+</tr>
+<tr>
+<td>被拒绝连接</td>
+<td>rejected_connections 增加</td>
+</tr>
+<tr>
+<td>fork 过慢</td>
+<td>latest_fork_usec 明显升高</td>
+</tr>
+<tr>
+<td>AOF&#x2F;RDB 失败</td>
+<td>last status 不是 ok</td>
+</tr>
+<tr>
+<td>主从断开</td>
+<td>master_link_status 为 down</td>
+</tr>
+<tr>
+<td>Cluster 异常</td>
+<td>cluster_state 不是 ok</td>
+</tr>
+</tbody></table>
+<p>阈值不要照抄，要根据业务压测、日常基线和 SLA 调整。</p>
+<h2 id="13-日常巡检清单"><a href="#13-日常巡检清单" class="headerlink" title="13. 日常巡检清单"></a>13. 日常巡检清单</h2><p>每天或每周巡检可以按下面顺序执行。</p>
+<p>基础状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 ping</span><br><span class="line">redis-cli -a Redis@123456 info server</span><br><span class="line">redis-cli -a Redis@123456 info stats</span><br></pre></td></tr></table></figure>
+
+<p>内存：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info memory</span><br><span class="line">redis-cli -a Redis@123456 info stats | grep evicted_keys</span><br></pre></td></tr></table></figure>
+
+<p>慢查询和延迟：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 slowlog len</span><br><span class="line">redis-cli -a Redis@123456 slowlog get 10</span><br><span class="line">redis-cli -a Redis@123456 latency latest</span><br></pre></td></tr></table></figure>
+
+<p>连接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info clients</span><br><span class="line">redis-cli -a Redis@123456 client list | <span class="built_in">head</span></span><br></pre></td></tr></table></figure>
+
+<p>持久化：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info persistence</span><br></pre></td></tr></table></figure>
+
+<p>复制：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info replication</span><br></pre></td></tr></table></figure>
+
+<p>Cluster：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 192.168.88.121 -p 6379 -a Redis@123456 cluster info</span><br><span class="line">redis-cli --cluster check 192.168.88.121:6379 -a Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>系统：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">top</span><br><span class="line">free -h</span><br><span class="line"><span class="built_in">df</span> -h</span><br><span class="line">vmstat 1 5</span><br><span class="line">iostat -x 1 5</span><br><span class="line">ss -antp | grep 6379 | <span class="built_in">wc</span> -l</span><br></pre></td></tr></table></figure>
+
+<p>巡检结论至少要记录：</p>
+<ul>
+<li>当前 Redis 是否可用。</li>
+<li>内存是否接近上限。</li>
+<li>是否发生淘汰。</li>
+<li>是否有慢查询。</li>
+<li>是否有延迟事件。</li>
+<li>连接数是否异常。</li>
+<li>持久化是否成功。</li>
+<li>主从或 Cluster 是否健康。</li>
+<li>是否需要容量治理或业务整改。</li>
+</ul>
+<h2 id="14-故障排查-SOP"><a href="#14-故障排查-SOP" class="headerlink" title="14. 故障排查 SOP"></a>14. 故障排查 SOP</h2><h3 id="14-1-Redis-变慢-SOP"><a href="#14-1-Redis-变慢-SOP" class="headerlink" title="14.1 Redis 变慢 SOP"></a>14.1 Redis 变慢 SOP</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">1. 确认影响范围</span><br><span class="line">   - 单个接口慢，还是所有接口慢</span><br><span class="line">   - 单个 Redis 节点慢，还是全部节点慢</span><br><span class="line"></span><br><span class="line">2. 检查 Redis 基础状态</span><br><span class="line">   - ping</span><br><span class="line">   - info stats</span><br><span class="line">   - info clients</span><br><span class="line">   - info memory</span><br><span class="line"></span><br><span class="line">3. 检查慢查询</span><br><span class="line">   - slowlog len</span><br><span class="line">   - slowlog get 10</span><br><span class="line"></span><br><span class="line">4. 检查延迟事件</span><br><span class="line">   - latency latest</span><br><span class="line">   - latency doctor</span><br><span class="line"></span><br><span class="line">5. 检查持久化和 fork</span><br><span class="line">   - info persistence</span><br><span class="line">   - Redis 日志</span><br><span class="line"></span><br><span class="line">6. 检查 big key 和 hot key</span><br><span class="line">   - --bigkeys</span><br><span class="line">   - --hotkeys</span><br><span class="line">   - commandstats</span><br><span class="line"></span><br><span class="line">7. 检查客户端</span><br><span class="line">   - 连接池等待</span><br><span class="line">   - 超时和重试</span><br><span class="line">   - 是否有大批量命令</span><br><span class="line"></span><br><span class="line">8. 临时止血</span><br><span class="line">   - 降级非核心功能</span><br><span class="line">   - 限流批量任务</span><br><span class="line">   - 清理或拆分问题 key</span><br><span class="line">   - 迁移热点或扩容</span><br><span class="line"></span><br><span class="line">9. 复盘治理</span><br><span class="line">   - 增加监控</span><br><span class="line">   - 增加告警</span><br><span class="line">   - 修正客户端用法</span><br><span class="line">   - 优化数据结构</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-2-内存打满-SOP"><a href="#14-2-内存打满-SOP" class="headerlink" title="14.2 内存打满 SOP"></a>14.2 内存打满 SOP</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. info memory 确认 used_memory、maxmemory、碎片率</span><br><span class="line">2. info stats 确认 evicted_keys 是否增长</span><br><span class="line">3. config get maxmemory-policy 确认淘汰策略</span><br><span class="line">4. --bigkeys 找大对象</span><br><span class="line">5. 判断是正常增长、异常写入还是过期策略失效</span><br><span class="line">6. 临时扩容或删除可丢弃缓存</span><br><span class="line">7. 使用 UNLINK 清理大 key</span><br><span class="line">8. 长期拆分 key、增加 TTL、扩容或迁移</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-3-连接数异常-SOP"><a href="#14-3-连接数异常-SOP" class="headerlink" title="14.3 连接数异常 SOP"></a>14.3 连接数异常 SOP</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. info clients 查看 connected_clients、blocked_clients</span><br><span class="line">2. client list 查看来源 IP 和连接状态</span><br><span class="line">3. ss 查看系统连接数</span><br><span class="line">4. 判断是否短连接、连接泄漏、连接池配置错误</span><br><span class="line">5. 检查 rejected_connections 是否增加</span><br><span class="line">6. 临时限流异常客户端</span><br><span class="line">7. 调整客户端连接池和超时配置</span><br><span class="line">8. 补充连接数告警</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-4-Cluster-单节点热点-SOP"><a href="#14-4-Cluster-单节点热点-SOP" class="headerlink" title="14.4 Cluster 单节点热点 SOP"></a>14.4 Cluster 单节点热点 SOP</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. cluster info 确认集群整体状态</span><br><span class="line">2. cluster nodes 确认节点角色和 slot</span><br><span class="line">3. 对比各 master 的 info stats、info memory、CPU</span><br><span class="line">4. 查找热点节点上的 big key、hot key</span><br><span class="line">5. 检查 hash tag 是否导致 key 集中</span><br><span class="line">6. 临时限流热点业务</span><br><span class="line">7. 拆分热点 key 或增加本地缓存</span><br><span class="line">8. 必要时 reshard 迁移 slot</span><br></pre></td></tr></table></figure>
+
+<h2 id="15-必做实验"><a href="#15-必做实验" class="headerlink" title="15. 必做实验"></a>15. 必做实验</h2><p>完成第 4 阶段前，至少做完下面实验：</p>
+<ol>
+<li>制造 big string，使用 <code>--bigkeys</code> 和 <code>MEMORY USAGE</code> 分析。</li>
+<li>制造 big hash，观察 <code>HLEN</code>、<code>MEMORY USAGE</code> 和删除影响。</li>
+<li>使用 <code>UNLINK</code> 删除 big key，对比 <code>DEL</code> 的风险。</li>
+<li>使用 <code>redis-benchmark</code> 制造 hot key 访问。</li>
+<li>配置 LFU 策略，尝试使用 <code>--hotkeys</code>。</li>
+<li>制造大量 key，执行 <code>KEYS</code> 并观察 slowlog。</li>
+<li>使用 <code>SCAN</code> 替代 <code>KEYS</code>。</li>
+<li>开启 latency monitor，使用 <code>latency latest</code> 和 <code>latency doctor</code>。</li>
+<li>配置 <code>maxmemory</code> 和淘汰策略，观察 <code>evicted_keys</code>。</li>
+<li>观察一次 <code>BGSAVE</code> 或 AOF rewrite 的 <code>info persistence</code> 变化。</li>
+<li>使用 <code>redis-benchmark -c</code> 模拟连接数上涨。</li>
+<li>写出一份自己的 Redis 巡检清单。</li>
+<li>写出一份 Redis 变慢故障排查 SOP。</li>
+</ol>
+<h2 id="16-本阶段过关标准"><a href="#16-本阶段过关标准" class="headerlink" title="16. 本阶段过关标准"></a>16. 本阶段过关标准</h2><p>完成本阶段后，你应该能回答这些问题：</p>
+<ol>
+<li>Redis 慢时，如何判断是服务端慢、客户端慢还是网络慢？</li>
+<li><code>SLOWLOG</code> 记录的时间是否包含网络耗时？</li>
+<li>big key 为什么危险？如何发现和治理？</li>
+<li>hot key 为什么会让 Cluster 单节点压力过高？</li>
+<li>为什么生产环境不能随便使用 <code>KEYS *</code>？</li>
+<li><code>SCAN</code> 是否完全不会影响 Redis？</li>
+<li><code>DEL</code> big key 和 <code>UNLINK</code> 有什么区别？</li>
+<li><code>latency doctor</code> 能帮你判断哪些问题？</li>
+<li><code>used_memory</code> 和 <code>used_memory_rss</code> 有什么区别？</li>
+<li><code>mem_fragmentation_ratio</code> 过高应该如何处理？</li>
+<li>Redis 内存达到 <code>maxmemory</code> 后会发生什么？</li>
+<li><code>noeviction</code> 和 <code>allkeys-lru</code> 适合什么场景？</li>
+<li>RDB 和 AOF rewrite 为什么可能造成延迟抖动？</li>
+<li>COW 为什么会让内存瞬间升高？</li>
+<li>连接数暴涨时应该先看哪些指标？</li>
+<li>Java 客户端连接池配置不合理会怎样影响 Redis？</li>
+<li>Cluster 中如何判断是否只有某个 master 有热点？</li>
+<li>Redis 巡检应该包含哪些指标？</li>
+<li>Redis 告警阈值为什么不能完全照抄网上模板？</li>
+<li>线上 Redis 故障处理完后，复盘应该补哪些监控和规范？</li>
+</ol>
+<p>如果这些问题能讲清楚，并且能独立完成 big key、hot key、慢查询、延迟、内存淘汰和连接数实验，就可以认为已经具备 Redis 线上问题排查与基础运维治理能力。</p>
+<p>下一阶段可以进入 Java 工程接入与缓存架构，重点学习客户端配置、缓存一致性、分布式锁、缓存穿透、缓存击穿、缓存雪崩和业务建模。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Redis/">Redis</a></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      toc.appendChild(a);
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = toc.querySelectorAll('a');
+    window.addEventListener('scroll', function() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+    });
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

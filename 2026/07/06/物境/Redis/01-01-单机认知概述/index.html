@@ -1,0 +1,993 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>01-01-Redis-单机认知概述 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Redis-单机认知概述">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01-01-Redis-单机认知概述">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-01-%E5%8D%95%E6%9C%BA%E8%AE%A4%E7%9F%A5%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Redis-单机认知概述">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/redis-standalone-concept-min.svg">
+<meta property="article:published_time" content="2026-07-06T12:07:05.000Z">
+<meta property="article:modified_time" content="2026-07-06T15:09:22.302Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/redis-standalone-concept-min.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "01-01-Redis-单机认知概述",
+  "url": "https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-01-%E5%8D%95%E6%9C%BA%E8%AE%A4%E7%9F%A5%E6%A6%82%E8%BF%B0/",
+  "image": "https://suxilovef.github.io/image/post_cover/redis-standalone-concept-min.svg",
+  "datePublished": "2026-07-06T12:07:05.000Z",
+  "dateModified": "2026-07-06T15:09:22.302Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-01-%E5%8D%95%E6%9C%BA%E8%AE%A4%E7%9F%A5%E6%A6%82%E8%BF%B0/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '01-01-Redis-单机认知概述',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;right:max(1.5rem,calc((100vw - 1020px)/ 2 - 200px));top:50%;transform:translateY(-50%);width:178px;max-height:55vh;overflow-y:auto;z-index:50;font-size:.8rem;line-height:2;padding-left:1rem;border-left:1px solid var(--border);opacity:.78;transition:opacity .2s}
+.custom-toc:hover{opacity:1}
+.custom-toc a{color:var(--faint);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .1s}
+.custom-toc a:hover{color:var(--text)}
+.custom-toc a.active{color:var(--accent);font-weight:600}
+.custom-toc .toc-h3{padding-left:.7rem;font-size:.76rem}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2rem;padding:1rem 1.2rem;border:1px solid var(--border);border-radius:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;opacity:1;box-shadow:var(--shadow);border-left:1px solid var(--border)}
+  .custom-toc a{display:inline-block;white-space:nowrap}
+  .custom-toc .toc-h3{padding-left:.3rem}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">01-01-Redis-单机认知概述</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">01-01-Redis-单机认知概述</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-06T12:07:05.000Z" title="发表于 2026-07-06 20:07:05">2026-07-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-06T15:09:22.302Z" title="更新于 2026-07-06 23:09:22">2026-07-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Redis/">Redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Redis-单机认知"><a href="#Redis-单机认知" class="headerlink" title="Redis 单机认知"></a>Redis 单机认知</h1><h2 id="1-这份文档解决什么问题"><a href="#1-这份文档解决什么问题" class="headerlink" title="1. 这份文档解决什么问题"></a>1. 这份文档解决什么问题</h2><p>你已经知道 Redis 可以存取数据，但如果要作为开发组长负责 Redis 的部署、容量评估和故障排查，单机 Redis 需要从下面几个角度重新理解：</p>
+<ul>
+<li>Redis 进程是如何处理请求的。</li>
+<li>数据存在内存里，但落盘机制如何保证可恢复。</li>
+<li>为什么 Redis 会变慢、阻塞、内存暴涨。</li>
+<li>哪些配置会直接影响线上稳定性。</li>
+<li>出问题时应该先看哪些指标和命令。</li>
+</ul>
+<p>单机认知是后续学习主从复制、Sentinel、Cluster 和线上排查的基础。</p>
+<h2 id="2-需要准备什么环境"><a href="#2-需要准备什么环境" class="headerlink" title="2. 需要准备什么环境"></a>2. 需要准备什么环境</h2><h3 id="2-1-基础环境"><a href="#2-1-基础环境" class="headerlink" title="2.1 基础环境"></a>2.1 基础环境</h3><p>建议准备两套环境：本地快速实验环境和接近线上行为的 Linux 环境。</p>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>用途</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Windows + Docker Desktop</td>
+<td>快速启动 Redis、做命令实验</td>
+<td>必备</td>
+</tr>
+<tr>
+<td>WSL2 &#x2F; Linux 虚拟机 &#x2F; 云服务器</td>
+<td>熟悉 Linux 下 Redis 部署、日志、配置和进程管理</td>
+<td>推荐</td>
+</tr>
+<tr>
+<td>redis-cli</td>
+<td>执行命令、观察状态、排查问题</td>
+<td>必备</td>
+</tr>
+<tr>
+<td>Java 17+</td>
+<td>编写客户端实验代码</td>
+<td>必备</td>
+</tr>
+<tr>
+<td>Maven &#x2F; Gradle</td>
+<td>构建 Java demo</td>
+<td>必备</td>
+</tr>
+<tr>
+<td>Redis Insight</td>
+<td>可视化查看 key、内存、慢查询</td>
+<td>可选</td>
+</tr>
+</tbody></table>
+<p>如果你后面要练集群，Docker Compose 会非常有用。</p>
+<h3 id="2-2-推荐版本"><a href="#2-2-推荐版本" class="headerlink" title="2.2 推荐版本"></a>2.2 推荐版本</h3><p>学习时建议使用 Redis 7.x。Redis 6.x 之后引入了多 IO 线程能力，Redis 7.x 是当前更适合作为学习和实践基线的版本。</p>
+<p>确认版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-server --version</span><br><span class="line">redis-cli --version</span><br></pre></td></tr></table></figure>
+
+<p>Docker 启动单机 Redis：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker run --name redis-single \</span><br><span class="line">  -p 6379:6379 \</span><br><span class="line">  -d redis:7</span><br></pre></td></tr></table></figure>
+
+<p>进入 redis-cli：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it redis-single redis-cli</span><br></pre></td></tr></table></figure>
+
+<p>检查服务：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ping</span><br><span class="line">info server</span><br><span class="line">info memory</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-推荐目录结构"><a href="#2-3-推荐目录结构" class="headerlink" title="2.3 推荐目录结构"></a>2.3 推荐目录结构</h3><p>后续实验建议单独准备一个 Redis 学习目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">redis-lab/</span><br><span class="line">  single/</span><br><span class="line">    redis.conf</span><br><span class="line">    data/</span><br><span class="line">    logs/</span><br><span class="line">  sentinel/</span><br><span class="line">  cluster/</span><br><span class="line">  java-demo/</span><br></pre></td></tr></table></figure>
+
+<p>单机阶段至少要保留：</p>
+<ul>
+<li><code>redis.conf</code>：用于反复修改配置。</li>
+<li><code>data/</code>：观察 <code>dump.rdb</code>、<code>appendonly.aof</code>、Redis 7 多部分 AOF 的 <code>appendonlydir/</code> 等持久化文件。</li>
+<li><code>logs/</code>：观察启动日志、异常日志。</li>
+</ul>
+<h3 id="2-4-Linux-环境准备项"><a href="#2-4-Linux-环境准备项" class="headerlink" title="2.4 Linux 环境准备项"></a>2.4 Linux 环境准备项</h3><p>如果使用 Linux，重点关注这些系统配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ulimit</span> -n</span><br><span class="line">sysctl vm.overcommit_memory</span><br><span class="line"><span class="built_in">cat</span> /sys/kernel/mm/transparent_hugepage/enabled</span><br></pre></td></tr></table></figure>
+
+<p>建议理解它们的意义：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>为什么重要</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ulimit -n</code></td>
+<td>Redis 连接数受文件描述符限制影响</td>
+</tr>
+<tr>
+<td><code>vm.overcommit_memory</code></td>
+<td>RDB&#x2F;AOF rewrite 需要 fork，内存策略会影响 fork 成功率</td>
+</tr>
+<tr>
+<td>Transparent Huge Pages</td>
+<td>可能导致 Redis 延迟抖动，线上通常建议关闭</td>
+</tr>
+<tr>
+<td><code>tcp-backlog</code></td>
+<td>影响高并发连接积压队列</td>
+</tr>
+</tbody></table>
+<p>这些不需要一开始全部调优，但必须知道它们会影响 Redis 稳定性。</p>
+<h2 id="3-单机-Redis-的核心认知"><a href="#3-单机-Redis-的核心认知" class="headerlink" title="3. 单机 Redis 的核心认知"></a>3. 单机 Redis 的核心认知</h2><h3 id="3-1-Redis-是一个内存数据库"><a href="#3-1-Redis-是一个内存数据库" class="headerlink" title="3.1 Redis 是一个内存数据库"></a>3.1 Redis 是一个内存数据库</h3><p>Redis 的主要数据在内存中，磁盘主要用于持久化恢复，不是每次读写都访问磁盘。</p>
+<p>这带来几个结果：</p>
+<ul>
+<li>读写速度快。</li>
+<li>容量受内存限制明显。</li>
+<li>大 key、热 key、内存碎片会直接影响稳定性。</li>
+<li>宕机恢复依赖 RDB&#x2F;AOF 策略。</li>
+</ul>
+<p>你做容量规划时，不应该只问“有多少 key”，还要问：</p>
+<ul>
+<li>每类 key 平均多大？</li>
+<li>是否有 list&#x2F;hash&#x2F;zset 这种集合类型？</li>
+<li>TTL 分布是否集中？</li>
+<li>峰值写入量多大？</li>
+<li>是否允许数据丢失几秒？</li>
+</ul>
+<h3 id="3-2-Redis-单线程模型的准确理解"><a href="#3-2-Redis-单线程模型的准确理解" class="headerlink" title="3.2 Redis 单线程模型的准确理解"></a>3.2 Redis 单线程模型的准确理解</h3><p>常见说法是“Redis 是单线程”，但更准确的说法是：</p>
+<ul>
+<li>Redis 处理命令的主执行路径主要是单线程。</li>
+<li>网络 IO、持久化、异步删除、AOF fsync 等部分可以由后台线程或子进程处理。</li>
+<li>Redis 6 之后支持多 IO 线程，但命令执行仍然不是多线程并发修改数据。</li>
+</ul>
+<p>这意味着：</p>
+<ul>
+<li>单个慢命令会阻塞后续命令。</li>
+<li>大 key 删除、复杂 Lua、范围查询过大，都可能造成延迟。</li>
+<li>Redis 的性能瓶颈经常不是锁竞争，而是单线程执行时间、网络、内存和系统调用。</li>
+</ul>
+<h3 id="3-3-一条命令的大致执行流程"><a href="#3-3-一条命令的大致执行流程" class="headerlink" title="3.3 一条命令的大致执行流程"></a>3.3 一条命令的大致执行流程</h3><p>一条 Redis 命令通常经历：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">客户端发送请求</span><br><span class="line">  -&gt; Redis 网络层读取请求</span><br><span class="line">  -&gt; 解析协议 RESP</span><br><span class="line">  -&gt; 查询命令表</span><br><span class="line">  -&gt; 执行命令逻辑</span><br><span class="line">  -&gt; 修改内存数据结构</span><br><span class="line">  -&gt; 记录 AOF / 传播给从节点</span><br><span class="line">  -&gt; 返回响应</span><br></pre></td></tr></table></figure>
+
+<p>排查问题时要判断慢在哪里：</p>
+<ul>
+<li>客户端连接池耗尽。</li>
+<li>网络延迟高。</li>
+<li>Redis 命令执行慢。</li>
+<li>AOF fsync 抖动。</li>
+<li>fork 导致阻塞。</li>
+<li>CPU 被复杂命令打满。</li>
+<li>内存不足触发淘汰或系统 swap。</li>
+</ul>
+<h2 id="4-Redis-数据结构认知"><a href="#4-Redis-数据结构认知" class="headerlink" title="4. Redis 数据结构认知"></a>4. Redis 数据结构认知</h2><h3 id="4-1-常用类型和真实用途"><a href="#4-1-常用类型和真实用途" class="headerlink" title="4.1 常用类型和真实用途"></a>4.1 常用类型和真实用途</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>常见场景</th>
+<th>风险点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>string</td>
+<td>缓存对象、计数器、分布式锁 token</td>
+<td>value 过大、序列化不统一</td>
+</tr>
+<tr>
+<td>hash</td>
+<td>对象字段缓存、购物车</td>
+<td>field 过多形成大 key</td>
+</tr>
+<tr>
+<td>list</td>
+<td>简单队列、时间线</td>
+<td>阻塞操作和长度膨胀</td>
+</tr>
+<tr>
+<td>set</td>
+<td>去重、标签、集合关系</td>
+<td>大集合求交并差可能很慢</td>
+</tr>
+<tr>
+<td>zset</td>
+<td>排行榜、延迟队列、权重排序</td>
+<td>范围查询过大、成员过多</td>
+</tr>
+<tr>
+<td>bitmap</td>
+<td>签到、活跃标记</td>
+<td>offset 过大导致内存突增</td>
+</tr>
+<tr>
+<td>hyperloglog</td>
+<td>UV 估算</td>
+<td>只能估算，不能取明细</td>
+</tr>
+<tr>
+<td>stream</td>
+<td>消息流、消费组</td>
+<td>未确认消息和积压管理</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-需要重点理解的底层结构"><a href="#4-2-需要重点理解的底层结构" class="headerlink" title="4.2 需要重点理解的底层结构"></a>4.2 需要重点理解的底层结构</h3><p>不要求一开始读源码，但需要知道这些结构会影响性能：</p>
+<table>
+<thead>
+<tr>
+<th>底层结构</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SDS</td>
+<td>Redis 字符串不是 C 原生字符串，支持二进制安全和容量预分配</td>
+</tr>
+<tr>
+<td>dict</td>
+<td>key 空间、hash 类型都大量依赖哈希表</td>
+</tr>
+<tr>
+<td>skiplist</td>
+<td>zset 排序能力的重要实现结构</td>
+</tr>
+<tr>
+<td>listpack</td>
+<td>小对象紧凑编码，节省内存</td>
+</tr>
+<tr>
+<td>quicklist</td>
+<td>list 的底层实现，兼顾链表和紧凑存储</td>
+</tr>
+<tr>
+<td>intset</td>
+<td>小整数 set 的紧凑编码</td>
+</tr>
+</tbody></table>
+<p>工程上你要记住：同一个 Redis 类型，在不同数据规模下可能使用不同内部编码。</p>
+<p>查看编码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">object encoding mykey</span><br><span class="line">memory usage mykey</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-持久化机制"><a href="#5-持久化机制" class="headerlink" title="5. 持久化机制"></a>5. 持久化机制</h2><h3 id="5-1-RDB"><a href="#5-1-RDB" class="headerlink" title="5.1 RDB"></a>5.1 RDB</h3><p>RDB 是某个时间点的内存快照，生成 <code>dump.rdb</code> 文件。</p>
+<p>特点：</p>
+<ul>
+<li>文件紧凑，适合备份和全量恢复。</li>
+<li>恢复速度通常较快。</li>
+<li>两次快照之间的数据可能丢失。</li>
+<li>生成 RDB 时 Redis 会 fork 子进程，fork 可能带来延迟。</li>
+</ul>
+<p>关键配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">save 900 1</span><br><span class="line">save 300 10</span><br><span class="line">save 60 10000</span><br><span class="line">dir /data</span><br><span class="line">dbfilename dump.rdb</span><br></pre></td></tr></table></figure>
+
+<p>常用命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bgsave</span><br><span class="line">lastsave</span><br><span class="line">info persistence</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-AOF"><a href="#5-2-AOF" class="headerlink" title="5.2 AOF"></a>5.2 AOF</h3><p>AOF 通过追加写命令日志恢复数据。</p>
+<p>特点：</p>
+<ul>
+<li>数据安全性通常高于 RDB。</li>
+<li>文件可能比 RDB 大。</li>
+<li>需要 AOF rewrite 压缩日志。</li>
+<li><code>appendfsync</code> 策略会影响性能和数据安全。</li>
+</ul>
+<p>关键配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">appendonly yes</span><br><span class="line">appendfsync everysec</span><br><span class="line">auto-aof-rewrite-percentage 100</span><br><span class="line">auto-aof-rewrite-min-size 64mb</span><br></pre></td></tr></table></figure>
+
+<p>常见 <code>appendfsync</code> 策略：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>含义</th>
+<th>取舍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>always</code></td>
+<td>每次写都刷盘</td>
+<td>最安全，性能最差</td>
+</tr>
+<tr>
+<td><code>everysec</code></td>
+<td>每秒刷盘</td>
+<td>常用，最多丢约 1 秒数据</td>
+</tr>
+<tr>
+<td><code>no</code></td>
+<td>交给操作系统</td>
+<td>性能好，但数据丢失风险更高</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-混合持久化"><a href="#5-3-混合持久化" class="headerlink" title="5.3 混合持久化"></a>5.3 混合持久化</h3><p>Redis 支持 AOF rewrite 文件前半部分使用 RDB 格式，后半部分追加 AOF 命令。</p>
+<p>关键配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aof-use-rdb-preamble yes</span><br></pre></td></tr></table></figure>
+
+<p>生产环境常见选择：</p>
+<ul>
+<li>缓存型业务：可以只开 RDB，甚至不开持久化，但要接受重建成本。</li>
+<li>重要状态型业务：建议开启 AOF everysec，并评估 RDB 备份。</li>
+<li>强一致数据：不要单纯依赖 Redis，当 Redis 只是缓存时以数据库为准。</li>
+</ul>
+<h2 id="6-过期删除和内存淘汰"><a href="#6-过期删除和内存淘汰" class="headerlink" title="6. 过期删除和内存淘汰"></a>6. 过期删除和内存淘汰</h2><h3 id="6-1-过期删除"><a href="#6-1-过期删除" class="headerlink" title="6.1 过期删除"></a>6.1 过期删除</h3><p>Redis 不是每个 key 到期就立刻删除，主要依赖：</p>
+<ul>
+<li>惰性删除：访问 key 时发现过期再删除。</li>
+<li>定期删除：后台周期性抽样删除过期 key。</li>
+</ul>
+<p>风险：</p>
+<ul>
+<li>大量 key 同一时间过期，会造成 CPU 抖动。</li>
+<li>过期 key 没被访问时，可能短时间继续占用内存。</li>
+</ul>
+<p>业务建议：</p>
+<ul>
+<li>TTL 增加随机值，避免集中失效。</li>
+<li>大批量缓存预热时，不要设置完全相同的过期时间。</li>
+</ul>
+<h3 id="6-2-内存淘汰"><a href="#6-2-内存淘汰" class="headerlink" title="6.2 内存淘汰"></a>6.2 内存淘汰</h3><p>当 Redis 达到 <code>maxmemory</code> 后，会根据 <code>maxmemory-policy</code> 淘汰 key。</p>
+<p>常见策略：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>含义</th>
+<th>适合场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>noeviction</code></td>
+<td>不淘汰，写入报错</td>
+<td>默认保守策略</td>
+</tr>
+<tr>
+<td><code>allkeys-lru</code></td>
+<td>所有 key 中淘汰最近最少使用</td>
+<td>通用缓存</td>
+</tr>
+<tr>
+<td><code>volatile-lru</code></td>
+<td>只淘汰设置 TTL 的 key</td>
+<td>混合缓存与重要数据</td>
+</tr>
+<tr>
+<td><code>allkeys-lfu</code></td>
+<td>所有 key 中淘汰低频访问</td>
+<td>热点相对稳定的缓存</td>
+</tr>
+<tr>
+<td><code>volatile-ttl</code></td>
+<td>优先淘汰快过期的 key</td>
+<td>依赖 TTL 的缓存</td>
+</tr>
+</tbody></table>
+<p>关键配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">maxmemory 2gb</span><br><span class="line">maxmemory-policy allkeys-lru</span><br></pre></td></tr></table></figure>
+
+<p>工程原则：</p>
+<ul>
+<li>作为缓存使用时，一定要显式配置 <code>maxmemory</code>。</li>
+<li>不要让 Redis 把机器内存吃满后交给操作系统处理。</li>
+<li><code>noeviction</code> 下写入失败需要业务能处理异常。</li>
+</ul>
+<h2 id="7-单机常见性能风险"><a href="#7-单机常见性能风险" class="headerlink" title="7. 单机常见性能风险"></a>7. 单机常见性能风险</h2><h3 id="7-1-大-key"><a href="#7-1-大-key" class="headerlink" title="7.1 大 key"></a>7.1 大 key</h3><p>大 key 指 value 很大，或者集合元素很多的 key。</p>
+<p>风险：</p>
+<ul>
+<li>网络传输慢。</li>
+<li>删除阻塞。</li>
+<li>迁移困难。</li>
+<li>主从同步压力大。</li>
+<li>集群迁槽成本高。</li>
+</ul>
+<p>排查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis-cli --bigkeys</span><br><span class="line">memory usage key</span><br><span class="line">strlen key</span><br><span class="line">hlen key</span><br><span class="line">llen key</span><br><span class="line">scard key</span><br><span class="line">zcard key</span><br></pre></td></tr></table></figure>
+
+<p>处理建议：</p>
+<ul>
+<li>大对象拆分。</li>
+<li>大集合分片。</li>
+<li>删除大 key 使用 <code>unlink</code> 而不是 <code>del</code>。</li>
+<li>控制单 key 的最大元素数量。</li>
+</ul>
+<h3 id="7-2-热-key"><a href="#7-2-热-key" class="headerlink" title="7.2 热 key"></a>7.2 热 key</h3><p>热 key 指访问频率远高于其他 key 的 key。</p>
+<p>风险：</p>
+<ul>
+<li>单线程 CPU 被打满。</li>
+<li>单节点流量过大。</li>
+<li>业务超时集中出现。</li>
+</ul>
+<p>处理建议：</p>
+<ul>
+<li>本地缓存。</li>
+<li>多副本读。</li>
+<li>热 key 拆分。</li>
+<li>提前识别高峰活动 key。</li>
+</ul>
+<h3 id="7-3-慢命令"><a href="#7-3-慢命令" class="headerlink" title="7.3 慢命令"></a>7.3 慢命令</h3><p>典型慢命令来源：</p>
+<ul>
+<li><code>keys *</code></li>
+<li>大范围 <code>zrange</code></li>
+<li>大集合 <code>smembers</code></li>
+<li>复杂 Lua 脚本。</li>
+<li>大 key 删除。</li>
+<li>一次性返回过多数据。</li>
+</ul>
+<p>排查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">slowlog get 10</span><br><span class="line">slowlog len</span><br><span class="line">latency latest</span><br><span class="line">latency doctor</span><br></pre></td></tr></table></figure>
+
+<p>替代建议：</p>
+<ul>
+<li>用 <code>scan</code> 替代 <code>keys</code>。</li>
+<li>分批读取。</li>
+<li>控制 Lua 脚本执行时间。</li>
+<li>使用 <code>unlink</code> 异步释放大 key。</li>
+</ul>
+<h2 id="8-单机排查命令清单"><a href="#8-单机排查命令清单" class="headerlink" title="8. 单机排查命令清单"></a>8. 单机排查命令清单</h2><h3 id="8-1-基础状态"><a href="#8-1-基础状态" class="headerlink" title="8.1 基础状态"></a>8.1 基础状态</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">info server</span><br><span class="line">info clients</span><br><span class="line">info memory</span><br><span class="line">info stats</span><br><span class="line">info persistence</span><br><span class="line">info commandstats</span><br></pre></td></tr></table></figure>
+
+<p>重点看：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>used_memory_human</code></td>
+<td>Redis 已使用内存</td>
+</tr>
+<tr>
+<td><code>used_memory_rss_human</code></td>
+<td>操作系统层面实际占用</td>
+</tr>
+<tr>
+<td><code>mem_fragmentation_ratio</code></td>
+<td>内存碎片率</td>
+</tr>
+<tr>
+<td><code>connected_clients</code></td>
+<td>当前连接数</td>
+</tr>
+<tr>
+<td><code>blocked_clients</code></td>
+<td>阻塞客户端数</td>
+</tr>
+<tr>
+<td><code>total_commands_processed</code></td>
+<td>总命令数</td>
+</tr>
+<tr>
+<td><code>instantaneous_ops_per_sec</code></td>
+<td>当前 QPS</td>
+</tr>
+<tr>
+<td><code>latest_fork_usec</code></td>
+<td>最近一次 fork 耗时</td>
+</tr>
+<tr>
+<td><code>rdb_last_bgsave_status</code></td>
+<td>最近 RDB 状态</td>
+</tr>
+<tr>
+<td><code>aof_last_bgrewrite_status</code></td>
+<td>最近 AOF rewrite 状态</td>
+</tr>
+</tbody></table>
+<h3 id="8-2-客户端排查"><a href="#8-2-客户端排查" class="headerlink" title="8.2 客户端排查"></a>8.2 客户端排查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">client list</span><br><span class="line">client info</span><br><span class="line">client <span class="built_in">kill</span> <span class="built_in">id</span> &lt;<span class="built_in">id</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<p>重点看：</p>
+<ul>
+<li>哪些客户端连接数异常。</li>
+<li>是否有客户端长时间阻塞。</li>
+<li>是否有客户端输出缓冲区过大。</li>
+</ul>
+<h3 id="8-3-内存排查"><a href="#8-3-内存排查" class="headerlink" title="8.3 内存排查"></a>8.3 内存排查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">memory stats</span><br><span class="line">memory doctor</span><br><span class="line">memory usage key</span><br><span class="line">dbsize</span><br><span class="line">scan 0 count 100</span><br></pre></td></tr></table></figure>
+
+<p>注意：<code>dbsize</code> 只返回 key 数量，不代表内存大小。<br><code>scan</code> 返回的是游标，需要按返回的 cursor 循环执行，直到 cursor 回到 <code>0</code> 才算扫描完成；不要把一次 <code>scan 0 count 100</code> 理解成全量扫描。</p>
+<h3 id="8-4-延迟排查"><a href="#8-4-延迟排查" class="headerlink" title="8.4 延迟排查"></a>8.4 延迟排查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">slowlog get 20</span><br><span class="line">latency latest</span><br><span class="line">latency <span class="built_in">history</span> <span class="built_in">command</span></span><br><span class="line">latency doctor</span><br></pre></td></tr></table></figure>
+
+<p>排查顺序建议：</p>
+<ol>
+<li>先看业务是否只有 Redis 慢，还是整体链路都慢。</li>
+<li>看 <code>slowlog</code> 是否有慢命令。</li>
+<li>看 <code>latency</code> 是否有 fork、AOF、expire 等事件。</li>
+<li>看 <code>info memory</code> 是否内存紧张或碎片严重。</li>
+<li>看客户端连接池是否耗尽。</li>
+</ol>
+<h2 id="9-必做实验"><a href="#9-必做实验" class="headerlink" title="9. 必做实验"></a>9. 必做实验</h2><h3 id="9-1-启动与配置实验"><a href="#9-1-启动与配置实验" class="headerlink" title="9.1 启动与配置实验"></a>9.1 启动与配置实验</h3><p>目标：理解 Redis 进程、配置文件、日志和数据目录。</p>
+<p>步骤：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-server redis.conf</span><br><span class="line">redis-cli ping</span><br><span class="line">redis-cli info server</span><br></pre></td></tr></table></figure>
+
+<p>观察：</p>
+<ul>
+<li>Redis 监听端口。</li>
+<li>日志输出。</li>
+<li><code>dir</code> 配置指向的数据目录。</li>
+<li><code>protected-mode</code>、<code>bind</code>、<code>requirepass</code> 的影响。</li>
+</ul>
+<h3 id="9-2-RDB-实验"><a href="#9-2-RDB-实验" class="headerlink" title="9.2 RDB 实验"></a>9.2 RDB 实验</h3><p>目标：理解快照生成和恢复。</p>
+<p>步骤：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> k1 v1</span><br><span class="line">bgsave</span><br><span class="line">lastsave</span><br></pre></td></tr></table></figure>
+
+<p>然后重启 Redis，观察数据是否恢复。</p>
+<p>需要回答：</p>
+<ul>
+<li><code>bgsave</code> 和 <code>save</code> 有什么区别？</li>
+<li>为什么 <code>save</code> 在线上危险？</li>
+<li>RDB 可能丢多少数据？</li>
+</ul>
+<h3 id="9-3-AOF-实验"><a href="#9-3-AOF-实验" class="headerlink" title="9.3 AOF 实验"></a>9.3 AOF 实验</h3><p>目标：理解追加日志、刷盘策略和 rewrite。</p>
+<p>配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">appendonly yes</span><br><span class="line">appendfsync everysec</span><br></pre></td></tr></table></figure>
+
+<p>步骤：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> a 1</span><br><span class="line"><span class="built_in">set</span> b 2</span><br><span class="line">bgrewriteaof</span><br><span class="line">info persistence</span><br></pre></td></tr></table></figure>
+
+<p>需要观察：</p>
+<ul>
+<li>AOF 文件如何变化。</li>
+<li>rewrite 后文件是否变小。</li>
+<li><code>aof_last_bgrewrite_status</code> 是否成功。</li>
+</ul>
+<h3 id="9-4-大-key-实验"><a href="#9-4-大-key-实验" class="headerlink" title="9.4 大 key 实验"></a>9.4 大 key 实验</h3><p>目标：理解大 key 对内存和命令耗时的影响。</p>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lpush biglist 1 2 3 4 5</span><br><span class="line">llen biglist</span><br><span class="line">memory usage biglist</span><br></pre></td></tr></table></figure>
+
+<p>进阶实验可以写脚本插入大量元素，再分别测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">del biglist</span><br><span class="line"><span class="built_in">unlink</span> biglist</span><br></pre></td></tr></table></figure>
+
+<p>比较两者对延迟的影响。</p>
+<h3 id="9-5-慢查询实验"><a href="#9-5-慢查询实验" class="headerlink" title="9.5 慢查询实验"></a>9.5 慢查询实验</h3><p>目标：知道如何发现慢命令。</p>
+<p>配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">slowlog-log-slower-than 10000</span><br><span class="line">slowlog-max-len 128</span><br></pre></td></tr></table></figure>
+
+<p>执行可能较慢的命令后查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slowlog get 10</span><br></pre></td></tr></table></figure>
+
+<p>需要回答：</p>
+<ul>
+<li>慢查询记录的是服务端执行时间，是否包含网络耗时？</li>
+<li>如果业务觉得慢，但 <code>slowlog</code> 没记录，可能慢在哪里？</li>
+</ul>
+<h2 id="10-Java-工程侧需要关注什么"><a href="#10-Java-工程侧需要关注什么" class="headerlink" title="10. Java 工程侧需要关注什么"></a>10. Java 工程侧需要关注什么</h2><p>即使单机 Redis 本身没问题，Java 客户端也可能制造问题。</p>
+<p>重点检查：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>连接池最大连接数</td>
+<td>太小会排队，太大会压垮 Redis</td>
+</tr>
+<tr>
+<td>连接超时</td>
+<td>太长会拖垮业务线程</td>
+</tr>
+<tr>
+<td>读写超时</td>
+<td>太短误判失败，太长放大故障</td>
+</tr>
+<tr>
+<td>序列化方式</td>
+<td>JSON&#x2F;JDK 序列化可能导致 value 过大</td>
+</tr>
+<tr>
+<td>key 命名</td>
+<td>缺少命名空间会冲突，难排查</td>
+</tr>
+<tr>
+<td>TTL 策略</td>
+<td>大量 key 同时过期会抖动</td>
+</tr>
+<tr>
+<td>批量操作</td>
+<td>一次返回过多数据会阻塞</td>
+</tr>
+</tbody></table>
+<p>建议 Java demo 至少包含：</p>
+<ul>
+<li>string&#x2F;hash&#x2F;zset 基础操作。</li>
+<li>TTL 随机化。</li>
+<li>Pipeline 批量写入。</li>
+<li>Lua 原子操作。</li>
+<li><code>unlink</code> 删除大 key。</li>
+<li>Redis 超时和异常处理。</li>
+</ul>
+<h2 id="11-单机配置最低认知清单"><a href="#11-单机配置最低认知清单" class="headerlink" title="11. 单机配置最低认知清单"></a>11. 单机配置最低认知清单</h2><p>你至少要看懂这些配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">bind 0.0.0.0</span><br><span class="line">protected-mode yes</span><br><span class="line">port 6379</span><br><span class="line">requirepass your-password</span><br><span class="line">daemonize no</span><br><span class="line">supervised systemd</span><br><span class="line">pidfile /run/redis/redis-6379.pid</span><br><span class="line">dir /data/redis</span><br><span class="line">logfile /var/log/redis/redis.log</span><br><span class="line">databases 16</span><br><span class="line">maxclients 10000</span><br><span class="line">maxmemory 2gb</span><br><span class="line">maxmemory-policy allkeys-lru</span><br><span class="line">save 900 1</span><br><span class="line">appendonly yes</span><br><span class="line">appenddirname appendonlydir</span><br><span class="line">appendfsync everysec</span><br><span class="line">slowlog-log-slower-than 10000</span><br><span class="line">slowlog-max-len 128</span><br></pre></td></tr></table></figure>
+
+<p>如果不用 systemd 托管，而是手工让 Redis 自己转后台运行，才会把 <code>daemonize</code> 改成 <code>yes</code>，并去掉 <code>supervised systemd</code>。学习部署文档采用 systemd 托管，所以推荐保持 <code>daemonize no</code>。</p>
+<p>生产环境尤其不能忽略：</p>
+<ul>
+<li>不要裸奔暴露公网。</li>
+<li>必须设置访问控制。Redis 6+ 生产环境建议优先使用 ACL 创建具名用户，并限制可执行命令和可访问 key 前缀。</li>
+<li>明确 <code>maxmemory</code>。</li>
+<li>明确持久化策略。</li>
+<li>日志和数据目录要可观测、可备份。</li>
+<li>配置文件要纳入版本管理或配置管理。</li>
+</ul>
+<h2 id="12-本阶段过关标准"><a href="#12-本阶段过关标准" class="headerlink" title="12. 本阶段过关标准"></a>12. 本阶段过关标准</h2><p>完成单机认知后，你应该能回答这些问题：</p>
+<ol>
+<li>Redis 为什么快？</li>
+<li>Redis 真的是完全单线程吗？</li>
+<li>一个慢命令为什么会影响其他请求？</li>
+<li>RDB 和 AOF 各自解决什么问题？</li>
+<li><code>appendfsync everysec</code> 最多可能丢多少数据？</li>
+<li>为什么线上不建议执行 <code>keys *</code>？</li>
+<li><code>del</code> 和 <code>unlink</code> 删除大 key 的区别是什么？</li>
+<li><code>maxmemory-policy</code> 不同策略怎么选？</li>
+<li>业务 Redis 超时，如何判断是 Redis 慢还是客户端慢？</li>
+<li><code>info memory</code>、<code>slowlog</code>、<code>latency</code> 分别适合排查什么？</li>
+</ol>
+<p>如果这些问题能讲清楚，就可以进入第 2 个模块：高可用部署，也就是主从复制和 Sentinel。</p>
+<h2 id="13-后续文档规划"><a href="#13-后续文档规划" class="headerlink" title="13. 后续文档规划"></a>13. 后续文档规划</h2><p>建议 5 份文档按下面方式组织：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">docs/</span><br><span class="line">  01-单机认知/</span><br><span class="line">    README.md</span><br><span class="line">  02-高可用部署/</span><br><span class="line">    README.md</span><br><span class="line">  03-集群能力/</span><br><span class="line">    README.md</span><br><span class="line">  04-线上问题排查/</span><br><span class="line">    README.md</span><br><span class="line">  05-Java接入与工程实践/</span><br><span class="line">    README.md</span><br></pre></td></tr></table></figure>
+
+<p>每份文档都建议包含：</p>
+<ul>
+<li>学习目标。</li>
+<li>环境准备。</li>
+<li>核心原理。</li>
+<li>关键配置。</li>
+<li>必做实验。</li>
+<li>排查命令。</li>
+<li>过关问题。</li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Redis/">Redis</a></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      toc.appendChild(a);
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = toc.querySelectorAll('a');
+    window.addEventListener('scroll', function() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+    });
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Checklist board -->
+    <rect x="380" y="180" width="840" height="540" rx="16" stroke="#374151" stroke-width="10"/>
+
+    <!-- Check items -->
+    <g>
+      <!-- Item 1 - checked -->
+      <rect x="440" y="240" width="720" height="60" rx="8" fill="#F0FDF4" stroke="#34D399" stroke-width="3"/>
+      <circle cx="480" cy="270" r="16" fill="#34D399" stroke="none"/>
+      <path d="M472 270 L478 276 L490 264" stroke="#fff" stroke-width="3" fill="none"/>
+      <text x="520" y="278" font-size="22" fill="#374151" stroke="none" font-weight="600">单机部署 — Redis 基础环境与配置</text>
+
+      <!-- Item 2 - checked -->
+      <rect x="440" y="320" width="720" height="60" rx="8" fill="#F0FDF4" stroke="#34D399" stroke-width="3"/>
+      <circle cx="480" cy="350" r="16" fill="#34D399" stroke="none"/>
+      <path d="M472 350 L478 356 L490 344" stroke="#fff" stroke-width="3" fill="none"/>
+      <text x="520" y="358" font-size="22" fill="#374151" stroke="none" font-weight="600">高可用架构 — 主从复制与哨兵机制</text>
+
+      <!-- Item 3 - checked -->
+      <rect x="440" y="400" width="720" height="60" rx="8" fill="#F0FDF4" stroke="#34D399" stroke-width="3"/>
+      <circle cx="480" cy="430" r="16" fill="#34D399" stroke="none"/>
+      <path d="M472 430 L478 436 L490 424" stroke="#fff" stroke-width="3" fill="none"/>
+      <text x="520" y="438" font-size="22" fill="#374151" stroke="none" font-weight="600">集群架构 — 分片 · 槽位 · 故障转移</text>
+
+      <!-- Item 4 - checked -->
+      <rect x="440" y="480" width="720" height="60" rx="8" fill="#F0FDF4" stroke="#34D399" stroke-width="3"/>
+      <circle cx="480" cy="510" r="16" fill="#34D399" stroke="none"/>
+      <path d="M472 510 L478 516 L490 504" stroke="#fff" stroke-width="3" fill="none"/>
+      <text x="520" y="518" font-size="22" fill="#374151" stroke="none" font-weight="600">运维治理 — 监控 · 排查 · 调优</text>
+
+      <!-- Item 5 - in progress -->
+      <rect x="440" y="560" width="720" height="60" rx="8" fill="#FFF7ED" stroke="#F59E0B" stroke-width="3"/>
+      <circle cx="480" cy="590" r="16" stroke="#F59E0B" stroke-width="3" fill="none"/>
+      <text x="520" y="598" font-size="22" fill="#374151" stroke="none" font-weight="600">Java 工程接入 — 客户端选型 · 缓存架构 · 验收</text>
+    </g>
+
+    <!-- Progress indicator top-right -->
+    <g transform="translate(1050,160)">
+      <circle cx="50" cy="50" r="44" stroke="#E5E7EB" stroke-width="8"/>
+      <circle cx="50" cy="50" r="44" stroke="#DC382D" stroke-width="8" stroke-dasharray="220 56" stroke-dashoffset="0"/>
+      <text x="50" y="56" text-anchor="middle" font-size="28" font-weight="800" fill="#DC382D" stroke="none">4/5</text>
+    </g>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="74" text-anchor="middle" font-weight="800">Redis 阶段验收清单</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">逐项核验 · 查漏补缺 · 学有所成</text>
+  </g>
+</svg>

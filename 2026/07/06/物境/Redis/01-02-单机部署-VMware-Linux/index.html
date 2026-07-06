@@ -1,0 +1,2571 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>01-02-Redis-单机部署-VMware-Linux | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Redis-单机部署-VMware-Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01-02-Redis-单机部署-VMware-Linux">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-02-%E5%8D%95%E6%9C%BA%E9%83%A8%E7%BD%B2-VMware-Linux/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Redis-单机部署-VMware-Linux">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/redis-standalone-deploy-min.svg">
+<meta property="article:published_time" content="2026-07-06T12:07:05.000Z">
+<meta property="article:modified_time" content="2026-07-06T15:09:22.343Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/redis-standalone-deploy-min.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "01-02-Redis-单机部署-VMware-Linux",
+  "url": "https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-02-%E5%8D%95%E6%9C%BA%E9%83%A8%E7%BD%B2-VMware-Linux/",
+  "image": "https://suxilovef.github.io/image/post_cover/redis-standalone-deploy-min.svg",
+  "datePublished": "2026-07-06T12:07:05.000Z",
+  "dateModified": "2026-07-06T15:09:22.343Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/06/%E7%89%A9%E5%A2%83/Redis/01-02-%E5%8D%95%E6%9C%BA%E9%83%A8%E7%BD%B2-VMware-Linux/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '01-02-Redis-单机部署-VMware-Linux',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;right:max(1.5rem,calc((100vw - 1020px)/ 2 - 200px));top:50%;transform:translateY(-50%);width:178px;max-height:55vh;overflow-y:auto;z-index:50;font-size:.8rem;line-height:2;padding-left:1rem;border-left:1px solid var(--border);opacity:.78;transition:opacity .2s}
+.custom-toc:hover{opacity:1}
+.custom-toc a{color:var(--faint);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .1s}
+.custom-toc a:hover{color:var(--text)}
+.custom-toc a.active{color:var(--accent);font-weight:600}
+.custom-toc .toc-h3{padding-left:.7rem;font-size:.76rem}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2rem;padding:1rem 1.2rem;border:1px solid var(--border);border-radius:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;opacity:1;box-shadow:var(--shadow);border-left:1px solid var(--border)}
+  .custom-toc a{display:inline-block;white-space:nowrap}
+  .custom-toc .toc-h3{padding-left:.3rem}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">01-02-Redis-单机部署-VMware-Linux</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">01-02-Redis-单机部署-VMware-Linux</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-06T12:07:05.000Z" title="发表于 2026-07-06 20:07:05">2026-07-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-06T15:09:22.343Z" title="更新于 2026-07-06 23:09:22">2026-07-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Redis/">Redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">13.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>51分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Redis-单机部署：VMware-Ubuntu-22-04-5"><a href="#Redis-单机部署：VMware-Ubuntu-22-04-5" class="headerlink" title="Redis 单机部署：VMware + Ubuntu 22.04.5"></a>Redis 单机部署：VMware + Ubuntu 22.04.5</h1><h2 id="1-部署目标"><a href="#1-部署目标" class="headerlink" title="1. 部署目标"></a>1. 部署目标</h2><p>本文用于在 VMware 中基于 <code>ubuntu-22.04.5-live-server-amd64.iso</code> 部署一台单机 Redis。</p>
+<p>这台机器既用于学习 Redis 单机部署，也作为后续主从复制、Sentinel 和 Cluster 的基础节点模板。</p>
+<p>最终目标：</p>
+<ul>
+<li>使用 VMware NAT 网络，和你之前 K8s 学习环境保持一致。</li>
+<li>先创建一台 Ubuntu 模板机，后续通过克隆生成 Redis 节点。</li>
+<li>Redis 使用独立用户、独立配置目录、独立数据目录和独立日志目录。</li>
+<li>Redis 由 <code>systemd</code> 管理，支持开机自启、重启和日志排查。</li>
+<li>宿主机可以通过固定 IP 访问虚拟机中的 Redis。</li>
+<li>能验证 RDB、AOF、慢查询、日志和基础状态。</li>
+</ul>
+<h2 id="2-环境规划"><a href="#2-环境规划" class="headerlink" title="2. 环境规划"></a>2. 环境规划</h2><h3 id="2-1-ISO-版本"><a href="#2-1-ISO-版本" class="headerlink" title="2.1 ISO 版本"></a>2.1 ISO 版本</h3><p>本文统一使用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ubuntu-22.04.5-live-server-amd64.iso</span><br></pre></td></tr></table></figure>
+
+<p>不要混用 Rocky Linux、CentOS 或其他 Ubuntu 版本。先把这一套跑通，后面再扩展其他环境。</p>
+<h3 id="2-2-VMware-网络规划"><a href="#2-2-VMware-网络规划" class="headerlink" title="2.2 VMware 网络规划"></a>2.2 VMware 网络规划</h3><p>本文默认沿用你之前 K8s 虚拟机环境的 VMware NAT 网段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">VMware Network: VMnet8 NAT</span><br><span class="line">Subnet: 192.168.88.0/24</span><br><span class="line">Gateway: 192.168.88.2</span><br><span class="line">DNS: 223.5.5.5, 8.8.8.8</span><br></pre></td></tr></table></figure>
+
+<p>需要先在 Windows 宿主机确认：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">VMware Workstation</span><br><span class="line">  -&gt; Edit</span><br><span class="line">  -&gt; Virtual Network Editor</span><br><span class="line">  -&gt; VMnet8</span><br><span class="line">  -&gt; NAT Settings</span><br></pre></td></tr></table></figure>
+
+<p>重点确认：</p>
+<ul>
+<li><code>Subnet IP</code> 是否是 <code>192.168.88.0</code></li>
+<li><code>Subnet mask</code> 是否是 <code>255.255.255.0</code></li>
+<li><code>Gateway IP</code> 是否是 <code>192.168.88.2</code></li>
+</ul>
+<p>如果你的 VMware 配置不同，本文所有 <code>192.168.88.x</code> 都要替换成你的实际网段。</p>
+<h3 id="2-3-节点规划"><a href="#2-3-节点规划" class="headerlink" title="2.3 节点规划"></a>2.3 节点规划</h3><p>建议先做一台模板机，再克隆出 Redis 节点。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">模板机:</span><br><span class="line">ubuntu-2204-template</span><br><span class="line"></span><br><span class="line">单机阶段:</span><br><span class="line">redis-single-1  192.168.88.101</span><br><span class="line"></span><br><span class="line">高可用阶段:</span><br><span class="line">redis-ha-1  192.168.88.111</span><br><span class="line">redis-ha-2  192.168.88.112</span><br><span class="line">redis-ha-3  192.168.88.113</span><br><span class="line"></span><br><span class="line">Cluster 阶段:</span><br><span class="line">redis-cluster-1  192.168.88.121  6379, 6380</span><br><span class="line">redis-cluster-2  192.168.88.122  6379, 6380</span><br><span class="line">redis-cluster-3  192.168.88.123  6379, 6380</span><br></pre></td></tr></table></figure>
+
+<p>这里按阶段分配不同虚拟机，不复用前面阶段的机器。这样单机、高可用、Cluster 三套环境可以同时保留，后面排查、复盘或重做实验时互不影响。</p>
+<p>Cluster 阶段这里写端口，是因为 Redis Cluster 需要的是多个 Redis 实例，不是单纯多台虚拟机。</p>
+<p>学习环境为了节省资源，采用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">3 台虚拟机 * 每台 2 个 Redis 实例 = 6 个 Redis 实例</span><br></pre></td></tr></table></figure>
+
+<p>展开后是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">redis-cluster-1  192.168.88.121</span><br><span class="line">  Redis 实例 1: 192.168.88.121:6379</span><br><span class="line">  Redis 实例 2: 192.168.88.121:6380</span><br><span class="line"></span><br><span class="line">redis-cluster-2  192.168.88.122</span><br><span class="line">  Redis 实例 3: 192.168.88.122:6379</span><br><span class="line">  Redis 实例 4: 192.168.88.122:6380</span><br><span class="line"></span><br><span class="line">redis-cluster-3  192.168.88.123</span><br><span class="line">  Redis 实例 5: 192.168.88.123:6379</span><br><span class="line">  Redis 实例 6: 192.168.88.123:6380</span><br></pre></td></tr></table></figure>
+
+<p>Redis Cluster 最小推荐是 3 主 3 从，也就是 6 个 Redis 实例。生产环境更推荐 6 台机器每台 1 个 Redis 实例；学习环境用 3 台机器每台 2 个 Redis 实例，也能完整练习槽位分配、主从关系、故障转移、扩容缩容和迁槽。</p>
+<p>一台虚拟机可以运行多个 Redis 进程，但每个实例必须使用不同端口、不同配置文件、不同数据目录和不同日志文件。例如 <code>redis-cluster-1</code> 上后续会有：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">/etc/redis/redis-6379.conf</span><br><span class="line">/etc/redis/redis-6380.conf</span><br><span class="line"></span><br><span class="line">/data/redis/6379</span><br><span class="line">/data/redis/6380</span><br><span class="line"></span><br><span class="line">/var/log/redis/redis-6379.log</span><br><span class="line">/var/log/redis/redis-6380.log</span><br></pre></td></tr></table></figure>
+
+<p>单机阶段先只创建：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hostname: redis-single-1</span><br><span class="line">ip: 192.168.88.101/24</span><br><span class="line">gateway: 192.168.88.2</span><br><span class="line">redis port: 6379</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-是否需要模板机"><a href="#3-是否需要模板机" class="headerlink" title="3. 是否需要模板机"></a>3. 是否需要模板机</h2><p>需要。</p>
+<p>原因很直接：后面你一定会用到 3 台虚拟机做主从、Sentinel 和 Cluster。如果每次从 ISO 重新安装 Ubuntu，会浪费大量时间，而且容易出现基础环境不一致。</p>
+<p>模板机只做 Ubuntu 基础初始化，不安装 Redis。</p>
+<p>模板机应该完成：</p>
+<ul>
+<li>安装 Ubuntu Server 22.04.5。</li>
+<li>安装 SSH。</li>
+<li>配置 apt 源和基础工具。</li>
+<li>设置时区。</li>
+<li>完成系统更新。</li>
+<li>关机，作为克隆源。</li>
+</ul>
+<p>模板机不应该做：</p>
+<ul>
+<li>不要设置最终节点主机名，比如 <code>redis-single-1</code>。</li>
+<li>不要配置最终静态 IP，比如 <code>192.168.88.101</code>。</li>
+<li>不要安装 Redis。</li>
+<li>不要创建 Redis 数据目录。</li>
+<li>不要创建 Redis systemd 服务。</li>
+</ul>
+<h2 id="4-创建-Ubuntu-模板机"><a href="#4-创建-Ubuntu-模板机" class="headerlink" title="4. 创建 Ubuntu 模板机"></a>4. 创建 Ubuntu 模板机</h2><h3 id="4-1-VMware-虚拟机配置"><a href="#4-1-VMware-虚拟机配置" class="headerlink" title="4.1 VMware 虚拟机配置"></a>4.1 VMware 虚拟机配置</h3><p>模板机建议配置：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td>1-2 核</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>2 GB</td>
+</tr>
+<tr>
+<td>磁盘</td>
+<td>20 GB</td>
+</tr>
+<tr>
+<td>系统</td>
+<td>Ubuntu Server 22.04.5</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>NAT，使用 VMnet8</td>
+</tr>
+</tbody></table>
+<p>安装 Ubuntu 时建议：</p>
+<ul>
+<li>勾选安装 <code>OpenSSH server</code>。</li>
+<li>网络可以先使用 DHCP。</li>
+<li>用户名可以统一使用你自己的学习用户，例如 <code>redisadmin</code>。</li>
+<li>磁盘使用默认 LVM 或普通分区都可以，学习环境不强制。</li>
+</ul>
+<h3 id="4-2-模板机基础初始化"><a href="#4-2-模板机基础初始化" class="headerlink" title="4.2 模板机基础初始化"></a>4.2 模板机基础初始化</h3><p>登录模板机后执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt upgrade -y</span><br><span class="line"><span class="built_in">sudo</span> apt install -y vim curl wget net-tools lsof tar gcc make tcl pkg-config openssh-server ca-certificates gnupg lsb-release libsystemd-dev</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> --now ssh</span><br><span class="line"><span class="built_in">sudo</span> timedatectl set-timezone Asia/Shanghai</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo apt update</code></td>
+<td>刷新 Ubuntu 软件源索引，让系统知道当前可安装、可升级的软件版本。</td>
+<td>只更新本地软件包索引，不会安装或升级软件。</td>
+</tr>
+<tr>
+<td><code>sudo apt upgrade -y</code></td>
+<td>把已安装的软件升级到当前软件源中的最新补丁版本，减少基础系统问题。</td>
+<td>会升级系统软件包；<code>-y</code> 表示自动确认。执行时间取决于网络和更新数量。</td>
+</tr>
+<tr>
+<td><code>sudo apt install -y ...</code></td>
+<td>安装 Redis 编译、测试、下载、排障、SSH 远程登录所需的基础工具。</td>
+<td>会新增这些软件包；其中 <code>gcc/make/tcl/pkg-config/libsystemd-dev</code> 主要服务于后面源码编译 Redis。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl enable --now ssh</code></td>
+<td>启用并立即启动 SSH，方便从 Windows 终端或其他机器远程登录虚拟机。</td>
+<td>SSH 服务立刻启动，并设置为开机自启。</td>
+</tr>
+<tr>
+<td><code>sudo timedatectl set-timezone Asia/Shanghai</code></td>
+<td>设置系统时区，避免日志时间和本地时间对不上。</td>
+<td>系统时区变为上海时间，后续 Redis 日志、systemd 日志都会按该时区显示。</td>
+</tr>
+</tbody></table>
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/os-release</span><br><span class="line">hostname</span><br><span class="line">ip addr</span><br><span class="line">timedatectl</span><br><span class="line">systemctl status ssh</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cat /etc/os-release</code></td>
+<td>查看当前 Linux 发行版和版本。</td>
+<td>应看到 Ubuntu 22.04.x。</td>
+</tr>
+<tr>
+<td><code>hostname</code></td>
+<td>查看当前主机名。</td>
+<td>模板机阶段可以还是安装时设置的名称。</td>
+</tr>
+<tr>
+<td><code>ip addr</code></td>
+<td>查看网卡、IP 地址和网络状态。</td>
+<td>至少能看到一块正在使用的网卡。</td>
+</tr>
+<tr>
+<td><code>timedatectl</code></td>
+<td>查看系统时间、时区和时间同步状态。</td>
+<td>时区应为 <code>Asia/Shanghai</code>。</td>
+</tr>
+<tr>
+<td><code>systemctl status ssh</code></td>
+<td>查看 SSH 服务是否正常运行。</td>
+<td>状态应为 <code>active (running)</code>。</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-清理模板机痕迹"><a href="#4-3-清理模板机痕迹" class="headerlink" title="4.3 清理模板机痕迹"></a>4.3 清理模板机痕迹</h3><p>关机前可以清理 apt 缓存：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt clean</span><br><span class="line"><span class="built_in">sudo</span> cloud-init clean 2&gt;/dev/null || <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo apt clean</code></td>
+<td>清理 apt 下载的软件包缓存，减小模板机磁盘占用。</td>
+<td>删除 apt 的安装包缓存，不会卸载软件。</td>
+</tr>
+<tr>
+<td>&#96;sudo cloud-init clean 2&gt;&#x2F;dev&#x2F;null</td>
+<td></td>
+<td>true&#96;</td>
+</tr>
+</tbody></table>
+<p>如果没有安装 <code>cloud-init</code>，第二条命令报错可以忽略。</p>
+<p>然后关机：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> shutdown now</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo shutdown now</code></td>
+<td>立即关闭模板机，方便在 VMware 中把它作为干净的克隆源。</td>
+<td>虚拟机会关机；后续不要再随意启动并修改模板机，否则克隆出的节点可能不一致。</td>
+</tr>
+</tbody></table>
+<p>在 VMware 中给这台机器命名为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ubuntu-2204-template</span><br></pre></td></tr></table></figure>
+
+<p>后续通过它克隆 Redis 节点。</p>
+<h2 id="5-克隆-Redis-单机节点"><a href="#5-克隆-Redis-单机节点" class="headerlink" title="5. 克隆 Redis 单机节点"></a>5. 克隆 Redis 单机节点</h2><h3 id="5-1-克隆方式"><a href="#5-1-克隆方式" class="headerlink" title="5.1 克隆方式"></a>5.1 克隆方式</h3><p>建议使用 VMware 的完整克隆：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ubuntu-2204-template</span><br><span class="line">  -&gt; Manage</span><br><span class="line">  -&gt; Clone</span><br><span class="line">  -&gt; Full clone</span><br><span class="line">  -&gt; redis-single-1</span><br></pre></td></tr></table></figure>
+
+<p>学习环境建议使用完整克隆，机器之间互不依赖，后续排查更直观。</p>
+<h3 id="5-2-启动克隆机后修改主机名"><a href="#5-2-启动克隆机后修改主机名" class="headerlink" title="5.2 启动克隆机后修改主机名"></a>5.2 启动克隆机后修改主机名</h3><p>在 <code>redis-single-1</code> 上执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> hostnamectl set-hostname redis-single-1</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo hostnamectl set-hostname redis-single-1</code></td>
+<td>把克隆出来的机器改成当前 Redis 单机节点的主机名，便于日志、SSH、排障时识别。</td>
+<td>修改系统主机名；重新登录后终端提示符通常会显示新主机名。</td>
+</tr>
+</tbody></table>
+<p>重新登录后验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hostname</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hostname</code></td>
+<td>查看当前机器主机名是否已经改好。</td>
+<td>应输出 <code>redis-single-1</code>。</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-重新生成-machine-id"><a href="#5-3-重新生成-machine-id" class="headerlink" title="5.3 重新生成 machine-id"></a>5.3 重新生成 machine-id</h3><p>克隆虚拟机后建议重新生成 <code>machine-id</code>，避免后续多节点实验出现标识重复。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> -f /etc/machine-id</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> -f /var/lib/dbus/machine-id</span><br><span class="line"><span class="built_in">sudo</span> systemd-machine-id-setup</span><br><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo rm -f /etc/machine-id</code></td>
+<td>删除克隆自模板机的系统唯一标识。</td>
+<td>该文件会被删除；<code>-f</code> 表示文件不存在也不报错。</td>
+</tr>
+<tr>
+<td><code>sudo rm -f /var/lib/dbus/machine-id</code></td>
+<td>删除 D-Bus 使用的机器标识，避免和 <code>/etc/machine-id</code> 不一致。</td>
+<td>该文件会被删除；后续会重新生成。</td>
+</tr>
+<tr>
+<td><code>sudo systemd-machine-id-setup</code></td>
+<td>让 systemd 重新生成当前虚拟机自己的 <code>machine-id</code>。</td>
+<td>当前机器获得新的唯一标识。</td>
+</tr>
+<tr>
+<td><code>sudo reboot</code></td>
+<td>重启系统，让依赖 <code>machine-id</code> 的服务重新按新标识启动。</td>
+<td>虚拟机会重启，SSH 连接会断开，需要重新登录。</td>
+</tr>
+</tbody></table>
+<p>重启后验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/machine-id</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cat /etc/machine-id</code></td>
+<td>查看当前机器新的唯一标识。</td>
+<td>应输出一串十六进制字符；多台克隆机之间不能相同。</td>
+</tr>
+</tbody></table>
+<p>后面创建高可用阶段和 Cluster 阶段的新虚拟机时，也要分别执行类似操作。</p>
+<h3 id="5-4-确认-MAC-地址唯一"><a href="#5-4-确认-MAC-地址唯一" class="headerlink" title="5.4 确认 MAC 地址唯一"></a>5.4 确认 MAC 地址唯一</h3><p>VMware 克隆时通常会生成新的 MAC 地址。仍然建议确认：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip <span class="built_in">link</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ip link</code></td>
+<td>查看网卡名称、状态和 MAC 地址。</td>
+<td>每台虚拟机的网卡 MAC 地址应不同。</td>
+</tr>
+</tbody></table>
+<p>如果后续多台机器 MAC 地址重复，需要在 VMware 虚拟机设置里重新生成 MAC。</p>
+<h2 id="6-配置静态-IP"><a href="#6-配置静态-IP" class="headerlink" title="6. 配置静态 IP"></a>6. 配置静态 IP</h2><p>Ubuntu Server 22.04 使用 <code>netplan</code> 管理网络。</p>
+<h3 id="6-1-查看网卡名"><a href="#6-1-查看网卡名" class="headerlink" title="6.1 查看网卡名"></a>6.1 查看网卡名</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip addr</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ip addr</code></td>
+<td>查看系统识别到的网卡名和当前 IP。</td>
+<td>找到类似 <code>ens33</code>、<code>ens160</code> 的网卡名，后续 netplan 里必须使用实际网卡名。</td>
+</tr>
+</tbody></table>
+<p>常见网卡名：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ens33</span><br><span class="line">ens160</span><br></pre></td></tr></table></figure>
+
+<p>本文示例使用 <code>ens33</code>。如果你的机器不是这个名字，下面配置要替换成实际网卡名。</p>
+<h3 id="6-2-备份-netplan-配置"><a href="#6-2-备份-netplan-配置" class="headerlink" title="6.2 备份 netplan 配置"></a>6.2 备份 netplan 配置</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> /etc/netplan</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /root/netplan-backup</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">cp</span> -a /etc/netplan/*.yaml /root/netplan-backup/</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ls /etc/netplan</code></td>
+<td>查看当前 netplan 配置文件名。</td>
+<td>会列出一个或多个 <code>.yaml</code> 文件，确认要修改哪个文件。</td>
+</tr>
+<tr>
+<td><code>sudo mkdir -p /root/netplan-backup</code></td>
+<td>创建 netplan 备份目录。</td>
+<td>备份文件不会继续留在 <code>/etc/netplan</code> 中被 netplan 当作有效配置读取。</td>
+</tr>
+<tr>
+<td><code>sudo cp -a /etc/netplan/*.yaml /root/netplan-backup/</code></td>
+<td>修改网络前先备份，防止配置错误导致断网后无法恢复。</td>
+<td>在 <code>/root/netplan-backup</code> 下保留原始配置；如果网络配置写错，可以从这里恢复。</td>
+</tr>
+</tbody></table>
+<p>不要把备份文件放在 <code>/etc/netplan</code> 目录下并继续使用 <code>.yaml</code> 后缀。netplan 会读取该目录里的 YAML 文件，旧配置和新配置同时存在时容易造成路由、DNS 或网卡配置冲突。</p>
+<h3 id="6-3-修改-netplan"><a href="#6-3-修改-netplan" class="headerlink" title="6.3 修改 netplan"></a>6.3 修改 netplan</h3><p>编辑配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/netplan/00-installer-config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo vim /etc/netplan/00-installer-config.yaml</code></td>
+<td>用管理员权限编辑 Ubuntu 的网络配置文件，把 DHCP 改成固定 IP。</td>
+<td>保存后配置文件内容会改变；真正生效要等后面执行 <code>netplan apply</code>。</td>
+</tr>
+</tbody></table>
+<p>写入：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">network:</span></span><br><span class="line">  <span class="attr">version:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">renderer:</span> <span class="string">networkd</span></span><br><span class="line">  <span class="attr">ethernets:</span></span><br><span class="line">    <span class="attr">ens33:</span></span><br><span class="line">      <span class="attr">dhcp4:</span> <span class="literal">false</span></span><br><span class="line">      <span class="attr">addresses:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="number">192.168</span><span class="number">.88</span><span class="number">.101</span><span class="string">/24</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">to:</span> <span class="string">default</span></span><br><span class="line">          <span class="attr">via:</span> <span class="number">192.168</span><span class="number">.88</span><span class="number">.2</span></span><br><span class="line">      <span class="attr">nameservers:</span></span><br><span class="line">        <span class="attr">addresses:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="number">223.5</span><span class="number">.5</span><span class="number">.5</span></span><br><span class="line">          <span class="bullet">-</span> <span class="number">8.8</span><span class="number">.8</span><span class="number">.8</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<ul>
+<li><code>addresses</code> 是当前 Redis 节点 IP。</li>
+<li><code>via</code> 是 VMware NAT 网关，不要随便写成 <code>.1</code>。</li>
+<li>新版 Ubuntu 推荐使用 <code>routes</code> 配置默认路由，不使用旧的 <code>gateway4</code>。</li>
+<li>YAML 对缩进敏感，必须使用空格。</li>
+</ul>
+<h3 id="6-4-应用配置"><a href="#6-4-应用配置" class="headerlink" title="6.4 应用配置"></a>6.4 应用配置</h3><p>建议先生成检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> netplan generate</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo netplan generate</code></td>
+<td>先检查 netplan YAML 语法并生成底层网络配置。</td>
+<td>不会立即改网络；如果 YAML 缩进或字段错误，会在这里报错，适合先做安全检查。</td>
+</tr>
+</tbody></table>
+<p>再应用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> netplan apply</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo netplan apply</code></td>
+<td>让新的静态 IP、网关、DNS 配置真正生效。</td>
+<td>网络会短暂重载；如果 IP、网关或网卡名写错，SSH 可能断开，需要回到 VMware 控制台修复。</td>
+</tr>
+</tbody></table>
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ip addr</span><br><span class="line">ip route</span><br><span class="line">ping -c 3 192.168.88.2</span><br><span class="line">ping -c 3 223.5.5.5</span><br><span class="line">ping -c 3 baidu.com</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ip addr</code></td>
+<td>查看静态 IP 是否已经绑定到正确网卡。</td>
+<td>应看到 <code>192.168.88.101/24</code>。</td>
+</tr>
+<tr>
+<td><code>ip route</code></td>
+<td>查看默认路由是否指向 VMware NAT 网关。</td>
+<td>默认路由应经由 <code>192.168.88.2</code>。</td>
+</tr>
+<tr>
+<td><code>ping -c 3 192.168.88.2</code></td>
+<td>测试虚拟机到 NAT 网关是否通。</td>
+<td>能收到 3 次回复，说明本地网段和网关配置基本正常。</td>
+</tr>
+<tr>
+<td><code>ping -c 3 223.5.5.5</code></td>
+<td>测试是否能访问外部 IP。</td>
+<td>能通说明网关&#x2F;NAT 出网正常。</td>
+</tr>
+<tr>
+<td><code>ping -c 3 baidu.com</code></td>
+<td>测试 DNS 解析和外网访问。</td>
+<td>能解析并 ping 通，说明 DNS 配置正常。</td>
+</tr>
+</tbody></table>
+<p>如果 <code>223.5.5.5</code> 能通但域名不通，通常是 DNS 配置问题。</p>
+<h3 id="6-5-配置-hosts"><a href="#6-5-配置-hosts" class="headerlink" title="6.5 配置 hosts"></a>6.5 配置 hosts</h3><p>编辑：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/hosts</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo vim /etc/hosts</code></td>
+<td>编辑本机 hosts 文件，让主机名能解析到规划好的 IP。</td>
+<td>保存后，本机可以直接用 <code>redis-single-1</code> 等名称访问对应 IP；不会影响 DNS 服务器。</td>
+</tr>
+</tbody></table>
+<p>写入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line">192.168.88.101 redis-single-1</span><br><span class="line"></span><br><span class="line">192.168.88.111 redis-ha-1</span><br><span class="line">192.168.88.112 redis-ha-2</span><br><span class="line">192.168.88.113 redis-ha-3</span><br><span class="line"></span><br><span class="line">192.168.88.121 redis-cluster-1</span><br><span class="line">192.168.88.122 redis-cluster-2</span><br><span class="line">192.168.88.123 redis-cluster-3</span><br></pre></td></tr></table></figure>
+
+<p>单机阶段只用 <code>redis-single-1</code>。后续高可用和 Cluster 阶段使用新的虚拟机，提前规划名称和 IP 是为了避免地址冲突。</p>
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping -c 3 redis-single-1</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ping -c 3 redis-single-1</code></td>
+<td>验证 <code>/etc/hosts</code> 中的主机名解析是否生效。</td>
+<td>应解析到 <code>192.168.88.101</code> 并收到回复。</td>
+</tr>
+</tbody></table>
+<h2 id="7-Redis-前置系统配置"><a href="#7-Redis-前置系统配置" class="headerlink" title="7. Redis 前置系统配置"></a>7. Redis 前置系统配置</h2><p>这些配置不是为了让 Redis 勉强跑起来，而是为了让你从一开始就按接近生产的方式理解 Redis。</p>
+<h3 id="7-1-文件描述符"><a href="#7-1-文件描述符" class="headerlink" title="7.1 文件描述符"></a>7.1 文件描述符</h3><p>查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ulimit</span> -n</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ulimit -n</code></td>
+<td>查看当前 shell 进程允许打开的最大文件描述符数量。</td>
+<td>学习环境里数值可能不高；Redis 服务后面会通过 systemd 的 <code>LimitNOFILE</code> 单独提高。</td>
+</tr>
+</tbody></table>
+<p>Redis 服务最终会通过 <code>systemd</code> 的 <code>LimitNOFILE</code> 单独设置，不需要在 shell 里永久修改。</p>
+<h3 id="7-2-overcommit-memory"><a href="#7-2-overcommit-memory" class="headerlink" title="7.2 overcommit_memory"></a>7.2 overcommit_memory</h3><p>查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/sys/vm/overcommit_memory</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cat /proc/sys/vm/overcommit_memory</code></td>
+<td>查看 Linux 内核当前的内存 overcommit 策略。</td>
+<td>Redis 推荐设置为 <code>1</code>；如果不是 <code>1</code>，后面会永久调整。</td>
+</tr>
+</tbody></table>
+<p>永久设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;vm.overcommit_memory = 1&quot;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/sysctl.d/99-redis.conf</span><br><span class="line"><span class="built_in">sudo</span> sysctl -p /etc/sysctl.d/99-redis.conf</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#96;echo “vm.overcommit_memory &#x3D; 1”</td>
+<td>sudo tee &#x2F;etc&#x2F;sysctl.d&#x2F;99-redis.conf&#96;</td>
+<td>把 Redis 推荐的内存分配策略写入 sysctl 配置文件。</td>
+</tr>
+<tr>
+<td><code>sudo sysctl -p /etc/sysctl.d/99-redis.conf</code></td>
+<td>立即加载刚写入的内核参数，不等重启。</td>
+<td>当前系统的 <code>vm.overcommit_memory</code> 立刻变为 <code>1</code>。</td>
+</tr>
+</tbody></table>
+<p>原因：Redis 执行 RDB 或 AOF rewrite 时会 <code>fork</code> 子进程，内存分配策略不合适可能导致 fork 失败。</p>
+<h3 id="7-3-关闭-Transparent-Huge-Pages"><a href="#7-3-关闭-Transparent-Huge-Pages" class="headerlink" title="7.3 关闭 Transparent Huge Pages"></a>7.3 关闭 Transparent Huge Pages</h3><p>查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /sys/kernel/mm/transparent_hugepage/enabled</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cat /sys/kernel/mm/transparent_hugepage/enabled</code></td>
+<td>查看透明大页 THP 当前状态。</td>
+<td>如果看到 <code>[always]</code> 或 <code>[madvise]</code>，说明当前启用了对应模式；Redis 通常建议关闭。</td>
+</tr>
+</tbody></table>
+<p>临时关闭：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> never | <span class="built_in">sudo</span> <span class="built_in">tee</span> /sys/kernel/mm/transparent_hugepage/enabled</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#96;echo never</td>
+<td>sudo tee &#x2F;sys&#x2F;kernel&#x2F;mm&#x2F;transparent_hugepage&#x2F;enabled&#96;</td>
+<td>临时关闭 THP，减少 Redis 延迟抖动风险。</td>
+</tr>
+</tbody></table>
+<p>学习阶段可以先临时关闭。后面如果你要模拟生产部署，再把它写入 systemd 或启动脚本。</p>
+<h3 id="7-4-TCP-backlog-上限"><a href="#7-4-TCP-backlog-上限" class="headerlink" title="7.4 TCP backlog 上限"></a>7.4 TCP backlog 上限</h3><p>Redis 配置里的 <code>tcp-backlog</code> 会受到 Linux 内核 <code>net.core.somaxconn</code> 上限影响。学习环境可以先查看当前值：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl net.core.somaxconn</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sysctl net.core.somaxconn</code></td>
+<td>查看系统允许的监听队列最大值。</td>
+<td>应不小于 Redis 配置里的 <code>tcp-backlog</code>；如果小于该值，Redis 的实际 backlog 会被内核上限截断。</td>
+</tr>
+</tbody></table>
+<p>如果后续要模拟高并发连接，可以再通过 <code>/etc/sysctl.d/99-redis.conf</code> 调整它。单机入门阶段先理解它和 <code>tcp-backlog</code> 的关系即可。</p>
+<h2 id="8-安装-Redis"><a href="#8-安装-Redis" class="headerlink" title="8. 安装 Redis"></a>8. 安装 Redis</h2><p>学习部署建议使用源码安装，这样你能清楚 Redis 的二进制文件、配置文件、数据目录和日志目录分别在哪里。</p>
+<h3 id="8-1-下载源码"><a href="#8-1-下载源码" class="headerlink" title="8.1 下载源码"></a>8.1 下载源码</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/src</span><br><span class="line"><span class="built_in">sudo</span> wget https://download.redis.io/releases/redis-7.2.5.tar.gz</span><br><span class="line"><span class="built_in">sudo</span> tar -zxvf redis-7.2.5.tar.gz</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> -R $(<span class="built_in">id</span> -u):$(<span class="built_in">id</span> -g) redis-7.2.5</span><br><span class="line"><span class="built_in">cd</span> redis-7.2.5</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cd /usr/local/src</code></td>
+<td>进入源码包存放目录，便于统一管理手工下载的软件源码。</td>
+<td>当前 shell 工作目录切换到 <code>/usr/local/src</code>。</td>
+</tr>
+<tr>
+<td><code>sudo wget https://download.redis.io/releases/redis-7.2.5.tar.gz</code></td>
+<td>从 Redis 官方下载 7.2.5 源码压缩包。</td>
+<td>在当前目录生成 <code>redis-7.2.5.tar.gz</code>；需要网络可访问。</td>
+</tr>
+<tr>
+<td><code>sudo tar -zxvf redis-7.2.5.tar.gz</code></td>
+<td>解压 Redis 源码包。</td>
+<td>生成 <code>redis-7.2.5</code> 源码目录。</td>
+</tr>
+<tr>
+<td><code>sudo chown -R $(id -u):$(id -g) redis-7.2.5</code></td>
+<td>把源码目录所有者改成当前登录用户，避免后续普通用户编译时报权限错误。</td>
+<td><code>redis-7.2.5</code> 目录及其文件归当前用户所有。</td>
+</tr>
+<tr>
+<td><code>cd redis-7.2.5</code></td>
+<td>进入 Redis 源码目录，准备编译。</td>
+<td>当前 shell 工作目录切换到源码目录。</td>
+</tr>
+</tbody></table>
+<p>如果下载慢，可以提前在宿主机下载后上传到虚拟机。</p>
+<h3 id="8-2-编译安装"><a href="#8-2-编译安装" class="headerlink" title="8.2 编译安装"></a>8.2 编译安装</h3><p>编译前先确认依赖已安装。因为本文使用 <code>supervised systemd</code>，Redis 编译时需要 <code>libsystemd-dev</code> 提供 systemd 头文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install -y gcc make tcl pkg-config libsystemd-dev</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo apt update</code></td>
+<td>刷新软件源索引，确保安装依赖时拿到可用版本。</td>
+<td>只更新本地索引，不安装软件。</td>
+</tr>
+<tr>
+<td><code>sudo apt install -y gcc make tcl pkg-config libsystemd-dev</code></td>
+<td>安装 Redis 源码编译、测试和 systemd 支持需要的依赖。</td>
+<td>新增编译工具和 systemd 开发头文件；缺少 <code>libsystemd-dev</code> 时，后面的 <code>Type=notify</code> 服务容易启动超时。</td>
+</tr>
+</tbody></table>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">make USE_SYSTEMD=<span class="built_in">yes</span> -j2</span><br><span class="line">make <span class="built_in">test</span></span><br><span class="line"><span class="built_in">sudo</span> make install PREFIX=/usr/local/redis</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-server /usr/local/bin/redis-server</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-cli /usr/local/bin/redis-cli</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-benchmark /usr/local/bin/redis-benchmark</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>make USE_SYSTEMD=yes -j2</code></td>
+<td>编译 Redis，并启用 systemd 通知支持；<code>-j2</code> 表示用 2 个并行任务编译。</td>
+<td>在源码目录 <code>src</code> 下生成 Redis 二进制文件；不会安装到系统目录。</td>
+</tr>
+<tr>
+<td><code>make test</code></td>
+<td>运行 Redis 官方测试，确认当前机器上编译出的 Redis 基本可用。</td>
+<td>会启动临时测试 Redis 进程并执行用例；学习环境建议跑，但它不是安装 Redis 的必要步骤。</td>
+</tr>
+<tr>
+<td><code>sudo make install PREFIX=/usr/local/redis</code></td>
+<td>把编译好的 Redis 程序安装到指定目录。</td>
+<td>写入 <code>/usr/local/redis/bin</code>；需要 <code>sudo</code> 是因为 <code>/usr/local</code> 通常归 root 管理。</td>
+</tr>
+<tr>
+<td><code>sudo ln -sf /usr/local/redis/bin/redis-server /usr/local/bin/redis-server</code></td>
+<td>给 <code>redis-server</code> 创建全局软链接，方便直接执行。</td>
+<td><code>/usr/local/bin/redis-server</code> 会指向真实安装文件；<code>-f</code> 会覆盖已有同名链接。</td>
+</tr>
+<tr>
+<td><code>sudo ln -sf /usr/local/redis/bin/redis-cli /usr/local/bin/redis-cli</code></td>
+<td>给 Redis 客户端创建全局软链接。</td>
+<td>后续可以直接执行 <code>redis-cli</code>，不用写完整路径。</td>
+</tr>
+<tr>
+<td><code>sudo ln -sf /usr/local/redis/bin/redis-benchmark /usr/local/bin/redis-benchmark</code></td>
+<td>给 Redis 压测工具创建全局软链接。</td>
+<td>后续可以直接执行 <code>redis-benchmark</code>。</td>
+</tr>
+</tbody></table>
+<p>如果 <code>make test</code> 在 VMware 中因为延迟敏感测试失败，先看 <code>src/redis-server --version</code> 是否正常；如果正常，可以继续执行 <code>sudo make install PREFIX=/usr/local/redis</code>。</p>
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/redis/bin/redis-server --version</span><br><span class="line">/usr/local/redis/bin/redis-cli --version</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/usr/local/redis/bin/redis-server --version</code></td>
+<td>查看 Redis 服务端二进制是否安装成功以及版本号。</td>
+<td>应输出 Redis 版本、bits、jemalloc 等信息。</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-cli --version</code></td>
+<td>查看 Redis 命令行客户端是否安装成功以及版本号。</td>
+<td>应输出 <code>redis-cli 7.2.5</code> 或对应版本。</td>
+</tr>
+</tbody></table>
+<p>安装后的关键文件：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/usr/local/redis/bin/redis-server</code></td>
+<td>Redis 服务端</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-cli</code></td>
+<td>Redis 命令行客户端</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-benchmark</code></td>
+<td>Redis 压测工具</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-check-rdb</code></td>
+<td>RDB 检查工具</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-check-aof</code></td>
+<td>AOF 检查工具</td>
+</tr>
+</tbody></table>
+<h2 id="9-创建-Redis-用户和目录"><a href="#9-创建-Redis-用户和目录" class="headerlink" title="9. 创建 Redis 用户和目录"></a>9. 创建 Redis 用户和目录</h2><p>不要用 <code>root</code> 直接运行 Redis。</p>
+<p>如果你安装 Ubuntu 时已经把登录用户名设置成了 <code>redis</code>，不要再创建同名服务用户。建议使用 <code>redis-svc</code> 作为 Redis 服务运行用户。</p>
+<p>本文后续统一使用 <code>redis-svc</code> 作为 Redis 服务用户。</p>
+<p>先把几个用户角色分清楚：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">  Linux 超级管理员，拥有所有权限。</span><br><span class="line"></span><br><span class="line">redis</span><br><span class="line">  你创建 Ubuntu 虚拟机时填写的登录用户。</span><br><span class="line">  它是普通用户，可以通过 sudo 临时执行管理员操作。</span><br><span class="line"></span><br><span class="line">redis-svc</span><br><span class="line">  Redis 服务运行用户。</span><br><span class="line">  它不能登录系统，只负责运行 redis-server。</span><br></pre></td></tr></table></figure>
+
+<p>学习环境中的职责划分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">编译 Redis：用登录用户 redis</span><br><span class="line">测试 Redis：用登录用户 redis</span><br><span class="line">安装 Redis：用 sudo</span><br><span class="line">运行 Redis 服务：用 redis-svc</span><br></pre></td></tr></table></figure>
+
+<p>生产环境的原则类似，但通常会换成更规范的用户和发布流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">编译 Redis：普通构建用户，例如 build、deploy、cicd</span><br><span class="line">测试 Redis：普通构建用户</span><br><span class="line">安装 Redis：root 权限或自动化发布工具</span><br><span class="line">运行 Redis 服务：专用低权限用户，例如 redis、redis-svc</span><br></pre></td></tr></table></figure>
+
+<p>核心原则：</p>
+<ul>
+<li>不要用 <code>root</code> 运行 Redis 服务。</li>
+<li>不要用 <code>root</code> 编译和测试 Redis，避免源码目录出现权限污染。</li>
+<li>安装阶段需要写入系统目录，所以可以使用 <code>sudo</code>。</li>
+<li>Redis 服务运行用户只应该拥有数据目录、日志目录和运行目录的必要权限。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">id</span> -u redis-svc &gt;/dev/null 2&gt;&amp;1 || <span class="built_in">sudo</span> useradd -r -s /usr/sbin/nologin redis-svc</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /etc/redis</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /data/redis/6379</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /var/log/redis</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> -R redis-svc:redis-svc /data/redis</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> -R redis-svc:redis-svc /var/log/redis</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#96;id -u redis-svc &gt;&#x2F;dev&#x2F;null 2&gt;&amp;1</td>
+<td></td>
+<td>sudo useradd -r -s &#x2F;usr&#x2F;sbin&#x2F;nologin redis-svc&#96;</td>
+</tr>
+<tr>
+<td><code>sudo mkdir -p /etc/redis</code></td>
+<td>创建 Redis 配置目录。</td>
+<td>后续 <code>redis-6379.conf</code> 放在这里；<code>-p</code> 表示目录已存在也不报错。</td>
+</tr>
+<tr>
+<td><code>sudo mkdir -p /data/redis/6379</code></td>
+<td>创建 6379 实例的数据目录。</td>
+<td>RDB、AOF 等持久化文件会写到这里。</td>
+</tr>
+<tr>
+<td><code>sudo mkdir -p /var/log/redis</code></td>
+<td>创建 Redis 日志目录。</td>
+<td>Redis 运行日志会写到这里。</td>
+</tr>
+<tr>
+<td><code>sudo chown -R redis-svc:redis-svc /data/redis</code></td>
+<td>把数据目录授权给 Redis 服务用户。</td>
+<td><code>redis-svc</code> 可以写入 RDB&#x2F;AOF；如果不授权，Redis 启动或持久化可能失败。</td>
+</tr>
+<tr>
+<td><code>sudo chown -R redis-svc:redis-svc /var/log/redis</code></td>
+<td>把日志目录授权给 Redis 服务用户。</td>
+<td><code>redis-svc</code> 可以写日志；如果不授权，Redis 可能因无法打开日志文件而启动失败。</td>
+</tr>
+</tbody></table>
+<p>目录说明：</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/usr/local/redis</code></td>
+<td>Redis 安装目录</td>
+</tr>
+<tr>
+<td><code>/etc/redis</code></td>
+<td>Redis 配置目录</td>
+</tr>
+<tr>
+<td><code>/data/redis/6379</code></td>
+<td>Redis 数据目录</td>
+</tr>
+<tr>
+<td><code>/var/log/redis</code></td>
+<td>Redis 日志目录</td>
+</tr>
+</tbody></table>
+<h2 id="10-编写-redis-conf"><a href="#10-编写-redis-conf" class="headerlink" title="10. 编写 redis.conf"></a>10. 编写 redis.conf</h2><p>创建配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/redis/redis-6379.conf</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo vim /etc/redis/redis-6379.conf</code></td>
+<td>创建并编辑当前 Redis 6379 实例的配置文件。</td>
+<td>保存后 Redis 会按这个文件启动；配置内容不会自动生效，需要启动或重启 Redis。</td>
+</tr>
+</tbody></table>
+<p>写入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">bind 0.0.0.0</span><br><span class="line">protected-mode yes</span><br><span class="line">port 6379</span><br><span class="line">tcp-backlog 511</span><br><span class="line">timeout 0</span><br><span class="line">tcp-keepalive 300</span><br><span class="line"></span><br><span class="line">daemonize no</span><br><span class="line">supervised systemd</span><br><span class="line">pidfile /run/redis/redis-6379.pid</span><br><span class="line">loglevel notice</span><br><span class="line">logfile /var/log/redis/redis-6379.log</span><br><span class="line"></span><br><span class="line">databases 16</span><br><span class="line">always-show-logo no</span><br><span class="line"></span><br><span class="line">dir /data/redis/6379</span><br><span class="line">dbfilename dump.rdb</span><br><span class="line"></span><br><span class="line">save 900 1</span><br><span class="line">save 300 10</span><br><span class="line">save 60 10000</span><br><span class="line">stop-writes-on-bgsave-error yes</span><br><span class="line">rdbcompression yes</span><br><span class="line">rdbchecksum yes</span><br><span class="line"></span><br><span class="line">appendonly yes</span><br><span class="line">appendfilename &quot;appendonly.aof&quot;</span><br><span class="line">appenddirname &quot;appendonlydir&quot;</span><br><span class="line">appendfsync everysec</span><br><span class="line">no-appendfsync-on-rewrite no</span><br><span class="line">auto-aof-rewrite-percentage 100</span><br><span class="line">auto-aof-rewrite-min-size 64mb</span><br><span class="line">aof-use-rdb-preamble yes</span><br><span class="line"></span><br><span class="line">maxmemory 512mb</span><br><span class="line">maxmemory-policy allkeys-lru</span><br><span class="line"></span><br><span class="line">slowlog-log-slower-than 10000</span><br><span class="line">slowlog-max-len 128</span><br><span class="line"></span><br><span class="line">latency-monitor-threshold 100</span><br><span class="line"></span><br><span class="line">requirepass Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>配置说明：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>作用</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bind 0.0.0.0</code></td>
+<td>监听所有网卡地址。</td>
+<td>宿主机和其他虚拟机可以访问 Redis；必须配合密码和防火墙控制风险。</td>
+</tr>
+<tr>
+<td><code>protected-mode yes</code></td>
+<td>开启保护模式。</td>
+<td>Redis 会对不安全暴露场景做保护；本文同时设置了密码。</td>
+</tr>
+<tr>
+<td><code>port 6379</code></td>
+<td>指定 Redis 监听端口。</td>
+<td>客户端要连接 <code>6379</code>；多实例时端口必须不同。</td>
+</tr>
+<tr>
+<td><code>daemonize no</code></td>
+<td>不让 Redis 自己转后台。</td>
+<td>Redis 前台运行，由 systemd 负责托管进程。</td>
+</tr>
+<tr>
+<td><code>supervised systemd</code></td>
+<td>启用 systemd 监督模式。</td>
+<td>Redis 启动完成后会通知 systemd；编译时必须带 <code>USE_SYSTEMD=yes</code>。</td>
+</tr>
+<tr>
+<td><code>pidfile /run/redis/redis-6379.pid</code></td>
+<td>指定 PID 文件位置。</td>
+<td>便于记录 Redis 主进程 ID；运行目录由 systemd 创建。</td>
+</tr>
+<tr>
+<td><code>logfile /var/log/redis/redis-6379.log</code></td>
+<td>指定 Redis 日志文件。</td>
+<td>日志落盘到该文件，排障时重点查看。</td>
+</tr>
+<tr>
+<td><code>dir /data/redis/6379</code></td>
+<td>指定数据目录。</td>
+<td>RDB&#x2F;AOF 文件会写到这里；目录必须允许 <code>redis-svc</code> 写入。</td>
+</tr>
+<tr>
+<td><code>save ...</code></td>
+<td>配置 RDB 自动快照规则。</td>
+<td>满足写入次数和时间条件后触发后台保存。</td>
+</tr>
+<tr>
+<td><code>appendonly yes</code></td>
+<td>开启 AOF 持久化。</td>
+<td>每次写命令会进入 AOF 流程，提升数据恢复能力，但增加磁盘写入。</td>
+</tr>
+<tr>
+<td><code>appenddirname &quot;appendonlydir&quot;</code></td>
+<td>指定 Redis 7 多部分 AOF 目录名。</td>
+<td>AOF base、incremental、manifest 等文件会放在 <code>/data/redis/6379/appendonlydir</code> 下。</td>
+</tr>
+<tr>
+<td><code>appendfsync everysec</code></td>
+<td>AOF 每秒刷盘。</td>
+<td>性能和数据安全的折中；最多可能丢约 1 秒数据。</td>
+</tr>
+<tr>
+<td><code>maxmemory 512mb</code></td>
+<td>限制 Redis 最大可用内存。</td>
+<td>防止学习虚拟机内存被 Redis 吃满。</td>
+</tr>
+<tr>
+<td><code>maxmemory-policy allkeys-lru</code></td>
+<td>内存满时按 LRU 淘汰键。</td>
+<td>所有 key 都可能被淘汰，适合理解缓存型 Redis 的行为。</td>
+</tr>
+<tr>
+<td><code>slowlog-log-slower-than 10000</code></td>
+<td>慢查询阈值，单位微秒。</td>
+<td>执行超过 10ms 的命令会进入慢查询日志。</td>
+</tr>
+<tr>
+<td><code>latency-monitor-threshold 100</code></td>
+<td>延迟监控阈值，单位毫秒。</td>
+<td>Redis 会记录超过阈值的延迟事件。</td>
+</tr>
+<tr>
+<td><code>requirepass Redis@123456</code></td>
+<td>设置访问密码。</td>
+<td>客户端必须认证；学习环境可用，生产环境要换成强密码并避免明文暴露。</td>
+</tr>
+</tbody></table>
+<p>修改权限：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> redis-svc:redis-svc /etc/redis/redis-6379.conf</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chmod</span> 640 /etc/redis/redis-6379.conf</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo chown redis-svc:redis-svc /etc/redis/redis-6379.conf</code></td>
+<td>让 Redis 服务用户拥有配置文件。</td>
+<td>Redis 进程可以读取配置文件。</td>
+</tr>
+<tr>
+<td><code>sudo chmod 640 /etc/redis/redis-6379.conf</code></td>
+<td>收紧配置文件权限，因为里面包含密码。</td>
+<td>文件所有者可读写，同组可读，其他用户无权限；降低密码泄露风险。</td>
+</tr>
+</tbody></table>
+<p>关键配置说明：</p>
+<ul>
+<li><code>bind 0.0.0.0</code>：允许宿主机和其他虚拟机访问。</li>
+<li><code>protected-mode yes</code>：保留保护模式，配合密码使用。</li>
+<li><code>supervised systemd</code>：交给 systemd 管理。</li>
+<li><code>appendonly yes</code>：打开 AOF，方便学习持久化。</li>
+<li><code>maxmemory 512mb</code>：限制 Redis 最大内存，避免吃光虚拟机内存。</li>
+<li><code>requirepass Redis@123456</code>：学习环境密码，后续生产环境必须换成强密码。</li>
+</ul>
+<h2 id="11-配置-systemd-服务"><a href="#11-配置-systemd-服务" class="headerlink" title="11. 配置 systemd 服务"></a>11. 配置 systemd 服务</h2><p>创建服务文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/systemd/system/redis-6379.service</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo vim /etc/systemd/system/redis-6379.service</code></td>
+<td>创建 Redis 的 systemd 服务单元文件。</td>
+<td>保存后 systemd 才知道如何启动、停止、重启 Redis；需要执行 <code>daemon-reload</code> 才会加载新文件。</td>
+</tr>
+</tbody></table>
+<p>写入：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Redis Server <span class="number">6379</span></span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=notify</span><br><span class="line"><span class="attr">User</span>=redis-svc</span><br><span class="line"><span class="attr">Group</span>=redis-svc</span><br><span class="line"><span class="attr">RuntimeDirectory</span>=redis</span><br><span class="line"><span class="attr">RuntimeDirectoryMode</span>=<span class="number">0755</span></span><br><span class="line"><span class="attr">Environment</span>=REDISCLI_AUTH=Redis@<span class="number">123456</span></span><br><span class="line"><span class="attr">ExecStart</span>=/usr/local/redis/bin/redis-server /etc/redis/redis-<span class="number">6379</span>.conf --supervised systemd --daemonize <span class="literal">no</span></span><br><span class="line"><span class="attr">ExecStop</span>=/usr/local/redis/bin/redis-cli --<span class="literal">no</span>-auth-warning -p <span class="number">6379</span> shutdown</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">3</span></span><br><span class="line"><span class="attr">LimitNOFILE</span>=<span class="number">100000</span></span><br><span class="line"><span class="attr">PrivateTmp</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">PrivateDevices</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">ProtectHome</span>=<span class="literal">true</span></span><br><span class="line"><span class="attr">ProtectSystem</span>=full</span><br><span class="line"><span class="attr">ReadWritePaths</span>=/data/redis/<span class="number">6379</span> /var/log/redis /run/redis</span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<p>服务配置说明：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>作用</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>After=network.target</code></td>
+<td>要求 Redis 在基础网络目标之后启动。</td>
+<td>避免系统刚启动时网络还没好就启动 Redis。</td>
+</tr>
+<tr>
+<td><code>Type=notify</code></td>
+<td>systemd 等 Redis 主动通知“我启动好了”。</td>
+<td>Redis 必须编译 systemd 支持，并配置 <code>supervised systemd</code>。</td>
+</tr>
+<tr>
+<td><code>User=redis-svc</code> &#x2F; <code>Group=redis-svc</code></td>
+<td>用低权限用户运行 Redis。</td>
+<td>Redis 进程不具备 root 权限，降低误操作和漏洞风险。</td>
+</tr>
+<tr>
+<td><code>RuntimeDirectory=redis</code></td>
+<td>让 systemd 创建 <code>/run/redis</code>。</td>
+<td>PID 文件可以写入 <code>/run/redis/redis-6379.pid</code>。</td>
+</tr>
+<tr>
+<td><code>Environment=REDISCLI_AUTH=...</code></td>
+<td>给 <code>ExecStop</code> 使用的 <code>redis-cli</code> 提供认证密码。</td>
+<td>避免把密码直接写在停止命令参数里；学习环境可用，生产环境应使用更安全的凭据管理方式。</td>
+</tr>
+<tr>
+<td><code>ExecStart=...</code></td>
+<td>定义 Redis 启动命令。</td>
+<td>systemd 会按这里的路径和配置文件启动 Redis。</td>
+</tr>
+<tr>
+<td><code>ExecStop=... shutdown</code></td>
+<td>定义 Redis 停止命令。</td>
+<td>停止服务时通过 <code>redis-cli</code> 让 Redis 正常退出，尽量保证持久化收尾。</td>
+</tr>
+<tr>
+<td><code>Restart=always</code> &#x2F; <code>RestartSec=3</code></td>
+<td>Redis 异常退出后自动重启。</td>
+<td>进程崩溃后 3 秒重启，适合服务托管。</td>
+</tr>
+<tr>
+<td><code>LimitNOFILE=100000</code></td>
+<td>提高 Redis 可打开文件描述符数量。</td>
+<td>支持更多客户端连接和文件句柄。</td>
+</tr>
+<tr>
+<td><code>PrivateTmp=true</code> &#x2F; <code>PrivateDevices=true</code></td>
+<td>限制 Redis 访问临时目录和设备。</td>
+<td>属于 systemd 安全加固，减少 Redis 进程能看到的系统资源。</td>
+</tr>
+<tr>
+<td><code>ProtectHome=true</code> &#x2F; <code>ProtectSystem=full</code></td>
+<td>限制访问用户家目录和系统目录写入。</td>
+<td>防止 Redis 误写系统敏感路径。</td>
+</tr>
+<tr>
+<td><code>ReadWritePaths=...</code></td>
+<td>明确允许 Redis 写入数据、日志、运行目录。</td>
+<td>即使开启了保护，Redis 仍能写入必要目录。</td>
+</tr>
+<tr>
+<td><code>WantedBy=multi-user.target</code></td>
+<td>定义开机自启挂载目标。</td>
+<td>执行 <code>systemctl enable</code> 后，系统进入多用户模式会自动启动 Redis。</td>
+</tr>
+</tbody></table>
+<p>加载并启动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl start redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl daemon-reload</code></td>
+<td>让 systemd 重新读取服务文件。</td>
+<td>新增或修改的 <code>redis-6379.service</code> 被 systemd 识别。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl enable redis-6379</code></td>
+<td>设置 Redis 开机自启。</td>
+<td>会创建 systemd 自启链接；不会立即启动服务。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl start redis-6379</code></td>
+<td>立即启动 Redis 服务。</td>
+<td>Redis 进程会启动并监听 6379；失败时看后面的日志命令。</td>
+</tr>
+</tbody></table>
+<p>查看状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl status redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl status redis-6379</code></td>
+<td>查看 Redis 服务是否正在运行，以及最近的 systemd 日志。</td>
+<td>应看到 <code>active (running)</code>；如果失败，会显示失败原因摘要。</td>
+</tr>
+</tbody></table>
+<p>如果启动失败：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -u redis-6379 -n 100 --no-pager</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -n 100 /var/log/redis/redis-6379.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来排查什么</th>
+<th>重点看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo journalctl -u redis-6379 -n 100 --no-pager</code></td>
+<td>查看 systemd 记录的 Redis 服务日志。</td>
+<td>启动超时、权限错误、退出码、systemd notify 问题。</td>
+</tr>
+<tr>
+<td><code>sudo tail -n 100 /var/log/redis/redis-6379.log</code></td>
+<td>查看 Redis 自己写的运行日志。</td>
+<td>配置语法错误、端口占用、目录权限、持久化文件错误。</td>
+</tr>
+</tbody></table>
+<h2 id="12-防火墙配置"><a href="#12-防火墙配置" class="headerlink" title="12. 防火墙配置"></a>12. 防火墙配置</h2><p>Ubuntu Server 默认不一定启用 <code>ufw</code>，先查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ufw status</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo ufw status</code></td>
+<td>查看 Ubuntu 简易防火墙是否启用。</td>
+<td>如果是 <code>inactive</code>，说明当前没有 ufw 拦截；如果是 <code>active</code>，需要放行 Redis 端口。</td>
+</tr>
+</tbody></table>
+<p>如果启用了 <code>ufw</code>，放行 Redis 端口：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ufw allow from 192.168.88.0/24 to any port 6379 proto tcp</span><br><span class="line"><span class="built_in">sudo</span> ufw reload</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo ufw allow from 192.168.88.0/24 to any port 6379 proto tcp</code></td>
+<td>只允许 VMware NAT 学习网段访问 Redis 的 TCP 6379 端口。</td>
+<td>ufw 规则中会新增来源网段受限的 6379&#x2F;tcp 放行规则，比直接对所有来源开放更安全。</td>
+</tr>
+<tr>
+<td><code>sudo ufw reload</code></td>
+<td>重新加载 ufw 规则。</td>
+<td>新增规则立即生效。</td>
+</tr>
+</tbody></table>
+<p>学习环境中也可以暂时关闭 <code>ufw</code>，但你要知道生产环境不能这么做：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ufw <span class="built_in">disable</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo ufw disable</code></td>
+<td>学习环境临时关闭防火墙，排除端口被拦截的干扰。</td>
+<td>ufw 会停止过滤流量；生产环境不要这样做，应按端口最小放行。</td>
+</tr>
+</tbody></table>
+<h2 id="13-验证-Redis"><a href="#13-验证-Redis" class="headerlink" title="13. 验证 Redis"></a>13. 验证 Redis</h2><h3 id="13-1-本机连接"><a href="#13-1-本机连接" class="headerlink" title="13.1 本机连接"></a>13.1 本机连接</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/redis/bin/redis-cli -h 127.0.0.1 -p 6379 -a Redis@123456</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/usr/local/redis/bin/redis-cli -h 127.0.0.1 -p 6379 -a Redis@123456</code></td>
+<td>用 Redis 客户端连接本机 6379 实例，并带上密码认证。</td>
+<td>进入交互式 Redis 命令行；不会修改数据，后续输入 <code>set</code> 才会写数据。</td>
+</tr>
+</tbody></table>
+<p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ping</span><br><span class="line"><span class="built_in">set</span> hello redis</span><br><span class="line">get hello</span><br><span class="line">info server</span><br><span class="line">info memory</span><br><span class="line">info persistence</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>验证什么</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ping</code></td>
+<td>验证 Redis 连接和认证是否正常。</td>
+<td>正常返回 <code>PONG</code>，不修改数据。</td>
+</tr>
+<tr>
+<td><code>set hello redis</code></td>
+<td>验证写入命令是否可用。</td>
+<td>写入 key <code>hello</code>，值为 <code>redis</code>。</td>
+</tr>
+<tr>
+<td><code>get hello</code></td>
+<td>验证读取命令是否可用。</td>
+<td>读取 key <code>hello</code> 的值。</td>
+</tr>
+<tr>
+<td><code>info server</code></td>
+<td>查看 Redis 服务端版本、运行模式、进程等信息。</td>
+<td>只读查询，不修改数据。</td>
+</tr>
+<tr>
+<td><code>info memory</code></td>
+<td>查看 Redis 内存使用情况。</td>
+<td>只读查询，可用来确认 <code>maxmemory</code> 等信息。</td>
+</tr>
+<tr>
+<td><code>info persistence</code></td>
+<td>查看 RDB&#x2F;AOF 持久化状态。</td>
+<td>只读查询，可用来确认是否正在保存、AOF 是否开启。</td>
+</tr>
+</tbody></table>
+<p>预期：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PONG</span><br><span class="line">OK</span><br><span class="line">&quot;redis&quot;</span><br></pre></td></tr></table></figure>
+
+<h3 id="13-2-宿主机远程连接"><a href="#13-2-宿主机远程连接" class="headerlink" title="13.2 宿主机远程连接"></a>13.2 宿主机远程连接</h3><p>在 Windows 宿主机或其他虚拟机上执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h 192.168.88.101 -p 6379 -a Redis@123456 ping</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -h 192.168.88.101 -p 6379 -a Redis@123456 ping</code></td>
+<td>从宿主机或其他机器远程连接 Redis，验证静态 IP、Redis 监听、防火墙和密码是否都正确。</td>
+<td>返回 <code>PONG</code>。</td>
+</tr>
+</tbody></table>
+<p>预期：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PONG</span><br></pre></td></tr></table></figure>
+
+<p>如果宿主机没有 <code>redis-cli</code>，可以先在虚拟机内验证端口监听：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ss -lntp | grep 6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#96;sudo ss -lntp</td>
+<td>grep 6379&#96;</td>
+<td>查看 Linux 上是否有进程监听 TCP 6379 端口。</td>
+</tr>
+</tbody></table>
+<p>也可以在 Windows PowerShell 中简单测试端口：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Test-NetConnection</span> <span class="number">192.168</span>.<span class="number">88.101</span> <span class="literal">-Port</span> <span class="number">6379</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Test-NetConnection 192.168.88.101 -Port 6379</code></td>
+<td>在 Windows 上测试到虚拟机 Redis 端口的 TCP 连通性。</td>
+<td><code>TcpTestSucceeded</code> 应为 <code>True</code>。</td>
+</tr>
+</tbody></table>
+<h2 id="14-验证持久化"><a href="#14-验证持久化" class="headerlink" title="14. 验证持久化"></a>14. 验证持久化</h2><h3 id="14-1-验证-RDB"><a href="#14-1-验证-RDB" class="headerlink" title="14.1 验证 RDB"></a>14.1 验证 RDB</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 <span class="built_in">set</span> rdb:<span class="built_in">test</span> 1</span><br><span class="line">redis-cli -a Redis@123456 bgsave</span><br><span class="line">redis-cli -a Redis@123456 lastsave</span><br><span class="line"><span class="built_in">ls</span> -lh /data/redis/6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 set rdb:test 1</code></td>
+<td>写入一条测试数据，后面用来验证 RDB 恢复。</td>
+<td>新增或覆盖 key <code>rdb:test</code>。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 bgsave</code></td>
+<td>手动触发后台 RDB 快照。</td>
+<td>Redis fork 子进程生成 <code>dump.rdb</code>；数据量大时会有短暂资源开销。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 lastsave</code></td>
+<td>查看最近一次 RDB 保存时间。</td>
+<td>只读查询，返回时间戳。</td>
+</tr>
+<tr>
+<td><code>ls -lh /data/redis/6379</code></td>
+<td>查看数据目录里是否生成持久化文件。</td>
+<td>应能看到 <code>dump.rdb</code>，也可能看到 AOF 相关文件或目录。</td>
+</tr>
+</tbody></table>
+<p>应该能看到 <code>dump.rdb</code>。</p>
+<p>重启 Redis：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl restart redis-6379</span><br><span class="line">redis-cli -a Redis@123456 get rdb:<span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl restart redis-6379</code></td>
+<td>重启 Redis，模拟服务重启后的数据恢复。</td>
+<td>Redis 会停止再启动，连接会短暂中断。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 get rdb:test</code></td>
+<td>验证重启后测试 key 是否还在。</td>
+<td>如果持久化生效，应返回 <code>1</code>。</td>
+</tr>
+</tbody></table>
+<h3 id="14-2-验证-AOF"><a href="#14-2-验证-AOF" class="headerlink" title="14.2 验证 AOF"></a>14.2 验证 AOF</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 <span class="built_in">set</span> aof:<span class="built_in">test</span> 1</span><br><span class="line">redis-cli -a Redis@123456 bgrewriteaof</span><br><span class="line">redis-cli -a Redis@123456 info persistence</span><br><span class="line"><span class="built_in">ls</span> -lh /data/redis/6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 set aof:test 1</code></td>
+<td>写入一条测试数据，后面用来验证 AOF。</td>
+<td>新增或覆盖 key <code>aof:test</code>。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 bgrewriteaof</code></td>
+<td>手动触发 AOF 重写。</td>
+<td>Redis 后台生成更紧凑的 AOF 文件；会产生临时文件和磁盘 IO。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 info persistence</code></td>
+<td>查看 AOF 是否开启、重写是否成功、是否有错误。</td>
+<td>只读查询，重点看 <code>aof_enabled</code>、<code>aof_rewrite_in_progress</code>、<code>aof_last_bgrewrite_status</code>。</td>
+</tr>
+<tr>
+<td><code>ls -lh /data/redis/6379</code></td>
+<td>查看 AOF 文件或目录是否生成。</td>
+<td>Redis 7 可能看到 <code>appendonlydir</code>。</td>
+</tr>
+</tbody></table>
+<p>Redis 7 的 AOF 可能会生成 <code>appendonlydir</code> 目录，这是正常现象。</p>
+<h2 id="15-常用管理命令"><a href="#15-常用管理命令" class="headerlink" title="15. 常用管理命令"></a>15. 常用管理命令</h2><p>服务管理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl start redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl stop redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl restart redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl status redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">disable</span> redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl start redis-6379</code></td>
+<td>启动 Redis 服务。</td>
+<td>Redis 进程启动并监听端口。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl stop redis-6379</code></td>
+<td>停止 Redis 服务。</td>
+<td>Redis 进程退出，客户端无法连接。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl restart redis-6379</code></td>
+<td>重启 Redis 服务。</td>
+<td>先停止再启动，常用于配置修改后生效。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl status redis-6379</code></td>
+<td>查看服务状态。</td>
+<td>显示是否运行、进程号、最近日志。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl enable redis-6379</code></td>
+<td>设置开机自启。</td>
+<td>下次系统启动时自动启动 Redis。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl disable redis-6379</code></td>
+<td>取消开机自启。</td>
+<td>下次系统启动时不会自动启动 Redis，但不会停止当前正在运行的服务。</td>
+</tr>
+</tbody></table>
+<p>日志查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -u redis-6379 -f</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -f /var/log/redis/redis-6379.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来查看什么</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo journalctl -u redis-6379 -f</code></td>
+<td>实时跟踪 systemd 里的 Redis 服务日志。</td>
+<td>看服务启动、停止、崩溃、重启等 systemd 层面的事件。</td>
+</tr>
+<tr>
+<td><code>sudo tail -f /var/log/redis/redis-6379.log</code></td>
+<td>实时跟踪 Redis 自己的日志文件。</td>
+<td>看 Redis 配置、持久化、客户端、错误等 Redis 层面的信息。</td>
+</tr>
+</tbody></table>
+<p>基础状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 info server</span><br><span class="line">redis-cli -a Redis@123456 info clients</span><br><span class="line">redis-cli -a Redis@123456 info memory</span><br><span class="line">redis-cli -a Redis@123456 info persistence</span><br><span class="line">redis-cli -a Redis@123456 info stats</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>查看内容</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 info server</code></td>
+<td>Redis 版本、运行模式、进程、系统信息。</td>
+<td>确认服务端基础信息。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 info clients</code></td>
+<td>客户端连接数量和阻塞情况。</td>
+<td>排查连接数、客户端积压。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 info memory</code></td>
+<td>内存使用、峰值、碎片率、淘汰策略。</td>
+<td>排查内存是否接近 <code>maxmemory</code>。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 info persistence</code></td>
+<td>RDB&#x2F;AOF 状态和最近错误。</td>
+<td>排查持久化是否成功。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 info stats</code></td>
+<td>命令数、连接数、命中率、网络流量等统计。</td>
+<td>观察 Redis 使用情况。</td>
+</tr>
+</tbody></table>
+<p>慢查询：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 slowlog get 10</span><br><span class="line">redis-cli -a Redis@123456 slowlog len</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>查看内容</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 slowlog get 10</code></td>
+<td>获取最近 10 条慢查询记录。</td>
+<td>分析哪些命令执行时间过长。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 slowlog len</code></td>
+<td>查看当前慢查询日志条数。</td>
+<td>判断是否持续产生慢查询。</td>
+</tr>
+</tbody></table>
+<p>延迟：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 latency latest</span><br><span class="line">redis-cli -a Redis@123456 latency doctor</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>查看内容</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 latency latest</code></td>
+<td>查看最近记录到的延迟事件。</td>
+<td>快速确认是否有延迟尖刺。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 latency doctor</code></td>
+<td>让 Redis 给出延迟诊断建议。</td>
+<td>学习定位 fork、AOF、命令阻塞等延迟来源。</td>
+</tr>
+</tbody></table>
+<h2 id="16-建议做的单机实验"><a href="#16-建议做的单机实验" class="headerlink" title="16. 建议做的单机实验"></a>16. 建议做的单机实验</h2><h3 id="16-1-配置变更实验"><a href="#16-1-配置变更实验" class="headerlink" title="16.1 配置变更实验"></a>16.1 配置变更实验</h3><p>修改 <code>/etc/redis/redis-6379.conf</code> 中的 <code>maxmemory</code>，然后重启：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl restart redis-6379</span><br><span class="line">redis-cli -a Redis@123456 config get maxmemory</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl restart redis-6379</code></td>
+<td>让配置文件里的 <code>maxmemory</code> 修改重新加载。</td>
+<td>Redis 短暂重启。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 config get maxmemory</code></td>
+<td>查看 Redis 当前运行时实际生效的 <code>maxmemory</code>。</td>
+<td>输出应和你修改后的配置一致。</td>
+</tr>
+</tbody></table>
+<p>目的：理解配置文件、启动参数和运行时配置的关系。</p>
+<h3 id="16-2-密码验证实验"><a href="#16-2-密码验证实验" class="headerlink" title="16.2 密码验证实验"></a>16.2 密码验证实验</h3><p>不带密码执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli ping</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli ping</code></td>
+<td>故意不带密码访问，验证 Redis 认证是否生效。</td>
+<td>应提示需要认证，不能返回正常 <code>PONG</code>。</td>
+</tr>
+</tbody></table>
+<p>带密码执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 ping</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 ping</code></td>
+<td>带密码访问 Redis，验证正确认证后可以执行命令。</td>
+<td>返回 <code>PONG</code>。</td>
+</tr>
+</tbody></table>
+<p>目的：理解 Redis 认证机制。</p>
+<h3 id="16-3-数据恢复实验"><a href="#16-3-数据恢复实验" class="headerlink" title="16.3 数据恢复实验"></a>16.3 数据恢复实验</h3><p>写入数据后重启：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 <span class="built_in">set</span> recover:<span class="built_in">test</span> ok</span><br><span class="line"><span class="built_in">sudo</span> systemctl restart redis-6379</span><br><span class="line">redis-cli -a Redis@123456 get recover:<span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 set recover:test ok</code></td>
+<td>写入恢复测试数据。</td>
+<td>新增或覆盖 key <code>recover:test</code>。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl restart redis-6379</code></td>
+<td>重启 Redis，模拟服务重启。</td>
+<td>Redis 重新从 RDB&#x2F;AOF 加载数据。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 get recover:test</code></td>
+<td>查看重启后数据是否还存在。</td>
+<td>应返回 <code>ok</code>。</td>
+</tr>
+</tbody></table>
+<p>目的：验证 RDB&#x2F;AOF 生效。</p>
+<h3 id="16-4-慢查询实验"><a href="#16-4-慢查询实验" class="headerlink" title="16.4 慢查询实验"></a>16.4 慢查询实验</h3><p>临时调整慢查询阈值：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> slowlog-log-slower-than 0</span><br><span class="line">redis-cli -a Redis@123456 <span class="built_in">set</span> slowlog:<span class="built_in">test</span> 1</span><br><span class="line">redis-cli -a Redis@123456 slowlog get 5</span><br><span class="line">redis-cli -a Redis@123456 config <span class="built_in">set</span> slowlog-log-slower-than 10000</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>redis-cli -a Redis@123456 config set slowlog-log-slower-than 0</code></td>
+<td>临时把慢查询阈值设为 0，让后续所有命令都进入慢查询日志。</td>
+<td>只修改运行时配置，不会写回配置文件；用于实验。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 set slowlog:test 1</code></td>
+<td>执行一条普通写命令，用来制造慢查询记录。</td>
+<td>写入 key <code>slowlog:test</code>，同时因为阈值为 0 会被记录。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 slowlog get 5</code></td>
+<td>查看最近 5 条慢查询记录。</td>
+<td>应能看到刚才的 <code>set</code> 或相关命令。</td>
+</tr>
+<tr>
+<td><code>redis-cli -a Redis@123456 config set slowlog-log-slower-than 10000</code></td>
+<td>把慢查询阈值恢复为 10ms。</td>
+<td>避免后续所有命令都进入慢查询日志，减少噪音。</td>
+</tr>
+</tbody></table>
+<p>目的：知道慢查询日志如何产生和查看。</p>
+<h2 id="17-常见问题"><a href="#17-常见问题" class="headerlink" title="17. 常见问题"></a>17. 常见问题</h2><h3 id="17-1-netplan-apply-后网络断了"><a href="#17-1-netplan-apply-后网络断了" class="headerlink" title="17.1 netplan apply 后网络断了"></a>17.1 netplan apply 后网络断了</h3><p>先回到 VMware 控制台检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/netplan/00-installer-config.yaml</span><br><span class="line">ip addr</span><br><span class="line">ip route</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>排查什么</th>
+<th>重点看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cat /etc/netplan/00-installer-config.yaml</code></td>
+<td>查看实际保存的 netplan 配置。</td>
+<td>网卡名、IP、网关、DNS、YAML 缩进是否正确。</td>
+</tr>
+<tr>
+<td><code>ip addr</code></td>
+<td>查看当前系统实际拿到的 IP。</td>
+<td>是否有 <code>192.168.88.101/24</code>，网卡是否是 <code>UP</code>。</td>
+</tr>
+<tr>
+<td><code>ip route</code></td>
+<td>查看当前路由表。</td>
+<td>默认路由是否指向 <code>192.168.88.2</code>。</td>
+</tr>
+</tbody></table>
+<p>高频原因：</p>
+<ul>
+<li>网卡名不是 <code>ens33</code>。</li>
+<li><code>addresses</code> 不在 VMnet8 网段。</li>
+<li><code>via</code> 不是 VMware NAT 实际网关。</li>
+<li>YAML 缩进错误。</li>
+</ul>
+<h3 id="17-2-宿主机连不上-Redis"><a href="#17-2-宿主机连不上-Redis" class="headerlink" title="17.2 宿主机连不上 Redis"></a>17.2 宿主机连不上 Redis</h3><p>按顺序排查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ip addr</span><br><span class="line">ping 192.168.88.101</span><br><span class="line"><span class="built_in">sudo</span> ss -lntp | grep 6379</span><br><span class="line"><span class="built_in">sudo</span> ufw status</span><br><span class="line"><span class="built_in">sudo</span> systemctl status redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>排查什么</th>
+<th>重点看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ip addr</code></td>
+<td>虚拟机 IP 是否正确。</td>
+<td>是否是 <code>192.168.88.101/24</code>，是否在 VMnet8 网段。</td>
+</tr>
+<tr>
+<td><code>ping 192.168.88.101</code></td>
+<td>从当前机器测试到 Redis 虚拟机 IP 是否能通。</td>
+<td>如果不通，优先查 VMware 网络、静态 IP 和网关。</td>
+</tr>
+<tr>
+<td>&#96;sudo ss -lntp</td>
+<td>grep 6379&#96;</td>
+<td>Redis 是否监听 6379 端口。</td>
+</tr>
+<tr>
+<td><code>sudo ufw status</code></td>
+<td>防火墙是否拦截 6379。</td>
+<td><code>active</code> 时要确认是否有 <code>6379/tcp ALLOW</code>。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl status redis-6379</code></td>
+<td>Redis 服务是否正常运行。</td>
+<td>是否 <code>active (running)</code>，失败时看错误摘要。</td>
+</tr>
+</tbody></table>
+<p>常见原因：</p>
+<ul>
+<li>虚拟机没有接到 <code>VMnet8 NAT</code>。</li>
+<li>虚拟机 IP 不是 <code>192.168.88.101</code>。</li>
+<li>Redis 只绑定了 <code>127.0.0.1</code>。</li>
+<li><code>ufw</code> 没放行 <code>6379</code>。</li>
+<li>Redis 密码没带或密码错误。</li>
+</ul>
+<h3 id="17-3-Redis-启动失败"><a href="#17-3-Redis-启动失败" class="headerlink" title="17.3 Redis 启动失败"></a>17.3 Redis 启动失败</h3><p>优先看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl status redis-6379</span><br><span class="line"><span class="built_in">sudo</span> journalctl -u redis-6379 -n 100 --no-pager</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -n 100 /var/log/redis/redis-6379.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>排查什么</th>
+<th>重点看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl status redis-6379</code></td>
+<td>看 systemd 对 Redis 服务的状态判断。</td>
+<td>是否启动失败、退出码是什么、是否超时。</td>
+</tr>
+<tr>
+<td><code>sudo journalctl -u redis-6379 -n 100 --no-pager</code></td>
+<td>看 systemd 记录的最近 100 行 Redis 服务日志。</td>
+<td><code>Permission denied</code>、<code>timeout</code>、<code>Main process exited</code> 等信息。</td>
+</tr>
+<tr>
+<td><code>sudo tail -n 100 /var/log/redis/redis-6379.log</code></td>
+<td>看 Redis 自己输出的最近 100 行日志。</td>
+<td>配置错误、端口占用、RDB&#x2F;AOF 文件错误、目录权限错误。</td>
+</tr>
+</tbody></table>
+<p>常见原因：</p>
+<ul>
+<li>配置文件语法错误。</li>
+<li>数据目录权限不对。</li>
+<li>日志目录权限不对。</li>
+<li>端口被占用。</li>
+<li><code>supervised</code> 配置和 systemd 服务类型不匹配。</li>
+</ul>
+<h3 id="17-4-redis-cli-提示-AUTH-警告"><a href="#17-4-redis-cli-提示-AUTH-警告" class="headerlink" title="17.4 redis-cli 提示 AUTH 警告"></a>17.4 redis-cli 提示 AUTH 警告</h3><p>使用 <code>-a</code> 会提示密码暴露风险，这是正常警告。</p>
+<p>可以使用环境变量减少命令行暴露：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> REDISCLI_AUTH=<span class="string">&#x27;Redis@123456&#x27;</span></span><br><span class="line">redis-cli ping</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>export REDISCLI_AUTH=&#39;Redis@123456&#39;</code></td>
+<td>把 Redis 密码放到当前 shell 环境变量中，避免每条命令都写 <code>-a</code>。</td>
+<td>只对当前终端会话生效；后续 <code>redis-cli</code> 会自动使用这个密码。</td>
+</tr>
+<tr>
+<td><code>redis-cli ping</code></td>
+<td>不在命令行显式写密码，验证环境变量认证是否生效。</td>
+<td>正常返回 <code>PONG</code>。</td>
+</tr>
+</tbody></table>
+<h3 id="17-5-make-test-出现-Active-defrag-失败"><a href="#17-5-make-test-出现-Active-defrag-失败" class="headerlink" title="17.5 make test 出现 Active defrag 失败"></a>17.5 make test 出现 Active defrag 失败</h3><p>如果执行 <code>make test</code> 时出现类似错误：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">*** [err]: Active defrag - AOF loading in tests/unit/memefficiency.tcl</span><br><span class="line">Expected 66 &lt;= 40</span><br><span class="line">make[1]: *** [Makefile:462: test] Error 1</span><br><span class="line">make: *** [Makefile:6: test] Error 2</span><br></pre></td></tr></table></figure>
+
+<p>这通常不是 Redis 编译失败，而是 Redis 自带测试里的延迟敏感用例在虚拟机中超时。VMware 学习环境 CPU、磁盘 IO、内存分配和宿主机负载都会影响这类测试。</p>
+<p>先确认 Redis 二进制是否已经编译出来：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/src/redis-7.2.5</span><br><span class="line">src/redis-server --version</span><br><span class="line">src/redis-cli --version</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>排查什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cd /usr/local/src/redis-7.2.5</code></td>
+<td>进入 Redis 源码目录。</td>
+<td>后续能访问 <code>src/redis-server</code> 和 <code>src/redis-cli</code>。</td>
+</tr>
+<tr>
+<td><code>src/redis-server --version</code></td>
+<td>确认服务端二进制是否已经编译出来。</td>
+<td>能输出 Redis 版本，说明编译产物存在。</td>
+</tr>
+<tr>
+<td><code>src/redis-cli --version</code></td>
+<td>确认客户端二进制是否已经编译出来。</td>
+<td>能输出 <code>redis-cli</code> 版本。</td>
+</tr>
+</tbody></table>
+<p>如果版本能正常输出，可以继续安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> make install PREFIX=/usr/local/redis</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo make install PREFIX=/usr/local/redis</code></td>
+<td>在确认编译产物可用后，把 Redis 安装到正式目录。</td>
+<td>更新 <code>/usr/local/redis/bin</code> 下的 Redis 程序。</td>
+</tr>
+</tbody></table>
+<p>安装后再验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/redis/bin/redis-server --version</span><br><span class="line">/usr/local/redis/bin/redis-cli --version</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用来确认什么</th>
+<th>正常结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/usr/local/redis/bin/redis-server --version</code></td>
+<td>确认正式安装目录里的 Redis 服务端版本。</td>
+<td>输出版本正常。</td>
+</tr>
+<tr>
+<td><code>/usr/local/redis/bin/redis-cli --version</code></td>
+<td>确认正式安装目录里的 Redis 客户端版本。</td>
+<td>输出版本正常。</td>
+</tr>
+</tbody></table>
+<p>处理原则：</p>
+<ul>
+<li><code>make</code> 失败：不能继续，说明编译没有通过。</li>
+<li><code>make test</code> 失败：先看失败原因；如果是虚拟机中的延迟测试失败，学习环境可以继续安装。</li>
+<li>生产编译或正式交付环境：应该换更稳定的机器重新跑完整测试。</li>
+</ul>
+<h3 id="17-6-systemd-启动提示未编译-systemd-支持"><a href="#17-6-systemd-启动提示未编译-systemd-支持" class="headerlink" title="17.6 systemd 启动提示未编译 systemd 支持"></a>17.6 systemd 启动提示未编译 systemd 支持</h3><p>如果执行启动命令时出现超时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Job for redis-6379.service failed because a timeout was exceeded.</span><br></pre></td></tr></table></figure>
+
+<p>同时 Redis 日志里出现类似信息：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemd supervision requested, but Redis was compiled without libsystemd support</span><br></pre></td></tr></table></figure>
+
+<p>说明 Redis 实际已经启动了，但 systemd 服务使用了 <code>Type=notify</code>，正在等待 Redis 发送启动完成通知。当前 Redis 编译时没有启用 systemd 支持，所以不会发送通知，最终 systemd 等待超时并终止 Redis。</p>
+<p>这个问题通常由下面两处配置共同触发：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">supervised systemd</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Type</span>=notify</span><br></pre></td></tr></table></figure>
+
+<p>处理方式是安装 <code>libsystemd-dev</code> 后重新编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl stop redis-6379</span><br><span class="line"><span class="built_in">sudo</span> systemctl reset-failed redis-6379</span><br><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install -y libsystemd-dev</span><br><span class="line"><span class="built_in">cd</span> /usr/local/src</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> -R $(<span class="built_in">id</span> -u):$(<span class="built_in">id</span> -g) redis-7.2.5</span><br><span class="line"><span class="built_in">cd</span> /usr/local/src/redis-7.2.5</span><br><span class="line">make distclean</span><br><span class="line">make USE_SYSTEMD=<span class="built_in">yes</span> -j2</span><br><span class="line"><span class="built_in">sudo</span> make install PREFIX=/usr/local/redis</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-server /usr/local/bin/redis-server</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-cli /usr/local/bin/redis-cli</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/redis/bin/redis-benchmark /usr/local/bin/redis-benchmark</span><br><span class="line"><span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line"><span class="built_in">sudo</span> systemctl restart redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo systemctl stop redis-6379</code></td>
+<td>先停止当前可能异常的 Redis 服务。</td>
+<td>Redis 停止监听端口。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl reset-failed redis-6379</code></td>
+<td>清除 systemd 里该服务的失败状态。</td>
+<td>状态计数重置，便于重新启动观察。</td>
+</tr>
+<tr>
+<td><code>sudo apt update</code></td>
+<td>刷新软件源索引。</td>
+<td>不安装软件，只更新索引。</td>
+</tr>
+<tr>
+<td><code>sudo apt install -y libsystemd-dev</code></td>
+<td>安装 Redis 编译 systemd 支持所需头文件。</td>
+<td>后续 <code>make USE_SYSTEMD=yes</code> 才能真正链接 systemd。</td>
+</tr>
+<tr>
+<td><code>cd /usr/local/src</code></td>
+<td>进入源码父目录。</td>
+<td>准备处理源码目录权限。</td>
+</tr>
+<tr>
+<td><code>sudo chown -R $(id -u):$(id -g) redis-7.2.5</code></td>
+<td>修复源码目录所有权，避免普通用户重新编译失败。</td>
+<td>当前登录用户获得源码目录写权限。</td>
+</tr>
+<tr>
+<td><code>cd /usr/local/src/redis-7.2.5</code></td>
+<td>进入 Redis 源码目录。</td>
+<td>后续 <code>make</code> 命令在正确目录执行。</td>
+</tr>
+<tr>
+<td><code>make distclean</code></td>
+<td>清理旧编译产物和配置缓存。</td>
+<td>源码目录回到更干净的编译状态；避免沿用之前未启用 systemd 的产物。</td>
+</tr>
+<tr>
+<td><code>make USE_SYSTEMD=yes -j2</code></td>
+<td>重新编译 Redis，并启用 systemd 支持。</td>
+<td>生成带 libsystemd 支持的 Redis 二进制。</td>
+</tr>
+<tr>
+<td><code>sudo make install PREFIX=/usr/local/redis</code></td>
+<td>把重新编译后的 Redis 安装到正式目录。</td>
+<td>覆盖 <code>/usr/local/redis/bin</code> 下的 Redis 程序。</td>
+</tr>
+<tr>
+<td><code>sudo ln -sf ...</code></td>
+<td>更新全局命令软链接。</td>
+<td>确保直接执行的 <code>redis-server</code>、<code>redis-cli</code> 指向正式安装目录。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl daemon-reload</code></td>
+<td>重新加载 systemd 服务定义。</td>
+<td>systemd 重新识别服务文件。</td>
+</tr>
+<tr>
+<td><code>sudo systemctl restart redis-6379</code></td>
+<td>用新二进制重启 Redis 服务。</td>
+<td>如果 systemd 支持正确，服务应正常启动。</td>
+</tr>
+</tbody></table>
+<p>如果你确认已经重新编译过，但 systemd 仍然超时，按下面顺序验证到底是哪一个二进制有问题：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/src/redis-7.2.5</span><br><span class="line">ldd src/redis-server | grep systemd || <span class="built_in">echo</span> <span class="string">&quot;src/redis-server 未链接 libsystemd&quot;</span></span><br><span class="line">ldd /usr/local/redis/bin/redis-server | grep systemd || <span class="built_in">echo</span> <span class="string">&quot;/usr/local/redis/bin/redis-server 未链接 libsystemd&quot;</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">cat</span> redis-6379</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>排查什么</th>
+<th>重点看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cd /usr/local/src/redis-7.2.5</code></td>
+<td>进入源码目录。</td>
+<td>后续检查源码目录里的二进制。</td>
+</tr>
+<tr>
+<td>&#96;ldd src&#x2F;redis-server</td>
+<td>grep systemd</td>
+<td></td>
+</tr>
+<tr>
+<td>&#96;ldd &#x2F;usr&#x2F;local&#x2F;redis&#x2F;bin&#x2F;redis-server</td>
+<td>grep systemd</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sudo systemctl cat redis-6379</code></td>
+<td>查看 systemd 实际加载的服务文件内容。</td>
+<td>确认 <code>ExecStart</code> 是否指向 <code>/usr/local/redis/bin/redis-server</code>。</td>
+</tr>
+</tbody></table>
+<p>判断方式：</p>
+<ul>
+<li><code>src/redis-server</code> 没有 <code>libsystemd</code>：说明源码目录没有用 <code>make USE_SYSTEMD=yes</code> 成功编译。</li>
+<li><code>src/redis-server</code> 有 <code>libsystemd</code>，但 <code>/usr/local/redis/bin/redis-server</code> 没有：说明只编译了源码目录，没有重新 <code>sudo make install PREFIX=/usr/local/redis</code>。</li>
+<li>两个都有 <code>libsystemd</code>，但仍然超时：检查 <code>sudo systemctl cat redis-6379</code> 里的 <code>ExecStart</code> 是否指向 <code>/usr/local/redis/bin/redis-server</code>。</li>
+</ul>
+<p>如果你已经按本文安装过 <code>libsystemd-dev</code> 并使用 <code>make USE_SYSTEMD=yes -j2</code> 编译，正常不会遇到这个问题。</p>
+<h3 id="17-7-make-出现-Permission-denied"><a href="#17-7-make-出现-Permission-denied" class="headerlink" title="17.7 make 出现 Permission denied"></a>17.7 make 出现 Permission denied</h3><p>如果编译或测试时出现类似错误：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sh: 1: cannot create foo.c: Permission denied</span><br><span class="line">rm: cannot remove &#x27;redis-server&#x27;: Permission denied</span><br><span class="line">can&#x27;t create directory &quot;./tests/tmp/server.xxxxx&quot;: permission denied</span><br></pre></td></tr></table></figure>
+
+<p>说明 Redis 源码目录或之前的编译产物属于 <code>root</code>，当前登录用户没有写权限。常见原因是之前执行过 <code>sudo tar</code>、<code>sudo make</code> 或用 <code>root</code> 编译过。</p>
+<p>处理方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/src</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chown</span> -R $(<span class="built_in">id</span> -u):$(<span class="built_in">id</span> -g) redis-7.2.5</span><br><span class="line"><span class="built_in">cd</span> redis-7.2.5</span><br><span class="line">make distclean</span><br><span class="line">make USE_SYSTEMD=<span class="built_in">yes</span> -j2</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cd /usr/local/src</code></td>
+<td>进入源码父目录。</td>
+<td>准备修复源码目录权限。</td>
+</tr>
+<tr>
+<td><code>sudo chown -R $(id -u):$(id -g) redis-7.2.5</code></td>
+<td>把源码目录归还给当前登录用户。</td>
+<td>当前用户可以清理、编译、测试源码。</td>
+</tr>
+<tr>
+<td><code>cd redis-7.2.5</code></td>
+<td>进入 Redis 源码目录。</td>
+<td>后续 <code>make</code> 在正确目录执行。</td>
+</tr>
+<tr>
+<td><code>make distclean</code></td>
+<td>清理可能属于 root 的旧编译产物。</td>
+<td>删除旧构建文件，减少权限污染和缓存影响。</td>
+</tr>
+<tr>
+<td><code>make USE_SYSTEMD=yes -j2</code></td>
+<td>用普通用户重新编译 Redis。</td>
+<td>生成新的 Redis 编译产物。</td>
+</tr>
+</tbody></table>
+<p>如果还要重新执行测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>make test</code></td>
+<td>用普通用户重新跑 Redis 自带测试。</td>
+<td>会启动临时测试进程；如果仍然是虚拟机延迟敏感用例失败，可按前文原则判断是否继续。</td>
+</tr>
+</tbody></table>
+<p>测试通过或确认只是虚拟机延迟测试失败后，再安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> make install PREFIX=/usr/local/redis</span><br></pre></td></tr></table></figure>
+
+<p>命令说明：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>为什么执行</th>
+<th>执行后的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo make install PREFIX=/usr/local/redis</code></td>
+<td>编译和测试确认后，把 Redis 安装到系统目录。</td>
+<td>更新 <code>/usr/local/redis/bin</code>；安装阶段使用 <code>sudo</code> 是合理的。</td>
+</tr>
+</tbody></table>
+<p>原则：</p>
+<ul>
+<li>源码编译和测试用普通登录用户执行。</li>
+<li>只有安装到 <code>/usr/local/redis</code> 时才使用 <code>sudo make install</code>。</li>
+<li>不建议使用 <code>sudo make</code> 或 <code>sudo make test</code>，否则容易留下 root-owned 编译产物。</li>
+</ul>
+<h2 id="18-本阶段完成标准"><a href="#18-本阶段完成标准" class="headerlink" title="18. 本阶段完成标准"></a>18. 本阶段完成标准</h2><p>完成本文后，你应该做到：</p>
+<ol>
+<li>能用 Ubuntu 22.04.5 创建模板机。</li>
+<li>能从模板机克隆出 <code>redis-single-1</code>。</li>
+<li>能给 <code>redis-single-1</code> 配置静态 IP <code>192.168.88.101/24</code>。</li>
+<li>能解释 <code>addresses</code> 和 <code>routes.via</code> 为什么这样配置。</li>
+<li>能从源码安装 Redis。</li>
+<li>能解释 <code>/etc/redis</code>、<code>/data/redis/6379</code>、<code>/var/log/redis</code> 分别做什么。</li>
+<li>能用 <code>systemctl</code> 管理 Redis。</li>
+<li>能从宿主机连接虚拟机 Redis。</li>
+<li>能验证 RDB 和 AOF 文件生成。</li>
+<li>能排查 Redis 启动失败和远程连接失败。</li>
+</ol>
+<p>达到这个状态后，再进入主从复制和 Sentinel，会更顺。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Redis/">Redis</a></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      toc.appendChild(a);
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = toc.querySelectorAll('a');
+    window.addEventListener('scroll', function() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+    });
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
