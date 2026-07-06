@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物境 | 九方</title>
+  <meta name="description" content="物境：格物致知 · 理以载道">
+  <link rel="icon" href="/image/favicon.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#f7fafb;--panel:#ffffff;--text:#162838;--muted:#687b88;--line:#cfdae1;--deep:#285b75;--accent:#4f91a8;--soft:#eaf3f5;--wash:#f1f7f8}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(180deg,#eef6f7 0%,var(--bg) 42%,#fff 100%);color:var(--text);line-height:1.6}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(40,91,117,.06) 1px,transparent 1px),linear-gradient(180deg,rgba(40,91,117,.045) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(180deg,#000,transparent 70%)}
+    a{color:inherit}
+    .wrap{position:relative;max-width:1120px;margin:0 auto;padding:2rem 1.4rem 3rem}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:4rem}
+    .brand{font-family:"Noto Serif SC",serif;font-weight:700;text-decoration:none;letter-spacing:0;color:var(--deep)}
+    .nav{display:flex;gap:.5rem;flex-wrap:wrap}
+    .nav a{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--deep);background:rgba(255,255,255,.76);transition:all .15s}
+    .nav a:hover{background:var(--deep);border-color:var(--deep);color:#fff}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:2rem;align-items:end;margin-bottom:2.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line)}
+    .eyebrow{font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.55rem}
+    h1{font-family:"Noto Serif SC",serif;font-size:clamp(2.4rem,7vw,5rem);line-height:1;letter-spacing:0;color:var(--deep)}
+    .tagline{font-family:"Noto Serif SC",serif;font-size:1.05rem;color:var(--muted);margin-top:.75rem}
+    .summary{border-left:3px solid var(--accent);padding-left:1rem;color:var(--muted);font-size:.92rem}
+    .summary strong{display:block;color:var(--text);font-size:1.5rem;line-height:1.2;margin-bottom:.2rem}
+    .article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
+    .article-card{min-height:150px;display:flex;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.82);text-decoration:none;box-shadow:0 14px 34px rgba(31,59,73,.07);transition:transform .15s,border-color .15s,box-shadow .15s}
+    .article-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 18px 42px rgba(31,59,73,.11)}
+    .article-card:first-child{grid-column:1/-1;min-height:210px;background:linear-gradient(135deg,#fff 0%,var(--wash) 100%)}
+    .cover{width:112px;border-radius:7px;background:var(--soft);background-size:cover;background-position:center;flex-shrink:0;border:1px solid rgba(40,91,117,.1)}
+    .article-card:first-child .cover{width:180px}
+    .placeholder{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.4rem}
+    .content{min-width:0;display:flex;flex-direction:column}
+    h2{font-size:1.05rem;line-height:1.35;margin-bottom:.45rem;color:var(--text)}
+    .article-card:first-child h2{font-size:1.45rem}
+    .desc{color:var(--muted);font-size:.86rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:auto}
+    .meta{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.76rem;margin-top:.9rem}
+    .tag{padding:.12rem .42rem;border-radius:999px;background:var(--soft);color:var(--deep)}
+    .empty{padding:1rem;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+    @media screen and (max-width:760px){
+      .wrap{padding:1.2rem 1rem 2.4rem}
+      .topbar{margin-bottom:2.8rem}
+      .hero{grid-template-columns:1fr;gap:1.2rem}
+      .summary{border-left:0;border-top:3px solid var(--accent);padding:.85rem 0 0}
+      .article-grid{grid-template-columns:1fr}
+      .article-card,.article-card:first-child{grid-column:auto;min-height:auto;flex-direction:column}
+      .cover,.article-card:first-child .cover{width:100%;height:150px}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <a class="brand" href="/">九方</a>
+      <nav class="nav" aria-label="页面导航">
+        <a href="/" title="首页" aria-label="首页"><i class="fas fa-home"></i></a>
+        <a href="/xinjing/" title="心境" aria-label="心境"><i class="fas fa-feather-alt"></i></a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Realm of Method</div>
+        <h1>物境</h1>
+        <p class="tagline">格物致知 · 理以载道</p>
+      </div>
+      <div class="summary">
+        <strong id="postCount">0</strong>
+        <span>篇文章按设定顺序展开</span>
+      </div>
+    </section>
+
+    <section class="article-grid" id="articleGrid"></section>
+  </main>
+
+  <script>
+  (function(){
+    function hasCategory(post, name) {
+      return post.categories && post.categories.some(function(c){ return c === name; });
+    }
+    function pathIncludes(post, part) {
+      return post.path && post.path.indexOf(part) !== -1;
+    }
+    function sortByRank(a, b) {
+      var ar = Number(a.realm_rank || 0);
+      var br = Number(b.realm_rank || 0);
+      if (br !== ar) return br - ar;
+      return String(b.date || '').localeCompare(String(a.date || ''));
+    }
+    function card(post) {
+      var cover = post.cover
+        ? '<div class="cover" style="background-image:url(' + post.cover + ')"></div>'
+        : '<div class="cover placeholder"><i class="fas fa-cube"></i></div>';
+      var desc = post.description ? '<p class="desc">' + post.description + '</p>' : '';
+      var tags = (post.tags || []).slice(0, 3).map(function(t){ return '<span class="tag">' + t + '</span>'; }).join('');
+      return '<a class="article-card" href="' + post.path + '">' + cover
+        + '<div class="content"><h2>' + post.title + '</h2>' + desc
+        + '<div class="meta"><i class="far fa-calendar-alt"></i><time>' + post.date + '</time>' + tags + '</div></div></a>';
+    }
+
+    fetch('/posts.json')
+      .then(function(r){ return r.json(); })
+      .then(function(posts){
+        var list = posts.filter(function(p){ return p.realm === 'wujing' || hasCategory(p, 'Java') || pathIncludes(p, '/java/'); }).sort(sortByRank);
+        document.getElementById('postCount').textContent = list.length;
+        document.getElementById('articleGrid').innerHTML = list.length ? list.map(card).join('') : '<div class="empty">暂无文章</div>';
+      })
+      .catch(function(err){ console.error(err); });
+  })();
+  </script>
+</body>
+</html>

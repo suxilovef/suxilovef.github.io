@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>心境 | 九方</title>
+  <meta name="description" content="心境：心之所向 · 素履以往">
+  <link rel="icon" href="/image/favicon.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#fffaf2;--panel:#fffdf8;--text:#3d2b1e;--muted:#8c735d;--line:#ead8bd;--deep:#8f5a2c;--accent:#c89b58;--rose:#b96f63;--soft:#f8ecd9;--wash:#fff6e8}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at 18% 8%,rgba(200,155,88,.18),transparent 28%),linear-gradient(180deg,var(--bg),#fff 78%);color:var(--text);line-height:1.7}
+    a{color:inherit}
+    .wrap{max-width:1080px;margin:0 auto;padding:2rem 1.4rem 3rem}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:4rem}
+    .brand{font-family:"Noto Serif SC",serif;font-weight:700;text-decoration:none;color:var(--deep)}
+    .nav{display:flex;gap:.5rem;flex-wrap:wrap}
+    .nav a{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--deep);background:rgba(255,253,248,.8);transition:all .15s}
+    .nav a:hover{background:var(--deep);border-color:var(--deep);color:#fff}
+    .hero{margin-bottom:2.4rem;padding:2.4rem 0 1.4rem;border-bottom:1px solid var(--line);position:relative}
+    .hero::after{content:"";position:absolute;right:0;bottom:1.4rem;width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--accent))}
+    .eyebrow{font-size:.78rem;color:var(--rose);font-weight:600;margin-bottom:.55rem}
+    h1{font-family:"Ma Shan Zheng","Noto Serif SC",serif;font-size:clamp(2.8rem,8vw,5.5rem);line-height:1;letter-spacing:0;color:var(--deep);font-weight:400}
+    .tagline{font-family:"Noto Serif SC",serif;font-size:1.08rem;color:var(--muted);margin-top:.75rem}
+    .summary{display:inline-flex;align-items:baseline;gap:.45rem;margin-top:1.2rem;color:var(--muted);font-size:.9rem}
+    .summary strong{font-size:1.6rem;color:var(--text)}
+    .article-list{display:grid;gap:.8rem}
+    .article-card{display:grid;grid-template-columns:120px minmax(0,1fr);gap:1rem;align-items:stretch;padding:.9rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,253,248,.82);text-decoration:none;box-shadow:0 14px 34px rgba(99,65,35,.07);transition:transform .15s,border-color .15s,box-shadow .15s}
+    .article-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 18px 42px rgba(99,65,35,.11)}
+    .article-card:first-child{grid-template-columns:180px minmax(0,1fr);min-height:210px;background:linear-gradient(135deg,#fffdf8,var(--wash))}
+    .cover{border-radius:7px;background:var(--soft);background-size:cover;background-position:center;border:1px solid rgba(143,90,44,.1)}
+    .placeholder{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:1.4rem}
+    .content{min-width:0;display:flex;flex-direction:column;padding:.1rem 0}
+    h2{font-family:"Noto Serif SC",serif;font-size:1.06rem;line-height:1.4;margin-bottom:.4rem;color:var(--text)}
+    .article-card:first-child h2{font-size:1.45rem}
+    .desc{color:var(--muted);font-size:.88rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:auto}
+    .meta{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.76rem;margin-top:.85rem}
+    .tag{padding:.12rem .42rem;border-radius:999px;background:var(--soft);color:var(--deep)}
+    .empty{padding:1rem;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+    @media screen and (max-width:720px){
+      .wrap{padding:1.2rem 1rem 2.4rem}
+      .topbar{margin-bottom:2.2rem}
+      .hero{padding-top:1.2rem}
+      .hero::after{width:110px}
+      .article-card,.article-card:first-child{grid-template-columns:1fr}
+      .cover{height:150px}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <a class="brand" href="/">九方</a>
+      <nav class="nav" aria-label="页面导航">
+        <a href="/" title="首页" aria-label="首页"><i class="fas fa-home"></i></a>
+        <a href="/wujing/" title="物境" aria-label="物境"><i class="fas fa-cube"></i></a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Realm of Mind</div>
+      <h1>心境</h1>
+      <p class="tagline">心之所向 · 素履以往</p>
+      <p class="summary"><strong id="postCount">0</strong><span>篇文章按设定顺序展开</span></p>
+    </section>
+
+    <section class="article-list" id="articleList"></section>
+  </main>
+
+  <script>
+  (function(){
+    function hasCategory(post, name) {
+      return post.categories && post.categories.some(function(c){ return c === name; });
+    }
+    function pathIncludes(post, part) {
+      return post.path && post.path.indexOf(part) !== -1;
+    }
+    function sortByRank(a, b) {
+      var ar = Number(a.realm_rank || 0);
+      var br = Number(b.realm_rank || 0);
+      if (br !== ar) return br - ar;
+      return String(b.date || '').localeCompare(String(a.date || ''));
+    }
+    function card(post) {
+      var cover = post.cover
+        ? '<div class="cover" style="background-image:url(' + post.cover + ')"></div>'
+        : '<div class="cover placeholder"><i class="fas fa-feather-alt"></i></div>';
+      var desc = post.description ? '<p class="desc">' + post.description + '</p>' : '';
+      var tags = (post.tags || []).slice(0, 3).map(function(t){ return '<span class="tag">' + t + '</span>'; }).join('');
+      return '<a class="article-card" href="' + post.path + '">' + cover
+        + '<div class="content"><h2>' + post.title + '</h2>' + desc
+        + '<div class="meta"><i class="far fa-calendar-alt"></i><time>' + post.date + '</time>' + tags + '</div></div></a>';
+    }
+
+    fetch('/posts.json')
+      .then(function(r){ return r.json(); })
+      .then(function(posts){
+        var list = posts.filter(function(p){ return p.realm === 'xinjing' || hasCategory(p, '经文集') || pathIncludes(p, '/scriptures/'); }).sort(sortByRank);
+        document.getElementById('postCount').textContent = list.length;
+        document.getElementById('articleList').innerHTML = list.length ? list.map(card).join('') : '<div class="empty">暂无文章</div>';
+      })
+      .catch(function(err){ console.error(err); });
+  })();
+  </script>
+</body>
+</html>

@@ -11,8 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--bg:#fff;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--accent-blue:#2563eb;--accent-gold:#b8860b;--code-bg:#f8f9fa;--code-card:#fff;--code-border:#e5e7eb;--code-text:#1a1a2e;--code-muted:#6b7280;--heart-bg:#fef9f0;--heart-card:#fffefb;--heart-border:#e8dcc8;--heart-text:#3d3226;--heart-muted:#8b7355}
-    body.dark-mode{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--border:#30363d;--accent-blue:#58a6ff;--accent-gold:#d4a843;--code-bg:#0d1117;--code-card:#161b22;--code-border:#30363d;--code-text:#c9d1d9;--code-muted:#8b949e;--heart-bg:#1a1814;--heart-card:#1e1c16;--heart-border:#3a3226;--heart-text:#d4c9b8;--heart-muted:#8b7e6a}
+    :root{--bg:#fbfcff;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;--accent-blue:#2e6f9e;--accent-gold:#b8860b;--code-bg:#f4f8fb;--code-card:#fbfdff;--code-border:#cfdce8;--code-text:#1a344a;--code-muted:#6f8495;--heart-bg:#fff8ee;--heart-card:#fffdf8;--heart-border:#ead8bd;--heart-text:#473421;--heart-muted:#8b7355}
+    body.dark-mode{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--border:#30363d;--accent-blue:#7db7dc;--accent-gold:#d4a843;--code-bg:#111820;--code-card:#151f28;--code-border:#2d4456;--code-text:#d7e8f2;--code-muted:#8ba3b2;--heart-bg:#1a1814;--heart-card:#1e1c16;--heart-border:#3a3226;--heart-text:#d4c9b8;--heart-muted:#8b7e6a}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
 
     .dark-toggle{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1;vertical-align:middle}
@@ -39,9 +39,9 @@
 
     /* Dual */
     .custom-dual{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
-    .realm{border-radius:10px;padding:1.2rem;border:1px solid}
-    .realm-code{border-color:var(--code-border)}
-    .realm-heart{border-color:var(--heart-border)}
+    .realm{border-radius:10px;padding:1.2rem;border:1px solid;box-shadow:0 18px 48px rgba(31,41,55,.06)}
+    .realm-code{border-color:var(--code-border);background:linear-gradient(180deg,var(--code-card),var(--code-bg))}
+    .realm-heart{border-color:var(--heart-border);background:linear-gradient(180deg,var(--heart-card),var(--heart-bg))}
     .realm-header{display:flex;align-items:center;gap:.4rem;margin-bottom:.8rem;padding-bottom:.6rem;border-bottom:1px solid}
     .realm-code .realm-header{border-bottom-color:var(--code-border)}
     .realm-heart .realm-header{border-bottom-color:var(--heart-border)}
@@ -49,13 +49,18 @@
     .realm-code .realm-icon{background:rgba(37,99,235,0.1);color:var(--accent-blue)}
     .realm-heart .realm-icon{background:rgba(184,134,11,0.1);color:var(--accent-gold)}
     .realm-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:1.1rem;font-weight:700;color:var(--text)}
-    .realm-tagline{font-size:.7rem;margin-left:auto;color:var(--muted);opacity:.6}
+    .realm-tagline{font-size:.7rem;margin-left:auto;color:var(--muted);opacity:.75}
+    .realm-link{width:28px;height:28px;border-radius:7px;border:1px solid;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;transition:all .15s}
+    .realm-code .realm-link{color:var(--accent-blue);border-color:rgba(46,111,158,.2);background:rgba(46,111,158,.08)}
+    .realm-code .realm-link:hover{background:var(--accent-blue);border-color:var(--accent-blue);color:#fff}
+    .realm-heart .realm-link{color:var(--accent-gold);border-color:rgba(184,134,11,.2);background:rgba(184,134,11,.08)}
+    .realm-heart .realm-link:hover{background:var(--accent-gold);border-color:var(--accent-gold);color:#fff}
     .realm-posts{display:flex;flex-direction:column;gap:.5rem}
-    .realm-card{display:flex;gap:.65rem;padding:.65rem;border-radius:7px;text-decoration:none;transition:all .15s;border:1px solid}
+    .realm-card{display:flex;gap:.65rem;padding:.7rem;border-radius:7px;text-decoration:none;transition:all .15s;border:1px solid;background:rgba(255,255,255,.48)}
     .code-card{border-color:var(--code-border)}
-    .code-card:hover{border-color:var(--accent-blue)}
+    .code-card:hover{border-color:var(--accent-blue);transform:translateY(-1px)}
     .heart-card{border-color:var(--heart-border)}
-    .heart-card:hover{border-color:var(--accent-gold)}
+    .heart-card:hover{border-color:var(--accent-gold);transform:translateY(-1px)}
     .card-cover-img{width:42px;height:42px;border-radius:5px;background-size:cover;background-position:center;flex-shrink:0}
     .code-card .card-cover-img{background-color:var(--code-border)}
     .heart-card .card-cover-img{background-color:var(--heart-border)}
@@ -67,6 +72,7 @@
     .card-meta{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:.2rem;flex-wrap:wrap}
     .card-divider{opacity:.3}
     .meta-cat{opacity:.6}
+    .empty-state{font-size:.78rem;color:var(--muted);padding:.7rem;border:1px dashed currentColor;border-radius:7px;opacity:.75}
 
     /* Footer */
     .site-footer{text-align:center;padding:1.2rem 1.5rem;margin-top:2rem;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border)}
@@ -106,16 +112,18 @@
         <div class="realm-icon"><i class="fas fa-cube"></i></div>
         <h2 class="realm-title">物境</h2>
         <div class="realm-tagline">格物致知 · 理以载道</div>
+        <a class="realm-link" href="/wujing/" title="进入物境" aria-label="进入物境"><i class="fas fa-arrow-right"></i></a>
       </div>
-      <div class="realm-posts" id="javaPosts"></div>
+      <div class="realm-posts" id="wujingPosts"></div>
     </div>
     <div class="realm realm-heart">
       <div class="realm-header">
         <div class="realm-icon"><i class="fas fa-feather-alt"></i></div>
         <h2 class="realm-title">心境</h2>
         <div class="realm-tagline">心之所向 · 素履以往</div>
+        <a class="realm-link" href="/xinjing/" title="进入心境" aria-label="进入心境"><i class="fas fa-arrow-right"></i></a>
       </div>
-      <div class="realm-posts" id="scripturePosts"></div>
+      <div class="realm-posts" id="xinjingPosts"></div>
     </div>
   </section>
 
@@ -133,7 +141,7 @@
       var cls = type === 'code' ? 'code-card' : 'heart-card';
       var cover = post.cover ? '<div class="card-cover-img" style="background-image:url(' + post.cover + ')"></div>' : '';
       var desc = post.description ? '<p class="card-desc">' + post.description + '</p>' : '';
-      var cats = post.categories.length ? '<span class="card-divider">|</span>' + post.categories.map(function(c,i,a){ return '<span class="meta-cat">' + c + '</span>' + (i < a.length-1 ? ' <span class="card-divider">|</span> ' : ''); }).join('') : '';
+      var cats = post.categories && post.categories.length ? '<span class="card-divider">|</span>' + post.categories.map(function(c,i,a){ return '<span class="meta-cat">' + c + '</span>' + (i < a.length-1 ? ' <span class="card-divider">|</span> ' : ''); }).join('') : '';
       return '<a class="realm-card ' + cls + '" href="' + post.path + '">'
         + cover
         + '<div class="card-body">'
@@ -155,11 +163,42 @@
       document.getElementById('stickySection').style.display = 'none';
     }
 
-    var javaPosts = posts.filter(function(p){ return p.categories.some(function(c){ return c === 'Java' }) });
-    document.getElementById('javaPosts').innerHTML = javaPosts.map(function(p){ return card(p, 'code'); }).join('');
+    function rankSort(a, b, key) {
+      var ar = Number(a[key] || 0);
+      var br = Number(b[key] || 0);
+      if (br !== ar) return br - ar;
+      return String(b.date || '').localeCompare(String(a.date || ''));
+    }
 
-    var scripturePosts = posts.filter(function(p){ return p.categories.some(function(c){ return c === '经文集' }) });
-    document.getElementById('scripturePosts').innerHTML = scripturePosts.map(function(p){ return card(p, 'heart'); }).join('');
+    function hasCategory(post, name) {
+      return post.categories && post.categories.some(function(c){ return c === name; });
+    }
+
+    function pathIncludes(post, part) {
+      return post.path && post.path.indexOf(part) !== -1;
+    }
+
+    function realmPosts(realm, fallbackCategory, fallbackPath) {
+      return posts.filter(function(p){
+        return p.realm === realm || hasCategory(p, fallbackCategory) || pathIncludes(p, fallbackPath);
+      });
+    }
+
+    function homePosts(list) {
+      var ranked = list.filter(function(p){ return Number(p.home_rank || 0) > 0; }).sort(function(a,b){ return rankSort(a, b, 'home_rank'); });
+      if (ranked.length) return ranked.slice(0, 2);
+      return list.slice().sort(function(a,b){ return rankSort(a, b, 'realm_rank'); }).slice(0, 2);
+    }
+
+    function renderHome(elId, list, type) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      var selected = homePosts(list);
+      el.innerHTML = selected.length ? selected.map(function(p){ return card(p, type); }).join('') : '<div class="empty-state">暂无文章</div>';
+    }
+
+    renderHome('wujingPosts', realmPosts('wujing', 'Java', '/java/'), 'code');
+    renderHome('xinjingPosts', realmPosts('xinjing', '经文集', '/scriptures/'), 'heart');
 
     }).catch(function(err){ console.error(err); });
 
