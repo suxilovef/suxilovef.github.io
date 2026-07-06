@@ -12,7 +12,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--bg:#fffaf2;--panel:#fffdf8;--text:#3d2b1e;--muted:#8c735d;--line:#ead8bd;--deep:#8f5a2c;--accent:#c89b58;--rose:#b96f63;--soft:#f8ecd9;--wash:#fff6e8}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at 18% 8%,rgba(200,155,88,.18),transparent 28%),linear-gradient(180deg,var(--bg),#fff 78%);color:var(--text);line-height:1.7}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(180deg,var(--bg) 0%,#fffdf8 48%,#fff 100%);color:var(--text);line-height:1.7}
     a{color:inherit}
     .wrap{max-width:1080px;margin:0 auto;padding:2rem 1.4rem 3rem}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:4rem}
@@ -20,6 +20,8 @@
     .nav{display:flex;gap:.5rem;flex-wrap:wrap}
     .nav a{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--deep);background:rgba(255,253,248,.8);transition:all .15s}
     .nav a:hover{background:var(--deep);border-color:var(--deep);color:#fff}
+    .nav a:focus-visible,
+    .article-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
     .hero{margin-bottom:2.4rem;padding:2.4rem 0 1.4rem;border-bottom:1px solid var(--line);position:relative}
     .hero::after{content:"";position:absolute;right:0;bottom:1.4rem;width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--accent))}
     .eyebrow{font-size:.78rem;color:var(--rose);font-weight:600;margin-bottom:.55rem}
@@ -70,39 +72,19 @@
     <section class="article-list" id="articleList"></section>
   </main>
 
+  <script src="/js/realm-posts.js"></script>
   <script>
   (function(){
-    function hasCategory(post, name) {
-      return post.categories && post.categories.some(function(c){ return c === name; });
-    }
-    function pathIncludes(post, part) {
-      return post.path && post.path.indexOf(part) !== -1;
-    }
-    function sortByRank(a, b) {
-      var ar = Number(a.realm_rank || 0);
-      var br = Number(b.realm_rank || 0);
-      if (br !== ar) return br - ar;
-      return String(b.date || '').localeCompare(String(a.date || ''));
-    }
-    function card(post) {
-      var cover = post.cover
-        ? '<div class="cover" style="background-image:url(' + post.cover + ')"></div>'
-        : '<div class="cover placeholder"><i class="fas fa-feather-alt"></i></div>';
-      var desc = post.description ? '<p class="desc">' + post.description + '</p>' : '';
-      var tags = (post.tags || []).slice(0, 3).map(function(t){ return '<span class="tag">' + t + '</span>'; }).join('');
-      return '<a class="article-card" href="' + post.path + '">' + cover
-        + '<div class="content"><h2>' + post.title + '</h2>' + desc
-        + '<div class="meta"><i class="far fa-calendar-alt"></i><time>' + post.date + '</time>' + tags + '</div></div></a>';
-    }
-
-    fetch('/posts.json')
-      .then(function(r){ return r.json(); })
-      .then(function(posts){
-        var list = posts.filter(function(p){ return p.realm === 'xinjing' || hasCategory(p, '经文集') || pathIncludes(p, '/scriptures/'); }).sort(sortByRank);
-        document.getElementById('postCount').textContent = list.length;
-        document.getElementById('articleList').innerHTML = list.length ? list.map(card).join('') : '<div class="empty">暂无文章</div>';
-      })
-      .catch(function(err){ console.error(err); });
+    RealmPosts.fetch().then(function(posts){
+      RealmPosts.renderRealmPage(posts, {
+        realm: 'xinjing',
+        fallbackCategory: '经文集',
+        fallbackPath: '/scriptures/',
+        countId: 'postCount',
+        listId: 'articleList',
+        placeholderIcon: 'fas fa-feather-alt'
+      });
+    }).catch(function(err){ console.error(err); });
   })();
   </script>
 </body>

@@ -17,6 +17,10 @@
 
     .dark-toggle{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1;vertical-align:middle}
     .dark-toggle:hover{border-color:var(--accent-blue);color:var(--text)}
+    .dark-toggle:focus-visible,
+    .realm-link:focus-visible,
+    .realm-card:focus-visible,
+    .sticky-card:focus-visible{outline:2px solid var(--accent-blue);outline-offset:3px}
 
     /* Main container */
     .main-container{max-width:1100px;margin:0 auto;padding:18vh 1.5rem 0;min-height:100vh}
@@ -62,8 +66,11 @@
     .heart-card{border-color:var(--heart-border)}
     .heart-card:hover{border-color:var(--accent-gold);transform:translateY(-1px)}
     .card-cover-img{width:42px;height:42px;border-radius:5px;background-size:cover;background-position:center;flex-shrink:0}
+    .card-cover-placeholder{display:flex;align-items:center;justify-content:center;font-size:.9rem}
     .code-card .card-cover-img{background-color:var(--code-border)}
     .heart-card .card-cover-img{background-color:var(--heart-border)}
+    .code-card .card-cover-placeholder{color:var(--accent-blue)}
+    .heart-card .card-cover-placeholder{color:var(--accent-gold)}
     .card-body{flex:1;min-width:0}
     .card-title{font-size:.9rem;font-weight:600;margin:0 0 .1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
     .code-card .card-title{font-family:"SF Mono","Fira Code","Consolas",monospace}
@@ -131,75 +138,25 @@
 
 </div>
 
+  <script src="/js/realm-posts.js"></script>
   <script>
   (function(){
-    fetch('/posts.json')
-      .then(function(r){ return r.json() })
-      .then(function(posts){
-
-    function card(post, type) {
-      var cls = type === 'code' ? 'code-card' : 'heart-card';
-      var cover = post.cover ? '<div class="card-cover-img" style="background-image:url(' + post.cover + ')"></div>' : '';
-      var desc = post.description ? '<p class="card-desc">' + post.description + '</p>' : '';
-      var cats = post.categories && post.categories.length ? '<span class="card-divider">|</span>' + post.categories.map(function(c,i,a){ return '<span class="meta-cat">' + c + '</span>' + (i < a.length-1 ? ' <span class="card-divider">|</span> ' : ''); }).join('') : '';
-      return '<a class="realm-card ' + cls + '" href="' + post.path + '">'
-        + cover
-        + '<div class="card-body">'
-        + '<h3 class="card-title">' + post.title + '</h3>'
-        + desc
-        + '<div class="card-meta"><i class="far fa-calendar-alt"></i> <time>' + post.date + '</time>' + cats + '</div>'
-        + '</div></a>';
-    }
-
-    var stickies = posts.filter(function(p){ return p.sticky > 0 }).sort(function(a,b){ return b.sticky - a.sticky });
-    var stickyEl = document.getElementById('stickyCards');
-    if (stickies.length && stickyEl) {
-      stickyEl.innerHTML = stickies.map(function(p){
-        var cover = p.cover ? '<div class="sticky-cover" style="background-image:url(' + p.cover + ')"></div>' : '';
-        var desc = p.description ? '<div class="sticky-desc">' + p.description + '</div>' : '';
-        return '<a class="sticky-card" href="' + p.path + '">' + cover + '<div class="sticky-info"><div class="sticky-title">' + p.title + '</div>' + desc + '</div></a>';
-      }).join('');
-    } else {
-      document.getElementById('stickySection').style.display = 'none';
-    }
-
-    function rankSort(a, b, key) {
-      var ar = Number(a[key] || 0);
-      var br = Number(b[key] || 0);
-      if (br !== ar) return br - ar;
-      return String(b.date || '').localeCompare(String(a.date || ''));
-    }
-
-    function hasCategory(post, name) {
-      return post.categories && post.categories.some(function(c){ return c === name; });
-    }
-
-    function pathIncludes(post, part) {
-      return post.path && post.path.indexOf(part) !== -1;
-    }
-
-    function realmPosts(realm, fallbackCategory, fallbackPath) {
-      return posts.filter(function(p){
-        return p.realm === realm || hasCategory(p, fallbackCategory) || pathIncludes(p, fallbackPath);
+    RealmPosts.fetch().then(function(posts){
+      RealmPosts.renderSticky(posts, 'stickyCards', 'stickySection');
+      RealmPosts.renderHomeRealm(posts, {
+        containerId: 'wujingPosts',
+        realm: 'wujing',
+        fallbackCategory: 'Java',
+        fallbackPath: '/java/',
+        type: 'code'
       });
-    }
-
-    function homePosts(list) {
-      var ranked = list.filter(function(p){ return Number(p.home_rank || 0) > 0; }).sort(function(a,b){ return rankSort(a, b, 'home_rank'); });
-      if (ranked.length) return ranked.slice(0, 2);
-      return list.slice().sort(function(a,b){ return rankSort(a, b, 'realm_rank'); }).slice(0, 2);
-    }
-
-    function renderHome(elId, list, type) {
-      var el = document.getElementById(elId);
-      if (!el) return;
-      var selected = homePosts(list);
-      el.innerHTML = selected.length ? selected.map(function(p){ return card(p, type); }).join('') : '<div class="empty-state">暂无文章</div>';
-    }
-
-    renderHome('wujingPosts', realmPosts('wujing', 'Java', '/java/'), 'code');
-    renderHome('xinjingPosts', realmPosts('xinjing', '经文集', '/scriptures/'), 'heart');
-
+      RealmPosts.renderHomeRealm(posts, {
+        containerId: 'xinjingPosts',
+        realm: 'xinjing',
+        fallbackCategory: '经文集',
+        fallbackPath: '/scriptures/',
+        type: 'heart'
+      });
     }).catch(function(err){ console.error(err); });
 
     var darkToggle = document.getElementById('darkToggle');
