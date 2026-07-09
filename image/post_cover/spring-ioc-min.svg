@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Central IOC container -->
+    <rect x="580" y="240" width="440" height="320" rx="20" stroke="#6DB33F" stroke-width="22"/>
+    <rect x="610" y="270" width="380" height="260" rx="14" stroke="#6DB33F" stroke-width="6" opacity="0.25"/>
+
+    <!-- Inner container detail lines -->
+    <path d="M620 310 L980 310" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+    <path d="M620 360 L980 360" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+    <path d="M620 410 L980 410" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+    <path d="M620 460 L980 460" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+
+    <!-- Pulse rings -->
+    <rect x="540" y="200" width="520" height="400" rx="24" stroke="#6DB33F" stroke-width="3" opacity="0.12"/>
+    <rect x="500" y="160" width="600" height="480" rx="28" stroke="#6DB33F" stroke-width="2" opacity="0.07"/>
+
+    <!-- Connection lines from container to peripheral beans -->
+    <path d="M580 360 L400 300" stroke="#6DB33F" stroke-width="5" opacity="0.4"/>
+    <path d="M580 440 L400 520" stroke="#6DB33F" stroke-width="5" opacity="0.4"/>
+    <path d="M1020 360 L1200 300" stroke="#6DB33F" stroke-width="5" opacity="0.4"/>
+    <path d="M1020 440 L1200 520" stroke="#6DB33F" stroke-width="5" opacity="0.4"/>
+    <path d="M800 240 L800 140" stroke="#6DB33F" stroke-width="5" opacity="0.4"/>
+
+    <!-- Decorative arcs -->
+    <path d="M340 280 Q560 120 780 200 Q1000 280 1240 240" stroke="#F59E0B" stroke-width="6" opacity="0.45"/>
+    <path d="M360 520 Q580 660 800 560 Q1020 460 1260 540" stroke="#F59E0B" stroke-width="6" opacity="0.35"/>
+  </g>
+
+  <!-- Peripheral beans (circles) -->
+  <circle cx="400" cy="300" r="16" fill="#34D399"/>
+  <circle cx="400" cy="520" r="16" fill="#34D399"/>
+  <circle cx="1200" cy="300" r="16" fill="#34D399"/>
+  <circle cx="1200" cy="520" r="16" fill="#34D399"/>
+  <circle cx="800" cy="140" r="16" fill="#F59E0B"/>
+
+  <!-- Small beans inside container -->
+  <circle cx="680" cy="335" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="750" cy="335" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="820" cy="335" r="10" fill="#F59E0B" opacity="0.7"/>
+  <circle cx="890" cy="335" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="700" cy="385" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="780" cy="385" r="10" fill="#F59E0B" opacity="0.7"/>
+  <circle cx="860" cy="385" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="930" cy="385" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="720" cy="435" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="800" cy="435" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="880" cy="435" r="10" fill="#F59E0B" opacity="0.7"/>
+
+  <!-- IOC label inside container -->
+  <text x="800" y="410" text-anchor="middle" font-size="48" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.5">IOC</text>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="82" text-anchor="middle" font-weight="800">Spring IOC</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">控制反转 · 依赖注入 · Bean 生命周期</text>
+  </g>
+</svg>

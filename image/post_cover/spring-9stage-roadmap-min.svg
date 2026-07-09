@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main roadmap curve -->
+    <path d="M100 480 C280 200 480 320 620 400 C760 480 860 380 1020 300 C1140 220 1300 340 1480 480" stroke="#6DB33F" stroke-width="6" opacity="0.3"/>
+    <path d="M100 480 C280 200 480 320 620 400" stroke="#6DB33F" stroke-width="14" opacity="0.9"/>
+
+    <!-- Decorative arcs -->
+    <path d="M180 540 Q380 700 580 600 Q780 500 980 620 Q1180 740 1380 580" stroke="#F59E0B" stroke-width="5" opacity="0.5"/>
+    <path d="M230 520 Q430 360 630 460 Q830 560 1030 420 Q1230 280 1430 480" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+
+    <!-- Small node connections -->
+    <path d="M280 360 Q360 290 400 340" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M440 320 Q520 250 560 280" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M600 350 Q680 280 720 310" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M760 320 Q840 260 880 280" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M920 280 Q1000 220 1040 240" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M1080 300 Q1160 250 1200 260" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+    <path d="M1240 330 Q1300 290 1340 300" stroke="#6DB33F" stroke-width="3" opacity="0.5"/>
+  </g>
+
+  <!-- 9 stage nodes -->
+  <g>
+    <circle cx="190" cy="430" r="18" fill="#6DB33F"/>
+    <text x="190" y="435" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">1</text>
+
+    <circle cx="340" cy="330" r="18" fill="#6DB33F"/>
+    <text x="340" y="335" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">2</text>
+
+    <circle cx="490" cy="370" r="18" fill="#6DB33F"/>
+    <text x="490" y="375" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">3</text>
+
+    <circle cx="640" cy="310" r="18" fill="#6DB33F"/>
+    <text x="640" y="315" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">4</text>
+
+    <circle cx="790" cy="350" r="18" fill="#6DB33F"/>
+    <text x="790" y="355" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">5</text>
+
+    <circle cx="940" cy="300" r="18" fill="#6DB33F"/>
+    <text x="940" y="305" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">6</text>
+
+    <circle cx="1090" cy="330" r="18" fill="#6DB33F"/>
+    <text x="1090" y="335" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">7</text>
+
+    <circle cx="1240" cy="310" r="18" fill="#6DB33F"/>
+    <text x="1240" y="315" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">8</text>
+
+    <circle cx="1390" cy="370" r="18" fill="#6DB33F"/>
+    <text x="1390" y="375" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">9</text>
+  </g>
+
+  <!-- Start / Finish markers -->
+  <circle cx="100" cy="480" r="10" fill="#34D399"/>
+  <circle cx="1480" cy="480" r="14" fill="#F59E0B"/>
+  <circle cx="1480" cy="480" r="6" fill="#fff"/>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="78" text-anchor="middle" font-weight="800">Spring 九阶段学习路线</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">从 Framework 到 Boot 再到 Cloud · 渐进式掌握</text>
+  </g>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Target object (innermost) -->
+    <rect x="620" y="310" width="360" height="200" rx="14" stroke="#6DB33F" stroke-width="14"/>
+
+    <!-- Proxy layer 1 -->
+    <rect x="580" y="270" width="440" height="280" rx="18" stroke="#34D399" stroke-width="10" opacity="0.8"/>
+
+    <!-- Proxy layer 2 -->
+    <rect x="540" y="230" width="520" height="360" rx="22" stroke="#6DB33F" stroke-width="8" opacity="0.5"/>
+
+    <!-- Outer pulse -->
+    <rect x="500" y="190" width="600" height="440" rx="26" stroke="#6DB33F" stroke-width="3" opacity="0.15"/>
+    <rect x="460" y="150" width="680" height="520" rx="30" stroke="#6DB33F" stroke-width="2" opacity="0.08"/>
+
+    <!-- Interception arrows (vertical) -->
+    <path d="M800 150 L800 230" stroke="#F59E0B" stroke-width="8"/>
+    <polygon points="800,140 790,158 810,158" fill="#F59E0B"/>
+
+    <path d="M800 590 L800 670" stroke="#F59E0B" stroke-width="8"/>
+    <polygon points="800,680 790,662 810,662" fill="#F59E0B"/>
+
+    <!-- Horizontal cut lines (aspect weaving) -->
+    <path d="M360 400 L540 400" stroke="#34D399" stroke-width="6" stroke-dasharray="12,8" opacity="0.7"/>
+    <path d="M1060 400 L1240 400" stroke="#34D399" stroke-width="6" stroke-dasharray="12,8" opacity="0.7"/>
+
+    <!-- Decorative arcs -->
+    <path d="M300 280 Q560 100 800 180 Q1040 260 1300 240" stroke="#F59E0B" stroke-width="5" opacity="0.4"/>
+    <path d="M320 540 Q580 720 800 640 Q1020 560 1280 580" stroke="#34D399" stroke-width="5" opacity="0.35"/>
+
+    <!-- Advice indicator lines -->
+    <path d="M540 340 L440 280" stroke="#6DB33F" stroke-width="4" opacity="0.4"/>
+    <path d="M540 460 L440 520" stroke="#6DB33F" stroke-width="4" opacity="0.4"/>
+    <path d="M1060 340 L1160 280" stroke="#6DB33F" stroke-width="4" opacity="0.4"/>
+    <path d="M1060 460 L1160 520" stroke="#6DB33F" stroke-width="4" opacity="0.4"/>
+  </g>
+
+  <!-- Advice labels -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" font-size="16" font-weight="700">
+    <text x="400" y="275" fill="#6DB33F" text-anchor="middle">Before</text>
+    <text x="400" y="545" fill="#6DB33F" text-anchor="middle">After</text>
+    <text x="1200" y="275" fill="#6DB33F" text-anchor="middle">Around</text>
+    <text x="1200" y="545" fill="#6DB33F" text-anchor="middle">Throws</text>
+  </g>
+
+  <!-- Weaving indicator dots -->
+  <circle cx="440" cy="280" r="6" fill="#34D399"/>
+  <circle cx="440" cy="520" r="6" fill="#34D399"/>
+  <circle cx="1160" cy="280" r="6" fill="#34D399"/>
+  <circle cx="1160" cy="520" r="6" fill="#34D399"/>
+
+  <!-- AOP label inside target -->
+  <text x="800" y="425" text-anchor="middle" font-size="40" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.45">AOP</text>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="82" text-anchor="middle" font-weight="800">Spring AOP</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">面向切面 · 动态代理 · 横切关注点</text>
+  </g>
+</svg>

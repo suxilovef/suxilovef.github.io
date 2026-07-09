@@ -1,0 +1,1280 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>01-02-Spring-IOC-ConfigurationClassPostProcessor | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spring-IOC-ConfigurationClassPostProcessor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01-02-Spring-IOC-ConfigurationClassPostProcessor">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/09/%E7%89%A9%E5%A2%83/Spring/01-02-Spring-IOC-ConfigurationClassPostProcessor/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Spring-IOC-ConfigurationClassPostProcessor">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/spring-beanfactory-postprocessor-min.svg">
+<meta property="article:published_time" content="2026-07-09T12:07:05.000Z">
+<meta property="article:modified_time" content="2026-07-09T15:24:04.393Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/spring-beanfactory-postprocessor-min.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "01-02-Spring-IOC-ConfigurationClassPostProcessor",
+  "url": "https://suxilovef.github.io/2026/07/09/%E7%89%A9%E5%A2%83/Spring/01-02-Spring-IOC-ConfigurationClassPostProcessor/",
+  "image": "https://suxilovef.github.io/image/post_cover/spring-beanfactory-postprocessor-min.svg",
+  "datePublished": "2026-07-09T12:07:05.000Z",
+  "dateModified": "2026-07-09T15:24:04.393Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/09/%E7%89%A9%E5%A2%83/Spring/01-02-Spring-IOC-ConfigurationClassPostProcessor/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '01-02-Spring-IOC-ConfigurationClassPostProcessor',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">19</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">01-02-Spring-IOC-ConfigurationClassPostProcessor</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">01-02-Spring-IOC-ConfigurationClassPostProcessor</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-09T12:07:05.000Z" title="发表于 2026-07-09 20:07:05">2026-07-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T15:24:04.393Z" title="更新于 2026-07-09 23:24:04">2026-07-09</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">5.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>20分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Spring-IOC-专题：ConfigurationClassPostProcessor-深度学习文档"><a href="#Spring-IOC-专题：ConfigurationClassPostProcessor-深度学习文档" class="headerlink" title="Spring IOC 专题：ConfigurationClassPostProcessor 深度学习文档"></a>Spring IOC 专题：ConfigurationClassPostProcessor 深度学习文档</h1><blockquote>
+<p>本文基于 Spring 源码学习整理。示例版本背景：Spring Boot <code>3.4.9</code>、Spring Framework <code>6.2.11</code>、Java <code>17</code>。</p>
+<p><code>ConfigurationClassPostProcessor</code> 是 Spring 注解驱动 IOC 的核心入口。理解它，才能真正理解 <code>@Configuration</code>、<code>@ComponentScan</code>、<code>@Bean</code>、<code>@Import</code>、Spring Boot 自动配置、<code>@EnableXxx</code> 系列注解如何变成容器中的 <code>BeanDefinition</code>。</p>
+</blockquote>
+<hr>
+<h2 id="一、先给结论"><a href="#一、先给结论" class="headerlink" title="一、先给结论"></a>一、先给结论</h2><h3 id="1-1-ConfigurationClassPostProcessor-是什么"><a href="#1-1-ConfigurationClassPostProcessor-是什么" class="headerlink" title="1.1 ConfigurationClassPostProcessor 是什么"></a>1.1 ConfigurationClassPostProcessor 是什么</h3><p><strong>一句话概括</strong>：<code>ConfigurationClassPostProcessor</code> 是 Spring 容器启动早期执行的一个 <code>BeanDefinitionRegistryPostProcessor</code>，负责解析配置类，并把注解配置转换成 <code>BeanDefinition</code> 注册到容器。</p>
+<p>它处理的核心注解包括：</p>
+<ul>
+<li><code>@Configuration</code></li>
+<li><code>@Component</code></li>
+<li><code>@ComponentScan</code></li>
+<li><code>@Bean</code></li>
+<li><code>@Import</code></li>
+<li><code>@ImportResource</code></li>
+<li><code>@PropertySource</code></li>
+<li><code>@Conditional</code></li>
+</ul>
+<p>这些注解背后都与 <code>ConfigurationClassPostProcessor</code> 的配置类解析链路有关。</p>
+<h3 id="1-2-它在-refresh-哪一步工作"><a href="#1-2-它在-refresh-哪一步工作" class="headerlink" title="1.2 它在 refresh() 哪一步工作"></a>1.2 它在 refresh() 哪一步工作</h3><p><code>ConfigurationClassPostProcessor</code> 工作在 <code>AbstractApplicationContext.refresh()</code> 的第 5 步：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">invokeBeanFactoryPostProcessors(beanFactory);</span><br></pre></td></tr></table></figure>
+
+<p>整体位置如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">SpringApplication.run()</span><br><span class="line">  └── refreshContext()</span><br><span class="line">      └── AbstractApplicationContext.refresh()</span><br><span class="line">          ├── prepareRefresh()</span><br><span class="line">          ├── obtainFreshBeanFactory()</span><br><span class="line">          ├── prepareBeanFactory()</span><br><span class="line">          ├── postProcessBeanFactory()</span><br><span class="line">          ├── invokeBeanFactoryPostProcessors()  ← ConfigurationClassPostProcessor 在这里执行</span><br><span class="line">          ├── registerBeanPostProcessors()</span><br><span class="line">          ├── initMessageSource()</span><br><span class="line">          ├── initApplicationEventMulticaster()</span><br><span class="line">          ├── onRefresh()</span><br><span class="line">          ├── registerListeners()</span><br><span class="line">          ├── finishBeanFactoryInitialization()</span><br><span class="line">          └── finishRefresh()</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键时序</strong>：</p>
+<ul>
+<li><code>ConfigurationClassPostProcessor</code> 执行时，大多数普通业务 Bean 还没有实例化。</li>
+<li>它操作的是 <code>BeanDefinition</code>，不是 Bean 实例。</li>
+<li>它执行完成后，<code>@ComponentScan</code> 扫描出的 Bean、<code>@Bean</code> 方法定义的 Bean、<code>@Import</code> 导入的 Bean 才真正进入 BeanDefinition 注册表。</li>
+<li>后续 <code>finishBeanFactoryInitialization()</code> 才会根据这些 BeanDefinition 创建单例 Bean。</li>
+</ul>
+<h3 id="1-3-为什么它重要"><a href="#1-3-为什么它重要" class="headerlink" title="1.3 为什么它重要"></a>1.3 为什么它重要</h3><p>没有 <code>ConfigurationClassPostProcessor</code>，注解驱动的 Spring 基本无法工作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    UserService <span class="title function_">userService</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有它，Spring 只知道有一个 <code>AppConfig</code> 类，不知道：</p>
+<ul>
+<li><code>AppConfig</code> 是配置类</li>
+<li><code>userService()</code> 是一个 <code>@Bean</code> 工厂方法</li>
+<li><code>@ComponentScan</code> 要扫描哪些包</li>
+<li><code>@Import</code> 要导入哪些类</li>
+<li><code>@Conditional</code> 是否应该跳过某些 Bean</li>
+<li>Spring Boot 自动配置类应该如何加载</li>
+<li><code>@EnableFeignClients</code> 这类注解如何注册额外 BeanDefinition</li>
+</ul>
+<hr>
+<h2 id="二、它的类型体系"><a href="#二、它的类型体系" class="headerlink" title="二、它的类型体系"></a>二、它的类型体系</h2><h3 id="2-1-类声明"><a href="#2-1-类声明" class="headerlink" title="2.1 类声明"></a>2.1 类声明</h3><p>源码中的核心声明可以抽象理解为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConfigurationClassPostProcessor</span></span><br><span class="line">        <span class="keyword">implements</span> <span class="title class_">BeanDefinitionRegistryPostProcessor</span>,</span><br><span class="line">                   PriorityOrdered,</span><br><span class="line">                   ResourceLoaderAware,</span><br><span class="line">                   BeanClassLoaderAware,</span><br><span class="line">                   EnvironmentAware &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>几个接口含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BeanDefinitionRegistryPostProcessor</code></td>
+<td>可以在 Bean 实例化前注册、修改 BeanDefinition</td>
+</tr>
+<tr>
+<td><code>BeanFactoryPostProcessor</code></td>
+<td><code>BeanDefinitionRegistryPostProcessor</code> 的父接口，可以修改 BeanFactory</td>
+</tr>
+<tr>
+<td><code>PriorityOrdered</code></td>
+<td>保证它在同类后处理器中优先执行</td>
+</tr>
+<tr>
+<td><code>EnvironmentAware</code></td>
+<td>获取环境变量，用于 <code>@Profile</code>、<code>@Conditional</code>、属性解析</td>
+</tr>
+<tr>
+<td><code>ResourceLoaderAware</code></td>
+<td>加载 classpath、文件、XML 等资源</td>
+</tr>
+<tr>
+<td><code>BeanClassLoaderAware</code></td>
+<td>获取类加载器，用于读取类元信息</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-为什么它必须很早执行"><a href="#2-2-为什么它必须很早执行" class="headerlink" title="2.2 为什么它必须很早执行"></a>2.2 为什么它必须很早执行</h3><p>它必须早于普通 Bean 实例化，因为它要先把“配置”翻译成“Bean 定义”：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">注解配置</span><br><span class="line">  ↓</span><br><span class="line">ConfigurationClassPostProcessor 解析</span><br><span class="line">  ↓</span><br><span class="line">BeanDefinition 注册表</span><br><span class="line">  ↓</span><br><span class="line">BeanFactory 根据 BeanDefinition 创建 Bean</span><br></pre></td></tr></table></figure>
+
+<p>如果普通 Bean 已经开始创建，再去解析 <code>@ComponentScan</code> 或 <code>@Bean</code>，就会出现依赖找不到、BeanDefinition 缺失、自动配置不完整等问题。</p>
+<hr>
+<h2 id="三、它是怎么被注册进容器的"><a href="#三、它是怎么被注册进容器的" class="headerlink" title="三、它是怎么被注册进容器的"></a>三、它是怎么被注册进容器的</h2><h3 id="3-1-AnnotationConfigUtils-注册内置处理器"><a href="#3-1-AnnotationConfigUtils-注册内置处理器" class="headerlink" title="3.1 AnnotationConfigUtils 注册内置处理器"></a>3.1 AnnotationConfigUtils 注册内置处理器</h3><p>当使用注解驱动的上下文或 Spring Boot 启动时，Spring 会注册一组基础设施 BeanDefinition。</p>
+<p>核心方法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);</span><br></pre></td></tr></table></figure>
+
+<p>其中会注册：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.context.annotation.internalConfigurationAnnotationProcessor</span><br><span class="line">  → ConfigurationClassPostProcessor</span><br><span class="line"></span><br><span class="line">org.springframework.context.annotation.internalAutowiredAnnotationProcessor</span><br><span class="line">  → AutowiredAnnotationBeanPostProcessor</span><br><span class="line"></span><br><span class="line">org.springframework.context.annotation.internalCommonAnnotationProcessor</span><br><span class="line">  → CommonAnnotationBeanPostProcessor</span><br><span class="line"></span><br><span class="line">org.springframework.context.event.internalEventListenerProcessor</span><br><span class="line">  → EventListenerMethodProcessor</span><br><span class="line"></span><br><span class="line">org.springframework.context.event.internalEventListenerFactory</span><br><span class="line">  → DefaultEventListenerFactory</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，<code>ConfigurationClassPostProcessor</code> 自己也是一个 BeanDefinition，只是它是基础设施 Bean。</p>
+<h3 id="3-2-它的-Bean-名称"><a href="#3-2-它的-Bean-名称" class="headerlink" title="3.2 它的 Bean 名称"></a>3.2 它的 Bean 名称</h3><p>Spring 内部固定名称：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.context.annotation.internalConfigurationAnnotationProcessor</span><br></pre></td></tr></table></figure>
+
+<p>调试时可以在 BeanDefinition 注册表中搜索这个名字。</p>
+<h3 id="3-3-Spring-Boot-中的触发链路"><a href="#3-3-Spring-Boot-中的触发链路" class="headerlink" title="3.3 Spring Boot 中的触发链路"></a>3.3 Spring Boot 中的触发链路</h3><p>Spring Boot 启动时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">DemoApplication.main()</span><br><span class="line">  └── SpringApplication.run(DemoApplication.class, args)</span><br><span class="line">      └── 创建 ApplicationContext</span><br><span class="line">          └── 注册 DemoApplication 的 BeanDefinition</span><br><span class="line">              └── 注册 ConfigurationClassPostProcessor 等内置处理器</span><br><span class="line">                  └── refresh()</span><br><span class="line">                      └── invokeBeanFactoryPostProcessors()</span><br><span class="line">                          └── 执行 ConfigurationClassPostProcessor</span><br></pre></td></tr></table></figure>
+
+<p>注意：在 <code>refresh()</code> 之前，通常只注册了启动类、少量基础设施类和上下文自身需要的定义。大量业务 Bean 是后续被 <code>ConfigurationClassPostProcessor</code> 解析出来的。</p>
+<hr>
+<h2 id="四、核心入口方法"><a href="#四、核心入口方法" class="headerlink" title="四、核心入口方法"></a>四、核心入口方法</h2><p><code>ConfigurationClassPostProcessor</code> 有两个关键阶段。</p>
+<h3 id="4-1-postProcessBeanDefinitionRegistry"><a href="#4-1-postProcessBeanDefinitionRegistry" class="headerlink" title="4.1 postProcessBeanDefinitionRegistry()"></a>4.1 postProcessBeanDefinitionRegistry()</h3><p>这是最核心的方法，负责解析配置类并注册新的 BeanDefinition。</p>
+<p>简化流程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postProcessBeanDefinitionRegistry</span><span class="params">(BeanDefinitionRegistry registry)</span> &#123;</span><br><span class="line">    processConfigBeanDefinitions(registry);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它做的事情包括：</p>
+<ul>
+<li>找出候选配置类</li>
+<li>解析配置类</li>
+<li>处理 <code>@ComponentScan</code></li>
+<li>处理 <code>@Import</code></li>
+<li>处理 <code>@Bean</code></li>
+<li>处理 <code>@PropertySource</code></li>
+<li>处理 <code>@ImportResource</code></li>
+<li>注册解析出来的 BeanDefinition</li>
+</ul>
+<h3 id="4-2-postProcessBeanFactory"><a href="#4-2-postProcessBeanFactory" class="headerlink" title="4.2 postProcessBeanFactory()"></a>4.2 postProcessBeanFactory()</h3><p>这个方法在 <code>postProcessBeanDefinitionRegistry()</code> 之后执行，主要负责增强配置类。</p>
+<p>简化流程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> &#123;</span><br><span class="line">    enhanceConfigurationClasses(beanFactory);</span><br><span class="line">    beanFactory.addBeanPostProcessor(<span class="keyword">new</span> <span class="title class_">ImportAwareBeanPostProcessor</span>(beanFactory));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键点：</p>
+<ul>
+<li>对 full 模式的 <code>@Configuration</code> 类生成 CGLIB 子类。</li>
+<li>保证配置类中 <code>@Bean</code> 方法互相调用时返回容器中的单例 Bean。</li>
+<li>添加 <code>ImportAwareBeanPostProcessor</code>，让被 <code>@Import</code> 导入的类可以感知导入来源。</li>
+</ul>
+<hr>
+<h2 id="五、完整源码链路"><a href="#五、完整源码链路" class="headerlink" title="五、完整源码链路"></a>五、完整源码链路</h2><h3 id="5-1-总览链路"><a href="#5-1-总览链路" class="headerlink" title="5.1 总览链路"></a>5.1 总览链路</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">AbstractApplicationContext.refresh()</span><br><span class="line">  └── invokeBeanFactoryPostProcessors(beanFactory)</span><br><span class="line">      └── PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors()</span><br><span class="line">          └── invokeBeanDefinitionRegistryPostProcessors()</span><br><span class="line">              └── ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry()</span><br><span class="line">                  └── processConfigBeanDefinitions(registry)</span><br><span class="line">                      ├── 找候选配置类</span><br><span class="line">                      ├── ConfigurationClassParser.parse()</span><br><span class="line">                      │   ├── parse()</span><br><span class="line">                      │   └── processConfigurationClass()</span><br><span class="line">                      │       └── doProcessConfigurationClass()</span><br><span class="line">                      │           ├── 处理 @PropertySource</span><br><span class="line">                      │           ├── 处理 @ComponentScan</span><br><span class="line">                      │           ├── 处理 @Import</span><br><span class="line">                      │           ├── 处理 @ImportResource</span><br><span class="line">                      │           ├── 处理 @Bean 方法</span><br><span class="line">                      │           └── 处理父类</span><br><span class="line">                      └── ConfigurationClassBeanDefinitionReader.loadBeanDefinitions()</span><br><span class="line">                          ├── 注册 @Bean 方法对应的 BeanDefinition</span><br><span class="line">                          ├── 注册 @Import 导入类对应的 BeanDefinition</span><br><span class="line">                          └── 注册 ImportedBeanDefinitionRegistrar 添加的 BeanDefinition</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-processConfigBeanDefinitions"><a href="#5-2-processConfigBeanDefinitions" class="headerlink" title="5.2 processConfigBeanDefinitions()"></a>5.2 processConfigBeanDefinitions()</h3><p>这是主流程方法。</p>
+<p>核心逻辑可以拆成 6 步：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1. 从 registry 中拿到所有 BeanDefinition 名称</span><br><span class="line">2. 判断哪些 BeanDefinition 是配置类候选</span><br><span class="line">3. 按 @Order / Ordered 排序</span><br><span class="line">4. 创建 ConfigurationClassParser</span><br><span class="line">5. 解析配置类，生成 ConfigurationClass 集合</span><br><span class="line">6. 使用 ConfigurationClassBeanDefinitionReader 注册解析结果</span><br></pre></td></tr></table></figure>
+
+<p>伪代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">processConfigBeanDefinitions</span><span class="params">(BeanDefinitionRegistry registry)</span> &#123;</span><br><span class="line">    List&lt;BeanDefinitionHolder&gt; configCandidates = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    String[] candidateNames = registry.getBeanDefinitionNames();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (String beanName : candidateNames) &#123;</span><br><span class="line">        <span class="type">BeanDefinition</span> <span class="variable">bd</span> <span class="operator">=</span> registry.getBeanDefinition(beanName);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ConfigurationClassUtils.checkConfigurationClassCandidate(bd, metadataReaderFactory)) &#123;</span><br><span class="line">            configCandidates.add(<span class="keyword">new</span> <span class="title class_">BeanDefinitionHolder</span>(bd, beanName));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    configCandidates.sort(...);</span><br><span class="line"></span><br><span class="line">    <span class="type">ConfigurationClassParser</span> <span class="variable">parser</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConfigurationClassParser</span>(...);</span><br><span class="line">    parser.parse(configCandidates);</span><br><span class="line">    parser.validate();</span><br><span class="line"></span><br><span class="line">    Set&lt;ConfigurationClass&gt; configClasses = parser.getConfigurationClasses();</span><br><span class="line"></span><br><span class="line">    <span class="type">ConfigurationClassBeanDefinitionReader</span> <span class="variable">reader</span> <span class="operator">=</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ConfigurationClassBeanDefinitionReader</span>(...);</span><br><span class="line">    reader.loadBeanDefinitions(configClasses);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-为什么要循环解析"><a href="#5-3-为什么要循环解析" class="headerlink" title="5.3 为什么要循环解析"></a>5.3 为什么要循环解析</h3><p><code>ConfigurationClassPostProcessor</code> 不是只解析一轮。原因是解析过程中可能产生新的配置类。</p>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@Import(OtherConfig.class)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">OtherConfig</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    UserService <span class="title function_">userService</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第一轮发现 <code>AppConfig</code>，解析 <code>@Import</code> 后又发现 <code>OtherConfig</code>，于是还要继续解析 <code>OtherConfig</code>。</p>
+<p>再比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(&quot;com.example&quot;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">DemoApplication</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>扫描出来的某个 <code>@Component</code> 类上可能还有：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@Import(SomeRegistrar.class)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SomeComponent</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以 Spring 要不断解析新增候选，直到没有新的配置类。</p>
+<hr>
+<h2 id="六、配置类候选是如何判断的"><a href="#六、配置类候选是如何判断的" class="headerlink" title="六、配置类候选是如何判断的"></a>六、配置类候选是如何判断的</h2><h3 id="6-1-Full-模式与-Lite-模式"><a href="#6-1-Full-模式与-Lite-模式" class="headerlink" title="6.1 Full 模式与 Lite 模式"></a>6.1 Full 模式与 Lite 模式</h3><p>Spring 会把配置类分成两类：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>判断条件</th>
+<th>是否 CGLIB 增强</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Full Configuration</td>
+<td>标注 <code>@Configuration(proxyBeanMethods = true)</code></td>
+<td>是</td>
+<td>正式配置类</td>
+</tr>
+<tr>
+<td>Lite Configuration</td>
+<td>标注 <code>@Component</code>、<code>@ComponentScan</code>、<code>@Import</code>、<code>@ImportResource</code>，或存在 <code>@Bean</code> 方法</td>
+<td>否</td>
+<td>普通组件内声明 <code>@Bean</code></td>
+</tr>
+</tbody></table>
+<h3 id="6-2-Full-模式示例"><a href="#6-2-Full-模式示例" class="headerlink" title="6.2 Full 模式示例"></a>6.2 Full 模式示例</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> UserDao <span class="title function_">userDao</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserDao</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> UserService <span class="title function_">userService</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>(userDao());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>默认 <code>proxyBeanMethods = true</code>，Spring 会给 <code>AppConfig</code> 生成 CGLIB 代理。</p>
+<p>当 <code>userService()</code> 调用 <code>userDao()</code> 时，不会直接执行普通 Java 方法创建新对象，而是被代理拦截，返回容器里的单例 <code>userDao</code>。</p>
+<h3 id="6-3-Lite-模式示例"><a href="#6-3-Lite-模式示例" class="headerlink" title="6.3 Lite 模式示例"></a>6.3 Lite 模式示例</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppComponent</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> UserDao <span class="title function_">userDao</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserDao</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个类不是 full 配置类，不会被 CGLIB 增强。<code>@Bean</code> 方法仍会被解析成 BeanDefinition，但类内部直接调用该方法时就是普通 Java 调用。</p>
+<h2 id="七、-ComponentScan-是如何被解析的"><a href="#七、-ComponentScan-是如何被解析的" class="headerlink" title="七、@ComponentScan 是如何被解析的"></a>七、@ComponentScan 是如何被解析的</h2><h3 id="7-1-扫描入口"><a href="#7-1-扫描入口" class="headerlink" title="7.1 扫描入口"></a>7.1 扫描入口</h3><p>常见配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.example&quot;&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<p>这意味着 Spring 会扫描 <code>com.example</code> 下所有符合条件的组件类。</p>
+<p>解析链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ConfigurationClassParser.doProcessConfigurationClass()</span><br><span class="line">  └── 读取 @ComponentScan / @ComponentScans</span><br><span class="line">      └── ComponentScanAnnotationParser.parse()</span><br><span class="line">          └── ClassPathBeanDefinitionScanner.doScan()</span><br><span class="line">              ├── findCandidateComponents(basePackage)</span><br><span class="line">              ├── 判断 @Component / @Service / @Repository / @Controller</span><br><span class="line">              ├── 应用 includeFilters / excludeFilters</span><br><span class="line">              ├── 生成 ScannedGenericBeanDefinition</span><br><span class="line">              └── registry.registerBeanDefinition(beanName, beanDefinition)</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-扫描时是否会加载类"><a href="#7-2-扫描时是否会加载类" class="headerlink" title="7.2 扫描时是否会加载类"></a>7.2 扫描时是否会加载类</h3><p>默认情况下，Spring 扫描 classpath 时主要通过 ASM 读取 <code>.class</code> 文件元数据，不需要真正加载类。</p>
+<p>这点很重要：</p>
+<ul>
+<li>扫描速度更快</li>
+<li>避免过早触发静态代码块</li>
+<li>避免不必要的类初始化</li>
+<li>可以在类未真正加载前判断注解信息</li>
+</ul>
+<h3 id="7-3-扫描出来的-BeanDefinition-长什么样"><a href="#7-3-扫描出来的-BeanDefinition-长什么样" class="headerlink" title="7.3 扫描出来的 BeanDefinition 长什么样"></a>7.3 扫描出来的 BeanDefinition 长什么样</h3><p>对于：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>扫描后会注册类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">beanName: userService</span><br><span class="line">beanClassName: com.example.xxx.UserService</span><br><span class="line">scope: singleton</span><br><span class="line">lazyInit: false</span><br><span class="line">autowireCandidate: true</span><br></pre></td></tr></table></figure>
+
+<p>此时只是注册 BeanDefinition，并没有创建 <code>UserService</code> 实例。</p>
+<hr>
+<h2 id="八、-Bean-是如何被解析的"><a href="#八、-Bean-是如何被解析的" class="headerlink" title="八、@Bean 是如何被解析的"></a>八、@Bean 是如何被解析的</h2><h3 id="8-1-Bean-方法的处理时机"><a href="#8-1-Bean-方法的处理时机" class="headerlink" title="8.1 @Bean 方法的处理时机"></a>8.1 @Bean 方法的处理时机</h3><p><code>@Bean</code> 方法不是在扫描阶段直接执行，而是在解析配置类时记录下来，然后注册为 BeanDefinition。</p>
+<p>链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ConfigurationClassParser.doProcessConfigurationClass()</span><br><span class="line">  └── retrieveBeanMethodMetadata()</span><br><span class="line">      └── 收集 @Bean 方法元数据</span><br><span class="line"></span><br><span class="line">ConfigurationClassBeanDefinitionReader.loadBeanDefinitions()</span><br><span class="line">  └── loadBeanDefinitionsForBeanMethod()</span><br><span class="line">      └── 注册 ConfigurationClassBeanDefinition</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-Bean-方法不是立即调用"><a href="#8-2-Bean-方法不是立即调用" class="headerlink" title="8.2 @Bean 方法不是立即调用"></a>8.2 @Bean 方法不是立即调用</h3><p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>ConfigurationClassPostProcessor</code> 阶段，Spring 不会调用这个方法，只会注册定义：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">factoryBeanName = appConfig</span><br><span class="line">factoryMethodName = restTemplate</span><br></pre></td></tr></table></figure>
+
+<p>真正调用发生在后续：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">finishBeanFactoryInitialization()</span><br><span class="line">  └── preInstantiateSingletons()</span><br><span class="line">      └── getBean(&quot;restTemplate&quot;)</span><br><span class="line">          └── createBean()</span><br><span class="line">              └── instantiateUsingFactoryMethod()</span><br><span class="line">                  └── 调用 restTemplate()</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-3-Bean-方法上的常见属性"><a href="#8-3-Bean-方法上的常见属性" class="headerlink" title="8.3 @Bean 方法上的常见属性"></a>8.3 @Bean 方法上的常见属性</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(</span></span><br><span class="line"><span class="meta">    name = &quot;restTemplate&quot;,</span></span><br><span class="line"><span class="meta">    initMethod = &quot;init&quot;,</span></span><br><span class="line"><span class="meta">    destroyMethod = &quot;close&quot;,</span></span><br><span class="line"><span class="meta">    autowireCandidate = true</span></span><br><span class="line"><span class="meta">)</span></span><br><span class="line"><span class="meta">@Primary</span></span><br><span class="line"><span class="meta">@Lazy</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这些信息都会进入 BeanDefinition，影响后续 Bean 创建和依赖注入。</p>
+<hr>
+<h2 id="九、-Import-是如何被解析的"><a href="#九、-Import-是如何被解析的" class="headerlink" title="九、@Import 是如何被解析的"></a>九、@Import 是如何被解析的</h2><p><code>@Import</code> 是 Spring 扩展能力最强的入口之一，也是 Spring Boot 自动配置和 <code>@EnableXxx</code> 注解的底层基础。</p>
+<h3 id="9-1-Import-支持三种类型"><a href="#9-1-Import-支持三种类型" class="headerlink" title="9.1 @Import 支持三种类型"></a>9.1 @Import 支持三种类型</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通类</td>
+<td>直接作为配置类或 Bean 注册</td>
+<td><code>@Import(UserConfig.class)</code></td>
+</tr>
+<tr>
+<td><code>ImportSelector</code></td>
+<td>返回要导入的类名数组</td>
+<td>Spring Boot 自动配置</td>
+</tr>
+<tr>
+<td><code>ImportBeanDefinitionRegistrar</code></td>
+<td>手动向 registry 注册 BeanDefinition</td>
+<td>Feign、AOP、MapperScan 常用</td>
+</tr>
+</tbody></table>
+<h3 id="9-2-导入普通类"><a href="#9-2-导入普通类" class="headerlink" title="9.2 导入普通类"></a>9.2 导入普通类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@Import(UserConfig.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>UserConfig</code> 会被当成配置类继续解析。</p>
+<h3 id="9-3-ImportSelector"><a href="#9-3-ImportSelector" class="headerlink" title="9.3 ImportSelector"></a>9.3 ImportSelector</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyImportSelector</span> <span class="keyword">implements</span> <span class="title class_">ImportSelector</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">String</span>[] &#123;</span><br><span class="line">            <span class="string">&quot;com.example.demo.UserConfig&quot;</span></span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>特点：</p>
+<ul>
+<li>输入是当前导入类的注解元数据</li>
+<li>输出是一批类名</li>
+<li>输出的类会继续参与配置类解析</li>
+</ul>
+<p>Spring Boot 的自动配置机制就是通过 <code>DeferredImportSelector</code> 的延迟导入能力实现的。</p>
+<h3 id="9-4-ImportBeanDefinitionRegistrar"><a href="#9-4-ImportBeanDefinitionRegistrar" class="headerlink" title="9.4 ImportBeanDefinitionRegistrar"></a>9.4 ImportBeanDefinitionRegistrar</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyRegistrar</span> <span class="keyword">implements</span> <span class="title class_">ImportBeanDefinitionRegistrar</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerBeanDefinitions</span><span class="params">(</span></span><br><span class="line"><span class="params">            AnnotationMetadata importingClassMetadata,</span></span><br><span class="line"><span class="params">            BeanDefinitionRegistry registry)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">RootBeanDefinition</span> <span class="variable">bd</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RootBeanDefinition</span>(UserService.class);</span><br><span class="line">        registry.registerBeanDefinition(<span class="string">&quot;userService&quot;</span>, bd);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>特点：</p>
+<ul>
+<li>可以直接操作 <code>BeanDefinitionRegistry</code></li>
+<li>适合动态注册 BeanDefinition</li>
+<li>很多 <code>@EnableXxx</code> 注解底层都使用它</li>
+</ul>
+<p>常见的 <code>@EnableXxx</code> 注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableScheduling</span></span><br><span class="line"><span class="meta">@EnableAsync</span></span><br></pre></td></tr></table></figure>
+
+<p>这些注解通常会通过 <code>@Import</code> 导入 registrar 或 selector，再由 <code>ConfigurationClassPostProcessor</code> 解析并触发注册逻辑。</p>
+<h3 id="9-5-DeferredImportSelector-与自动配置"><a href="#9-5-DeferredImportSelector-与自动配置" class="headerlink" title="9.5 DeferredImportSelector 与自动配置"></a>9.5 DeferredImportSelector 与自动配置</h3><p>Spring Boot 自动配置不是普通 <code>ImportSelector</code>，而是延迟导入选择器：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">@SpringBootApplication</span><br><span class="line">  └── @EnableAutoConfiguration</span><br><span class="line">      └── @Import(AutoConfigurationImportSelector.class)</span><br></pre></td></tr></table></figure>
+
+<p><code>AutoConfigurationImportSelector</code> 实现了 <code>DeferredImportSelector</code>。</p>
+<p>为什么要延迟？</p>
+<ul>
+<li>先解析用户自己的配置类</li>
+<li>再解析自动配置类</li>
+<li>用户配置优先，自动配置兜底</li>
+<li><code>@ConditionalOnMissingBean</code> 才能正确判断用户是否已经定义 Bean</li>
+</ul>
+<p>Spring Boot 3.x 自动配置候选主要来自：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</span><br></pre></td></tr></table></figure>
+
+<p>老版本常见的 <code>META-INF/spring.factories</code> 仍可能在部分扩展点中出现，但讲 Spring Boot 3.x 自动配置时，应优先以 <code>AutoConfiguration.imports</code> 为主。</p>
+<hr>
+<h2 id="十、-Conditional-是如何生效的"><a href="#十、-Conditional-是如何生效的" class="headerlink" title="十、@Conditional 是如何生效的"></a>十、@Conditional 是如何生效的</h2><h3 id="10-1-条件判断入口"><a href="#10-1-条件判断入口" class="headerlink" title="10.1 条件判断入口"></a>10.1 条件判断入口</h3><p><code>ConfigurationClassPostProcessor</code> 解析配置类时，会使用 <code>ConditionEvaluator</code> 判断条件。</p>
+<p>常见注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Conditional(MyCondition.class)</span></span><br><span class="line"><span class="meta">@Profile(&quot;dev&quot;)</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(RedisTemplate.class)</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean(CacheManager.class)</span></span><br><span class="line"><span class="meta">@ConditionalOnProperty(prefix = &quot;cache&quot;, name = &quot;enabled&quot;, havingValue = &quot;true&quot;)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="10-2-条件判断有两个阶段"><a href="#10-2-条件判断有两个阶段" class="headerlink" title="10.2 条件判断有两个阶段"></a>10.2 条件判断有两个阶段</h3><p>Spring 条件判断分两类：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>枚举</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>配置类解析阶段</td>
+<td><code>ConfigurationPhase.PARSE_CONFIGURATION</code></td>
+<td>决定配置类是否需要继续解析</td>
+</tr>
+<tr>
+<td>Bean 注册阶段</td>
+<td><code>ConfigurationPhase.REGISTER_BEAN</code></td>
+<td>决定 <code>@Bean</code> 是否注册</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(RedisTemplate.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">    <span class="keyword">public</span> CacheManager <span class="title function_">cacheManager</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RedisCacheManager</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>含义：</p>
+<ul>
+<li>如果 classpath 没有 <code>RedisTemplate</code>，整个 <code>RedisConfig</code> 都跳过。</li>
+<li>如果已经有 <code>CacheManager</code> BeanDefinition，<code>cacheManager()</code> 这个 <code>@Bean</code> 跳过。</li>
+</ul>
+<h3 id="10-3-为什么自动配置要后解析"><a href="#10-3-为什么自动配置要后解析" class="headerlink" title="10.3 为什么自动配置要后解析"></a>10.3 为什么自动配置要后解析</h3><p>以 <code>@ConditionalOnMissingBean</code> 为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果自动配置先解析，它会认为容器中没有 <code>RestTemplate</code>，于是注册默认 Bean。</p>
+<p>但如果用户配置后面才解析：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>就可能出现默认 Bean 与用户 Bean 冲突。</p>
+<p>所以 Spring Boot 通过 <code>DeferredImportSelector</code> 让自动配置延后处理，保证用户配置优先被看见。</p>
+<hr>
+<h2 id="十一、-PropertySource-与-Environment"><a href="#十一、-PropertySource-与-Environment" class="headerlink" title="十一、@PropertySource 与 Environment"></a>十一、@PropertySource 与 Environment</h2><p>配置类中可以声明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PropertySource(value = &quot;classpath:application-extra.properties&quot;)</span></span><br></pre></td></tr></table></figure>
+
+<p>解析链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ConfigurationClassParser.doProcessConfigurationClass()</span><br><span class="line">  └── 读取 @PropertySource</span><br><span class="line">      └── PropertySourceRegistry / Environment</span><br><span class="line">          └── 加入 MutablePropertySources</span><br></pre></td></tr></table></figure>
+
+<p>这使得后续可以通过 <code>Environment</code> 获取属性。</p>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyProperties</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Environment environment;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyProperties</span><span class="params">(Environment environment)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.environment = environment;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getValue</span><span class="params">(String key)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> environment.getProperty(key);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里要注意：<code>@PropertySource</code> 的解析发生在配置类解析阶段，它影响的是 <code>Environment</code> 中的属性源，而不是直接创建业务 Bean。</p>
+<hr>
+<h2 id="十二、ConfigurationClassParser-详解"><a href="#十二、ConfigurationClassParser-详解" class="headerlink" title="十二、ConfigurationClassParser 详解"></a>十二、ConfigurationClassParser 详解</h2><h3 id="12-1-它负责什么"><a href="#12-1-它负责什么" class="headerlink" title="12.1 它负责什么"></a>12.1 它负责什么</h3><p><code>ConfigurationClassParser</code> 负责把一个候选配置类解析成 <code>ConfigurationClass</code> 模型。</p>
+<p>它不直接创建 BeanDefinition，而是先构建中间模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">BeanDefinition</span><br><span class="line">  ↓</span><br><span class="line">ConfigurationClassParser</span><br><span class="line">  ↓</span><br><span class="line">ConfigurationClass</span><br><span class="line">  ├── beanMethods</span><br><span class="line">  ├── importedResources</span><br><span class="line">  ├── importBeanDefinitionRegistrars</span><br><span class="line">  └── importedBy</span><br></pre></td></tr></table></figure>
+
+<p>之后再由 <code>ConfigurationClassBeanDefinitionReader</code> 把这些模型转换为 BeanDefinition。</p>
+<h3 id="12-2-doProcessConfigurationClass"><a href="#12-2-doProcessConfigurationClass" class="headerlink" title="12.2 doProcessConfigurationClass()"></a>12.2 doProcessConfigurationClass()</h3><p>核心方法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> SourceClass <span class="title function_">doProcessConfigurationClass</span><span class="params">(</span></span><br><span class="line"><span class="params">        ConfigurationClass configClass,</span></span><br><span class="line"><span class="params">        SourceClass sourceClass,</span></span><br><span class="line"><span class="params">        Predicate&lt;String&gt; filter)</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以理解为按顺序处理：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. 如果配置类内部有成员类，先处理成员类</span><br><span class="line">2. 处理 @PropertySource</span><br><span class="line">3. 处理 @ComponentScan</span><br><span class="line">4. 处理 @Import</span><br><span class="line">5. 处理 @ImportResource</span><br><span class="line">6. 处理 @Bean 方法</span><br><span class="line">7. 处理接口默认方法中的 @Bean</span><br><span class="line">8. 处理父类</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-3-为什么父类也要处理"><a href="#12-3-为什么父类也要处理" class="headerlink" title="12.3 为什么父类也要处理"></a>12.3 为什么父类也要处理</h3><p>配置类可能继承父类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseConfig</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> BaseService <span class="title function_">baseService</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">BaseService</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppConfig</span> <span class="keyword">extends</span> <span class="title class_">BaseConfig</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Spring 需要继续向上查找父类中的 <code>@Bean</code> 方法。</p>
+<hr>
+<h2 id="十三、ConfigurationClassBeanDefinitionReader-详解"><a href="#十三、ConfigurationClassBeanDefinitionReader-详解" class="headerlink" title="十三、ConfigurationClassBeanDefinitionReader 详解"></a>十三、ConfigurationClassBeanDefinitionReader 详解</h2><h3 id="13-1-它负责什么"><a href="#13-1-它负责什么" class="headerlink" title="13.1 它负责什么"></a>13.1 它负责什么</h3><p><code>ConfigurationClassBeanDefinitionReader</code> 负责把解析后的 <code>ConfigurationClass</code> 落地到 BeanDefinition 注册表。</p>
+<p>它处理：</p>
+<ul>
+<li>配置类自身</li>
+<li><code>@Bean</code> 方法</li>
+<li><code>@ImportResource</code> XML</li>
+<li><code>ImportBeanDefinitionRegistrar</code></li>
+<li>imported 配置类</li>
+</ul>
+<h3 id="13-2-Bean-方法如何变成-BeanDefinition"><a href="#13-2-Bean-方法如何变成-BeanDefinition" class="headerlink" title="13.2 @Bean 方法如何变成 BeanDefinition"></a>13.2 @Bean 方法如何变成 BeanDefinition</h3><p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(&quot;restTemplate&quot;)</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">getRestTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注册后类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ConfigurationClassBeanDefinition</span><br><span class="line">  beanName = restTemplate</span><br><span class="line">  factoryBeanName = appConfig</span><br><span class="line">  factoryMethodName = getRestTemplate</span><br><span class="line">  autowireMode = constructor</span><br><span class="line">  role = application</span><br></pre></td></tr></table></figure>
+
+<p><code>factoryBeanName</code> 和 <code>factoryMethodName</code> 是理解 <code>@Bean</code> 的关键。</p>
+<p>它说明：这个 Bean 不是通过构造器直接 new 出来的，而是通过另一个 Bean 的工厂方法创建的。</p>
+<h3 id="13-3-imported-配置类如何注册"><a href="#13-3-imported-配置类如何注册" class="headerlink" title="13.3 imported 配置类如何注册"></a>13.3 imported 配置类如何注册</h3><p>如果配置类是通过 <code>@Import</code> 导入的，Spring 会为它生成 BeanDefinition，并记录导入关系。</p>
+<p>这样后续 <code>ImportAware</code> 可以知道自己是被哪个类导入的。</p>
+<hr>
+<h2 id="十四、配置类增强：为什么-Configuration-会被-CGLIB-代理"><a href="#十四、配置类增强：为什么-Configuration-会被-CGLIB-代理" class="headerlink" title="十四、配置类增强：为什么 @Configuration 会被 CGLIB 代理"></a>十四、配置类增强：为什么 @Configuration 会被 CGLIB 代理</h2><h3 id="14-1-问题场景"><a href="#14-1-问题场景" class="headerlink" title="14.1 问题场景"></a>14.1 问题场景</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> UserDao <span class="title function_">userDao</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserDao</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> UserService <span class="title function_">userService</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>(userDao());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有 CGLIB 代理，<code>userService()</code> 里调用 <code>userDao()</code> 就是普通 Java 方法调用，会创建一个新的 <code>UserDao</code>，而不是容器中的单例。</p>
+<h3 id="14-2-CGLIB-增强后的效果"><a href="#14-2-CGLIB-增强后的效果" class="headerlink" title="14.2 CGLIB 增强后的效果"></a>14.2 CGLIB 增强后的效果</h3><p>Spring 会把 <code>AppConfig</code> 增强成子类，拦截 <code>@Bean</code> 方法调用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">userService()</span><br><span class="line">  └── 调用 userDao()</span><br><span class="line">      └── 被 CGLIB 拦截</span><br><span class="line">          ├── 容器中已有 userDao → 返回已有单例</span><br><span class="line">          └── 容器中没有 userDao → 创建并注册</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-3-proxyBeanMethods-false"><a href="#14-3-proxyBeanMethods-false" class="headerlink" title="14.3 proxyBeanMethods &#x3D; false"></a>14.3 proxyBeanMethods &#x3D; false</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AppConfig</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这叫轻量模式：</p>
+<ul>
+<li>不生成 CGLIB 代理</li>
+<li>启动更快</li>
+<li>适合 <code>@Bean</code> 方法之间没有互相调用的配置类</li>
+<li>如果 <code>@Bean</code> 方法互相调用，会产生普通 Java 方法调用语义</li>
+</ul>
+<p>Spring Boot 很多自动配置类都使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@AutoConfiguration</span></span><br><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br></pre></td></tr></table></figure>
+
+<p>因为自动配置类通常通过方法参数注入依赖，而不是直接调用另一个 <code>@Bean</code> 方法。</p>
+<p>推荐写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> UserService <span class="title function_">userService</span><span class="params">(UserDao userDao)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>(userDao);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不推荐写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> UserService <span class="title function_">userService</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">UserService</span>(userDao());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十五、与-BeanFactoryPostProcessor-执行顺序的关系"><a href="#十五、与-BeanFactoryPostProcessor-执行顺序的关系" class="headerlink" title="十五、与 BeanFactoryPostProcessor 执行顺序的关系"></a>十五、与 BeanFactoryPostProcessor 执行顺序的关系</h2><h3 id="15-1-执行顺序总览"><a href="#15-1-执行顺序总览" class="headerlink" title="15.1 执行顺序总览"></a>15.1 执行顺序总览</h3><p><code>invokeBeanFactoryPostProcessors()</code> 中大致顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1. 执行手动添加的 BeanDefinitionRegistryPostProcessor</span><br><span class="line">2. 执行容器中的 PriorityOrdered BeanDefinitionRegistryPostProcessor</span><br><span class="line">   └── ConfigurationClassPostProcessor 在这里</span><br><span class="line">3. 执行容器中的 Ordered BeanDefinitionRegistryPostProcessor</span><br><span class="line">4. 执行容器中的普通 BeanDefinitionRegistryPostProcessor</span><br><span class="line">5. 执行这些处理器的 postProcessBeanFactory()</span><br><span class="line">6. 执行普通 BeanFactoryPostProcessor</span><br></pre></td></tr></table></figure>
+
+<h3 id="15-2-为什么要分-PriorityOrdered-Ordered-普通"><a href="#15-2-为什么要分-PriorityOrdered-Ordered-普通" class="headerlink" title="15.2 为什么要分 PriorityOrdered &#x2F; Ordered &#x2F; 普通"></a>15.2 为什么要分 PriorityOrdered &#x2F; Ordered &#x2F; 普通</h3><p>因为某些后处理器必须先执行。</p>
+<p><code>ConfigurationClassPostProcessor</code> 必须尽早执行，因为只有它先完成扫描，其他通过 <code>@Component</code> 声明的 <code>BeanFactoryPostProcessor</code> 才能被发现。</p>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyPostProcessor</span> <span class="keyword">implements</span> <span class="title class_">BeanFactoryPostProcessor</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有先执行配置类扫描，容器根本不知道 <code>MyPostProcessor</code> 是一个 <code>BeanFactoryPostProcessor</code>。</p>
+<h3 id="15-3-为什么-BeanFactoryPostProcessor-里不建议依赖普通-Bean"><a href="#15-3-为什么-BeanFactoryPostProcessor-里不建议依赖普通-Bean" class="headerlink" title="15.3 为什么 BeanFactoryPostProcessor 里不建议依赖普通 Bean"></a>15.3 为什么 BeanFactoryPostProcessor 里不建议依赖普通 Bean</h3><p><code>BeanFactoryPostProcessor</code> 工作在普通 Bean 实例化之前。</p>
+<p>如果在这个阶段强行获取普通 Bean：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyPostProcessor</span> <span class="keyword">implements</span> <span class="title class_">BeanFactoryPostProcessor</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>容易导致：</p>
+<ul>
+<li>Bean 过早实例化</li>
+<li>跳过某些 BeanPostProcessor</li>
+<li>AOP 代理未生效</li>
+<li>配置类增强时序异常</li>
+<li>隐蔽的启动问题</li>
+</ul>
+<p>更推荐：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyPostProcessor</span> <span class="keyword">implements</span> <span class="title class_">BeanFactoryPostProcessor</span>, EnvironmentAware &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Environment environment;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setEnvironment</span><span class="params">(Environment environment)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.environment = environment;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在后处理器阶段优先使用：</p>
+<ul>
+<li><code>Environment</code></li>
+<li><code>ResourceLoader</code></li>
+<li><code>BeanDefinitionRegistry</code></li>
+<li><code>ConfigurableListableBeanFactory</code></li>
+<li>BeanDefinition 元数据</li>
+</ul>
+<hr>
+<h2 id="十六、常见面试题"><a href="#十六、常见面试题" class="headerlink" title="十六、常见面试题"></a>十六、常见面试题</h2><h3 id="16-1-ConfigurationClassPostProcessor-的作用是什么？"><a href="#16-1-ConfigurationClassPostProcessor-的作用是什么？" class="headerlink" title="16.1 ConfigurationClassPostProcessor 的作用是什么？"></a>16.1 ConfigurationClassPostProcessor 的作用是什么？</h3><p>答题框架：</p>
+<ol>
+<li>它是一个 <code>BeanDefinitionRegistryPostProcessor</code>。</li>
+<li>工作在 <code>refresh()</code> 的 <code>invokeBeanFactoryPostProcessors()</code> 阶段。</li>
+<li>它负责解析配置类，把 <code>@Configuration</code>、<code>@ComponentScan</code>、<code>@Bean</code>、<code>@Import</code>、<code>@PropertySource</code> 等注解转换成 BeanDefinition。</li>
+<li>它还会增强 full 模式的 <code>@Configuration</code> 类，保证 <code>@Bean</code> 方法调用返回容器单例。</li>
+<li>Spring Boot 自动配置、<code>@EnableXxx</code> 系列注解、组件扫描都依赖这条链路。</li>
+</ol>
+<h3 id="16-2-它和普通-BeanPostProcessor-有什么区别？"><a href="#16-2-它和普通-BeanPostProcessor-有什么区别？" class="headerlink" title="16.2 它和普通 BeanPostProcessor 有什么区别？"></a>16.2 它和普通 BeanPostProcessor 有什么区别？</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>ConfigurationClassPostProcessor</th>
+<th>BeanPostProcessor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>处理对象</td>
+<td>BeanDefinition &#x2F; 配置类元数据</td>
+<td>Bean 实例</td>
+</tr>
+<tr>
+<td>执行时机</td>
+<td>Bean 实例化之前</td>
+<td>Bean 初始化前后</td>
+</tr>
+<tr>
+<td>典型作用</td>
+<td>解析注解、注册 BeanDefinition</td>
+<td>依赖注入、AOP、初始化增强</td>
+</tr>
+<tr>
+<td>代表方法</td>
+<td><code>postProcessBeanDefinitionRegistry()</code></td>
+<td><code>postProcessBeforeInitialization()</code> &#x2F; <code>postProcessAfterInitialization()</code></td>
+</tr>
+</tbody></table>
+<h3 id="16-3-ComponentScan-是在什么时候执行的？"><a href="#16-3-ComponentScan-是在什么时候执行的？" class="headerlink" title="16.3 @ComponentScan 是在什么时候执行的？"></a>16.3 @ComponentScan 是在什么时候执行的？</h3><p>在 <code>refresh()</code> 的 <code>invokeBeanFactoryPostProcessors()</code> 阶段，由 <code>ConfigurationClassPostProcessor</code> 解析配置类时执行。</p>
+<p>不是在启动类构造时执行，也不是在普通 Bean 创建时执行。</p>
+<h3 id="16-4-Bean-方法什么时候执行？"><a href="#16-4-Bean-方法什么时候执行？" class="headerlink" title="16.4 @Bean 方法什么时候执行？"></a>16.4 @Bean 方法什么时候执行？</h3><p><code>ConfigurationClassPostProcessor</code> 阶段只解析 <code>@Bean</code> 方法并注册 BeanDefinition，不执行方法。</p>
+<p>真正执行发生在后续创建 Bean 时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">finishBeanFactoryInitialization()</span><br><span class="line">  └── getBean()</span><br><span class="line">      └── instantiateUsingFactoryMethod()</span><br><span class="line">          └── 调用 @Bean 方法</span><br></pre></td></tr></table></figure>
+
+<h3 id="16-5-为什么-Configuration-要被-CGLIB-代理？"><a href="#16-5-为什么-Configuration-要被-CGLIB-代理？" class="headerlink" title="16.5 为什么 @Configuration 要被 CGLIB 代理？"></a>16.5 为什么 @Configuration 要被 CGLIB 代理？</h3><p>为了保证 <code>@Bean</code> 方法之间互相调用时仍然返回容器中的单例 Bean，而不是每次普通方法调用都创建新对象。</p>
+<h3 id="16-6-Spring-Boot-自动配置和它有什么关系？"><a href="#16-6-Spring-Boot-自动配置和它有什么关系？" class="headerlink" title="16.6 Spring Boot 自动配置和它有什么关系？"></a>16.6 Spring Boot 自动配置和它有什么关系？</h3><p><code>@SpringBootApplication</code> 包含 <code>@EnableAutoConfiguration</code>，后者通过 <code>@Import(AutoConfigurationImportSelector.class)</code> 导入自动配置选择器。</p>
+<p><code>ConfigurationClassPostProcessor</code> 解析 <code>@Import</code>，识别 <code>DeferredImportSelector</code>，最终加载自动配置类。</p>
+<h3 id="16-7-为什么自动配置要延迟导入？"><a href="#16-7-为什么自动配置要延迟导入？" class="headerlink" title="16.7 为什么自动配置要延迟导入？"></a>16.7 为什么自动配置要延迟导入？</h3><p>为了让用户自定义配置先注册，再让自动配置根据 <code>@ConditionalOnMissingBean</code> 等条件决定是否生效。</p>
+<p>这保证了“用户配置优先，自动配置兜底”。</p>
+<h3 id="16-8-为什么不要在-BeanFactoryPostProcessor-中注入普通业务-Bean？"><a href="#16-8-为什么不要在-BeanFactoryPostProcessor-中注入普通业务-Bean？" class="headerlink" title="16.8 为什么不要在 BeanFactoryPostProcessor 中注入普通业务 Bean？"></a>16.8 为什么不要在 BeanFactoryPostProcessor 中注入普通业务 Bean？</h3><p>因为该阶段普通 Bean 还没正式创建。强行注入会导致 Bean 过早初始化，可能跳过 AOP、后处理器或其他容器增强逻辑。</p>
+<hr>
+<h2 id="十七、调试断点建议"><a href="#十七、调试断点建议" class="headerlink" title="十七、调试断点建议"></a>十七、调试断点建议</h2><h3 id="17-1-主链路断点"><a href="#17-1-主链路断点" class="headerlink" title="17.1 主链路断点"></a>17.1 主链路断点</h3><table>
+<thead>
+<tr>
+<th>目标</th>
+<th>断点位置</th>
+<th>关键类</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>refresh 第 5 步</td>
+<td><code>invokeBeanFactoryPostProcessors()</code></td>
+<td><code>AbstractApplicationContext</code></td>
+</tr>
+<tr>
+<td>后处理器调度</td>
+<td><code>invokeBeanFactoryPostProcessors()</code></td>
+<td><code>PostProcessorRegistrationDelegate</code></td>
+</tr>
+<tr>
+<td>配置类入口</td>
+<td><code>postProcessBeanDefinitionRegistry()</code></td>
+<td><code>ConfigurationClassPostProcessor</code></td>
+</tr>
+<tr>
+<td>配置类主流程</td>
+<td><code>processConfigBeanDefinitions()</code></td>
+<td><code>ConfigurationClassPostProcessor</code></td>
+</tr>
+<tr>
+<td>配置类候选判断</td>
+<td><code>checkConfigurationClassCandidate()</code></td>
+<td><code>ConfigurationClassUtils</code></td>
+</tr>
+<tr>
+<td>配置类解析</td>
+<td><code>parse()</code></td>
+<td><code>ConfigurationClassParser</code></td>
+</tr>
+<tr>
+<td>单个配置类处理</td>
+<td><code>doProcessConfigurationClass()</code></td>
+<td><code>ConfigurationClassParser</code></td>
+</tr>
+<tr>
+<td>ComponentScan 解析</td>
+<td><code>parse()</code></td>
+<td><code>ComponentScanAnnotationParser</code></td>
+</tr>
+<tr>
+<td>classpath 扫描</td>
+<td><code>doScan()</code></td>
+<td><code>ClassPathBeanDefinitionScanner</code></td>
+</tr>
+<tr>
+<td>@Bean 注册</td>
+<td><code>loadBeanDefinitionsForBeanMethod()</code></td>
+<td><code>ConfigurationClassBeanDefinitionReader</code></td>
+</tr>
+<tr>
+<td>配置类增强</td>
+<td><code>enhanceConfigurationClasses()</code></td>
+<td><code>ConfigurationClassPostProcessor</code></td>
+</tr>
+</tbody></table>
+<h3 id="17-2-观察变量"><a href="#17-2-观察变量" class="headerlink" title="17.2 观察变量"></a>17.2 观察变量</h3><p>调试时重点看：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">registry.beanDefinitionMap</span><br><span class="line">registry.beanDefinitionNames</span><br><span class="line">configCandidates</span><br><span class="line">parser.configurationClasses</span><br><span class="line">parser.importStack</span><br><span class="line">parser.deferredImportSelectorHandler</span><br><span class="line">sourceClass.metadata</span><br><span class="line">beanMethods</span><br><span class="line">importBeanDefinitionRegistrars</span><br></pre></td></tr></table></figure>
+
+<h3 id="17-3-推荐调试路径"><a href="#17-3-推荐调试路径" class="headerlink" title="17.3 推荐调试路径"></a>17.3 推荐调试路径</h3><p>第一轮建议只看一个最小 Spring Boot 启动类：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DemoApplication</span><br><span class="line">  ├── @SpringBootApplication</span><br><span class="line">  ├── @ComponentScan(&quot;com.example&quot;)</span><br><span class="line">  ├── @PropertySource</span><br><span class="line">  └── @Bean(&quot;restTemplate&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>观察目标：</p>
+<ol>
+<li><code>DemoApplication</code> 如何被识别为配置类。</li>
+<li><code>@ComponentScan(&quot;com.example&quot;)</code> 如何扫描出业务组件。</li>
+<li><code>@Bean(&quot;restTemplate&quot;)</code> 如何注册成 BeanDefinition。</li>
+<li><code>@PropertySource</code> 如何加入 <code>Environment</code>。</li>
+<li><code>@EnableXxx</code> 类注解如何通过 <code>@Import</code> 触发 selector 或 registrar。</li>
+</ol>
+<hr>
+<h2 id="十八、生产实践建议"><a href="#十八、生产实践建议" class="headerlink" title="十八、生产实践建议"></a>十八、生产实践建议</h2><h3 id="18-1-控制-ComponentScan-范围"><a href="#18-1-控制-ComponentScan-范围" class="headerlink" title="18.1 控制 ComponentScan 范围"></a>18.1 控制 ComponentScan 范围</h3><p>常见的大范围扫描：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.example&quot;&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<p>优点：</p>
+<ul>
+<li>简单</li>
+<li>多模块自动发现</li>
+<li>适合单体应用和框架型工程</li>
+</ul>
+<p>风险：</p>
+<ul>
+<li>扫描范围大</li>
+<li>启动慢</li>
+<li>Bean 冲突概率高</li>
+<li>测试上下文加载成本高</li>
+<li>容易把不该注册的类注册进容器</li>
+</ul>
+<p>如果做微服务拆分或独立模块启动，建议缩小扫描范围：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(basePackages = &#123;</span></span><br><span class="line"><span class="meta">    &quot;com.example.order&quot;,</span></span><br><span class="line"><span class="meta">    &quot;com.example.user&quot;,</span></span><br><span class="line"><span class="meta">    &quot;com.example.common&quot;</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="18-2-配置类优先使用方法参数注入"><a href="#18-2-配置类优先使用方法参数注入" class="headerlink" title="18.2 配置类优先使用方法参数注入"></a>18.2 配置类优先使用方法参数注入</h3><p>推荐：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">(ActionTrackInterceptor interceptor)</span> &#123;</span><br><span class="line">    <span class="type">RestTemplate</span> <span class="variable">restTemplate</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">    restTemplate.setInterceptors(Collections.singletonList(interceptor));</span><br><span class="line">    <span class="keyword">return</span> restTemplate;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不推荐：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> ActionTrackInterceptor actionTrackInterceptor;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">RestTemplate</span> <span class="variable">restTemplate</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">    restTemplate.setInterceptors(Collections.singletonList(actionTrackInterceptor));</span><br><span class="line">    <span class="keyword">return</span> restTemplate;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原因：</p>
+<ul>
+<li>方法参数注入依赖更清晰</li>
+<li>避免配置类字段注入</li>
+<li>对 <code>proxyBeanMethods = false</code> 更友好</li>
+<li>更容易单元测试</li>
+</ul>
+<h3 id="18-3-自动配置类使用-proxyBeanMethods-false"><a href="#18-3-自动配置类使用-proxyBeanMethods-false" class="headerlink" title="18.3 自动配置类使用 proxyBeanMethods &#x3D; false"></a>18.3 自动配置类使用 proxyBeanMethods &#x3D; false</h3><p>如果配置类内部没有直接调用其他 <code>@Bean</code> 方法，建议：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CacheAutoConfiguration</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以减少 CGLIB 增强成本。</p>
+<h3 id="18-4-不要在-BeanFactoryPostProcessor-中提前-getBean"><a href="#18-4-不要在-BeanFactoryPostProcessor-中提前-getBean" class="headerlink" title="18.4 不要在 BeanFactoryPostProcessor 中提前 getBean"></a>18.4 不要在 BeanFactoryPostProcessor 中提前 getBean</h3><p>避免：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> &#123;</span><br><span class="line">    <span class="type">UserService</span> <span class="variable">userService</span> <span class="operator">=</span> beanFactory.getBean(UserService.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>推荐操作 BeanDefinition：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> &#123;</span><br><span class="line">    <span class="type">BeanDefinition</span> <span class="variable">bd</span> <span class="operator">=</span> beanFactory.getBeanDefinition(<span class="string">&quot;userService&quot;</span>);</span><br><span class="line">    bd.setLazyInit(<span class="literal">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十九、学习路线"><a href="#十九、学习路线" class="headerlink" title="十九、学习路线"></a>十九、学习路线</h2><h3 id="19-1-第一阶段：看懂职责"><a href="#19-1-第一阶段：看懂职责" class="headerlink" title="19.1 第一阶段：看懂职责"></a>19.1 第一阶段：看懂职责</h3><p>重点掌握：</p>
+<ul>
+<li>它是 <code>BeanDefinitionRegistryPostProcessor</code></li>
+<li>它在 <code>invokeBeanFactoryPostProcessors()</code> 阶段执行</li>
+<li>它把注解配置转换成 BeanDefinition</li>
+</ul>
+<h3 id="19-2-第二阶段：看懂五类注解"><a href="#19-2-第二阶段：看懂五类注解" class="headerlink" title="19.2 第二阶段：看懂五类注解"></a>19.2 第二阶段：看懂五类注解</h3><p>按顺序学习：</p>
+<ol>
+<li><code>@Configuration</code></li>
+<li><code>@ComponentScan</code></li>
+<li><code>@Bean</code></li>
+<li><code>@Import</code></li>
+<li><code>@Conditional</code></li>
+</ol>
+<h3 id="19-3-第三阶段：结合最小启动类调试"><a href="#19-3-第三阶段：结合最小启动类调试" class="headerlink" title="19.3 第三阶段：结合最小启动类调试"></a>19.3 第三阶段：结合最小启动类调试</h3><p>从 <code>DemoApplication</code> 开始：</p>
+<ol>
+<li>看启动类如何成为配置类候选。</li>
+<li>看 <code>@ComponentScan(&quot;com.example&quot;)</code> 扫描结果。</li>
+<li>看 <code>@Bean(&quot;restTemplate&quot;)</code> 的 BeanDefinition。</li>
+<li>看 <code>@PropertySource</code> 的属性源注册。</li>
+<li>看 <code>@EnableXxx</code> 如何通过 <code>@Import</code> 导入额外配置。</li>
+</ol>
+<h3 id="19-4-第四阶段：深入-Spring-Boot-自动配置"><a href="#19-4-第四阶段：深入-Spring-Boot-自动配置" class="headerlink" title="19.4 第四阶段：深入 Spring Boot 自动配置"></a>19.4 第四阶段：深入 Spring Boot 自动配置</h3><p>重点看：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">@SpringBootApplication</span><br><span class="line">  └── @EnableAutoConfiguration</span><br><span class="line">      └── @Import(AutoConfigurationImportSelector.class)</span><br><span class="line">          └── DeferredImportSelector</span><br><span class="line">              └── AutoConfiguration.imports</span><br><span class="line">                  └── @ConditionalOnXxx</span><br></pre></td></tr></table></figure>
+
+<p>这条链路是 Spring Boot “约定大于配置”的核心。</p>
+<hr>
+<h2 id="二十、最终总结"><a href="#二十、最终总结" class="headerlink" title="二十、最终总结"></a>二十、最终总结</h2><p><code>ConfigurationClassPostProcessor</code> 是 Spring 注解配置体系的核心转换器。</p>
+<p>它解决的问题是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">开发者写的注解配置</span><br><span class="line">  ↓</span><br><span class="line">Spring 可识别的 ConfigurationClass 模型</span><br><span class="line">  ↓</span><br><span class="line">BeanDefinition 注册表</span><br><span class="line">  ↓</span><br><span class="line">BeanFactory 创建和装配 Bean</span><br></pre></td></tr></table></figure>
+
+<p>一句话记忆：</p>
+<blockquote>
+<p><code>ConfigurationClassPostProcessor</code> 不创建业务 Bean，它负责在业务 Bean 创建之前，把配置类、扫描、导入、条件和 <code>@Bean</code> 方法全部解析成 BeanDefinition。</p>
+</blockquote>
+<p>在 Spring Boot 应用中，它直接支撑了：</p>
+<ul>
+<li><code>@ComponentScan</code> 的组件发现</li>
+<li><code>@Bean</code> 方法的注册</li>
+<li><code>@Import</code> 导入的 selector 和 registrar</li>
+<li><code>@EnableXxx</code> 扩展能力的接入</li>
+<li>通过组件扫描发现的后处理器的早期执行</li>
+<li>Spring Boot 自动配置的导入和条件判断</li>
+</ul>
+<p>如果要真正掌握 Spring IOC，<code>refresh()</code> 是主线，而 <code>ConfigurationClassPostProcessor</code> 就是注解配置进入 IOC 容器的核心关口。</p>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
