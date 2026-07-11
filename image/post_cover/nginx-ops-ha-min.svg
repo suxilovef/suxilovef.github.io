@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Monitoring dashboard frame -->
+    <rect x="120" y="110" width="1360" height="460" rx="16" stroke="#009639" stroke-width="4" fill="#F0FDF4" opacity="0.3"/>
+
+    <!-- Dashboard top bar -->
+    <rect x="120" y="110" width="1360" height="50" rx="16" fill="#009639" opacity="0.08"/>
+    <circle cx="150" cy="135" r="7" fill="#EF4444" opacity="0.5"/>
+    <circle cx="175" cy="135" r="7" fill="#F59E0B" opacity="0.5"/>
+    <circle cx="200" cy="135" r="7" fill="#34D399" opacity="0.5"/>
+
+    <!-- Dashboard panels -->
+    <!-- Panel 1: QPS -->
+    <rect x="150" y="180" width="300" height="160" rx="10" stroke="#009639" stroke-width="2.5" fill="#fff"/>
+    <text x="300" y="210" text-anchor="middle" font-size="16" fill="#6B7280" font-weight="600">QPS 监控</text>
+    <path d="M170 320 L220 280 L270 300 L320 250 L370 270 L420 230" stroke="#009639" stroke-width="3" opacity="0.7"/>
+    <circle cx="420" cy="230" r="5" fill="#009639"/>
+
+    <!-- Panel 2: 4xx/5xx -->
+    <rect x="480" y="180" width="300" height="160" rx="10" stroke="#EF4444" stroke-width="2.5" fill="#fff"/>
+    <text x="630" y="210" text-anchor="middle" font-size="16" fill="#6B7280" font-weight="600">4xx / 5xx 错误</text>
+    <path d="M500 310 L560 280 L620 320 L680 270 L740 290" stroke="#EF4444" stroke-width="3" opacity="0.6"/>
+    <circle cx="740" cy="290" r="5" fill="#EF4444"/>
+
+    <!-- Panel 3: Response Time -->
+    <rect x="810" y="180" width="300" height="160" rx="10" stroke="#F59E0B" stroke-width="2.5" fill="#fff"/>
+    <text x="960" y="210" text-anchor="middle" font-size="16" fill="#6B7280" font-weight="600">响应时间 (ms)</text>
+    <path d="M830 290 L890 270 L950 310 L1010 260 L1070 280" stroke="#F59E0B" stroke-width="3" opacity="0.7"/>
+    <circle cx="1070" cy="280" r="5" fill="#F59E0B"/>
+
+    <!-- Panel 4: Connection Pool -->
+    <rect x="1140" y="180" width="310" height="160" rx="10" stroke="#34D399" stroke-width="2.5" fill="#fff"/>
+    <text x="1295" y="210" text-anchor="middle" font-size="16" fill="#6B7280" font-weight="600">连接池状态</text>
+    <!-- Stacked bars -->
+    <rect x="1200" y="240" width="40" height="80" rx="3" fill="#009639" opacity="0.5"/>
+    <rect x="1250" y="250" width="40" height="70" rx="3" fill="#009639" opacity="0.6"/>
+    <rect x="1300" y="230" width="40" height="90" rx="3" fill="#009639" opacity="0.7"/>
+    <rect x="1350" y="260" width="40" height="60" rx="3" fill="#34D399" opacity="0.5"/>
+
+    <!-- HA cluster (bottom area) -->
+    <g transform="translate(300, 540)">
+      <!-- VIP floating -->
+      <rect x="300" y="0" width="120" height="40" rx="10" fill="#009639" opacity="0.15" stroke="#009639" stroke-width="3"/>
+      <text x="360" y="25" text-anchor="middle" font-size="16" fill="#009639" font-weight="700">VIP 10.0.0.1</text>
+
+      <!-- Keepalived lines from VIP to nodes -->
+      <line x1="360" y1="40" x2="160" y2="70" stroke="#009639" stroke-width="3" opacity="0.5"/>
+      <line x1="360" y1="40" x2="200" y2="70" stroke="#009639" stroke-width="3" opacity="0.5"/>
+      <line x1="360" y1="40" x2="520" y2="70" stroke="#6B7280" stroke-width="2" opacity="0.3" stroke-dasharray="6,3"/>
+
+      <!-- Node 1 (master) -->
+      <rect x="100" y="70" width="140" height="60" rx="10" stroke="#009639" stroke-width="4" fill="#F0FDF4"/>
+      <text x="170" y="100" text-anchor="middle" font-size="15" fill="#009639" font-weight="700">Nginx-1</text>
+      <text x="170" y="118" text-anchor="middle" font-size="12" fill="#009639" font-weight="600">MASTER</text>
+
+      <!-- Node 2 (backup) -->
+      <rect x="260" y="70" width="140" height="60" rx="10" stroke="#6B7280" stroke-width="3" fill="#F9FAFB"/>
+      <text x="330" y="100" text-anchor="middle" font-size="15" fill="#6B7280" font-weight="700">Nginx-2</text>
+      <text x="330" y="118" text-anchor="middle" font-size="12" fill="#6B7280" font-weight="600">BACKUP</text>
+
+      <!-- Node 3 (standby) -->
+      <rect x="440" y="70" width="140" height="60" rx="10" stroke="#6B7280" stroke-width="2" stroke-dasharray="5,3" fill="#F9FAFB"/>
+      <text x="510" y="100" text-anchor="middle" font-size="15" fill="#9CA3AF" font-weight="600">Nginx-3</text>
+      <text x="510" y="118" text-anchor="middle" font-size="12" fill="#9CA3AF" font-weight="600">STANDBY</text>
+    </g>
+
+    <!-- Status indicators for the dashboard -->
+    <g transform="translate(150, 370)">
+      <rect x="0" y="0" width="200" height="30" rx="6" fill="#ECFDF5"/>
+      <circle cx="20" cy="15" r="6" fill="#34D399"/>
+      <text x="35" y="20" font-size="13" fill="#009639" font-weight="600">Upstream OK</text>
+    </g>
+    <g transform="translate(380, 370)">
+      <rect x="0" y="0" width="200" height="30" rx="6" fill="#FEF3C7"/>
+      <circle cx="20" cy="15" r="6" fill="#F59E0B"/>
+      <text x="35" y="20" font-size="13" fill="#D97706" font-weight="600">Latency Warning</text>
+    </g>
+    <g transform="translate(610, 370)">
+      <rect x="0" y="0" width="200" height="30" rx="6" fill="#FEE2E2"/>
+      <circle cx="20" cy="15" r="6" fill="#EF4444"/>
+      <text x="35" y="20" font-size="13" fill="#DC2626" font-weight="600">502 Spike!</text>
+    </g>
+
+    <!-- Decorative arcs -->
+    <path d="M100 720 C400 660 600 760 800 680 C1000 600 1200 720 1500 660" stroke="#009639" stroke-width="3" opacity="0.15"/>
+
+    <!-- Decorative dots -->
+    <circle cx="550" cy="720" r="3" fill="#009639" opacity="0.2"/>
+    <circle cx="850" cy="680" r="4" fill="#009639" opacity="0.15"/>
+    <circle cx="1150" cy="700" r="3" fill="#009639" opacity="0.2"/>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="58" text-anchor="middle" font-weight="800">生产排障 · 高可用 · 运维体系</text>
+    <text x="800" y="845" font-size="26" text-anchor="middle" font-weight="600" fill="#6B7280">日志可观测 · 指标告警 · Keepalived · 灰度发布 · 变更回滚</text>
+  </g>
+</svg>

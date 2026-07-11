@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Server chassis outline -->
+    <rect x="640" y="140" width="320" height="440" rx="16" stroke="#009639" stroke-width="5" opacity="0.4" fill="#F0FDF4"/>
+    <rect x="640" y="140" width="320" height="440" rx="16" stroke="#009639" stroke-width="3" opacity="0.7"/>
+
+    <!-- Server inner lines (blade slots) -->
+    <line x1="660" y1="190" x2="940" y2="190" stroke="#009639" stroke-width="2" opacity="0.3"/>
+    <line x1="660" y1="230" x2="940" y2="230" stroke="#009639" stroke-width="2" opacity="0.3"/>
+    <line x1="660" y1="460" y2="460" x2="940" stroke="#009639" stroke-width="2" opacity="0.3"/>
+    <line x1="660" y1="500" x2="940" y2="500" stroke="#009639" stroke-width="2" opacity="0.3"/>
+
+    <!-- Status LEDs on server -->
+    <circle cx="680" cy="210" r="6" fill="#34D399"/>
+    <circle cx="710" cy="210" r="6" fill="#34D399"/>
+    <circle cx="740" cy="210" r="6" fill="#34D399"/>
+
+    <!-- Network signal waves from left -->
+    <path d="M120 400 Q200 340 200 400 Q200 460 280 400" stroke="#009639" stroke-width="5" opacity="0.2"/>
+    <path d="M120 360 Q220 280 220 360 Q220 440 320 360" stroke="#009639" stroke-width="5" opacity="0.35"/>
+    <path d="M120 320 Q240 220 240 320 Q240 420 360 320" stroke="#009639" stroke-width="5" opacity="0.55"/>
+
+    <!-- Arrow into server -->
+    <path d="M380 400 L620 400" stroke="#009639" stroke-width="5" opacity="0.7" marker-end="url(#arrowGreen)"/>
+
+    <!-- Response arrow out of server -->
+    <path d="M960 440 L1300 440" stroke="#34D399" stroke-width="4" opacity="0.6" marker-end="url(#arrowTeal)"/>
+
+    <!-- Client icon (left) -->
+    <rect x="120" y="370" width="80" height="60" rx="10" stroke="#6B7280" stroke-width="3" fill="#F9FAFB"/>
+    <circle cx="160" cy="390" r="8" fill="#6B7280" opacity="0.3"/>
+    <line x1="135" y1="415" x2="185" y2="415" stroke="#6B7280" stroke-width="2" opacity="0.3"/>
+
+    <!-- Response client (right) -->
+    <rect x="1300" y="410" width="80" height="60" rx="10" stroke="#34D399" stroke-width="3" fill="#F0FDF4"/>
+
+    <!-- Decorative network arcs -->
+    <path d="M200 200 Q400 80 560 180" stroke="#009639" stroke-width="4" opacity="0.25"/>
+    <path d="M1040 300 Q1200 160 1400 280" stroke="#34D399" stroke-width="4" opacity="0.2"/>
+
+    <!-- Decorative dots -->
+    <circle cx="300" cy="300" r="4" fill="#009639" opacity="0.3"/>
+    <circle cx="480" cy="260" r="3" fill="#009639" opacity="0.25"/>
+    <circle cx="1120" cy="200" r="4" fill="#009639" opacity="0.3"/>
+    <circle cx="1280" cy="340" r="3" fill="#34D399" opacity="0.25"/>
+  </g>
+
+  <!-- File system icon inside server -->
+  <g transform="translate(720, 270)" fill="none" stroke="#009639" stroke-width="3" opacity="0.6">
+    <rect x="0" y="0" width="160" height="120" rx="8"/>
+    <line x1="20" y1="30" x2="140" y2="30"/>
+    <line x1="20" y1="55" x2="140" y2="55"/>
+    <line x1="20" y1="80" x2="100" y2="80"/>
+  </g>
+
+  <!-- Nginx "N" logo inside server -->
+  <g transform="translate(730, 540)">
+    <rect x="0" y="0" width="40" height="30" rx="4" fill="#009639" opacity="0.15"/>
+    <text x="20" y="22" text-anchor="middle" font-size="20" fill="#009639" font-weight="800" font-family="'Segoe UI',Arial,sans-serif">N</text>
+  </g>
+
+  <defs>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#009639"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="68" text-anchor="middle" font-weight="800">单机部署与基础认知</text>
+    <text x="800" y="845" font-size="26" text-anchor="middle" font-weight="600" fill="#6B7280">安装 · 启动 · 进程模型 · 静态资源 · 日志排障</text>
+  </g>
+</svg>

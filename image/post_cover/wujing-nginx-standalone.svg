@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M220 220 Q430 90 650 190" stroke="#F59E0B" stroke-width="5" opacity="0.24"/>
+    <path d="M1240 250 Q1380 180 1480 280" stroke="#34D399" stroke-width="4" opacity="0.18"/>
+    <path d="M250 680 Q520 800 800 700 Q1080 600 1350 730" stroke="#009639" stroke-width="4" opacity="0.12"/>
+    <circle cx="300" cy="250" r="5" fill="#009639" opacity="0.18"/>
+    <circle cx="480" cy="180" r="4" fill="#34D399" opacity="0.18"/>
+    <circle cx="1120" cy="170" r="5" fill="#009639" opacity="0.18"/>
+    <circle cx="1320" cy="310" r="4" fill="#F59E0B" opacity="0.16"/>
+    <circle cx="1180" cy="700" r="5" fill="#34D399" opacity="0.16"/>
+    <rect x="610" y="160" width="380" height="560" rx="30" stroke="#009639" stroke-width="5" fill="#F0FDF4" opacity="0.9"/>
+    <rect x="660" y="220" width="280" height="420" rx="18" stroke="#009639" stroke-width="4" opacity="0.72"/>
+    <line x1="700" y1="290" x2="900" y2="290" stroke="#009639" stroke-width="3" opacity="0.25"/>
+    <line x1="700" y1="360" x2="900" y2="360" stroke="#009639" stroke-width="3" opacity="0.25"/>
+    <line x1="700" y1="500" x2="900" y2="500" stroke="#009639" stroke-width="3" opacity="0.25"/>
+    <circle cx="720" cy="250" r="7" fill="#34D399"/>
+    <circle cx="755" cy="250" r="7" fill="#34D399"/>
+    <circle cx="790" cy="250" r="7" fill="#34D399"/>
+    <path d="M130 390 Q240 280 240 390 Q240 500 350 390" stroke="#009639" stroke-width="6" opacity="0.34"/>
+    <path d="M130 330 Q270 180 270 330 Q270 480 410 330" stroke="#009639" stroke-width="6" opacity="0.52"/>
+    <path d="M400 430 L590 430" stroke="#009639" stroke-width="6" opacity="0.78"/>
+    <rect x="1180" y="360" width="120" height="90" rx="14" stroke="#34D399" stroke-width="3" fill="#F0FDF4"/>
+    <rect x="1310" y="460" width="120" height="90" rx="14" stroke="#009639" stroke-width="3" fill="#F0FDF4"/>
+    <path d="M1010 390 L1180 390" stroke="#34D399" stroke-width="5" opacity="0.7"/>
+    <path d="M1010 500 L1310 500" stroke="#009639" stroke-width="5" opacity="0.42"/>
+    <rect x="720" y="320" width="160" height="110" rx="12" stroke="#009639" stroke-width="4" opacity="0.56"/>
+    <line x1="750" y1="355" x2="850" y2="355" stroke="#009639" stroke-width="3" opacity="0.32"/>
+    <line x1="750" y1="395" x2="850" y2="395" stroke="#009639" stroke-width="3" opacity="0.32"/>
+  </g>
+</svg>

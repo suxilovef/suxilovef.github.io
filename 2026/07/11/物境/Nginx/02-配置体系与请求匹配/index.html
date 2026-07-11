@@ -1,0 +1,1999 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02-配置体系与请求匹配 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Nginx 第二阶段学习文档：配置上下文、指令继承、server 匹配、location 匹配、root 与 alias、try_files、rewrite、return、变量和可维护配置实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02-配置体系与请求匹配">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/02-%E9%85%8D%E7%BD%AE%E4%BD%93%E7%B3%BB%E4%B8%8E%E8%AF%B7%E6%B1%82%E5%8C%B9%E9%85%8D/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Nginx 第二阶段学习文档：配置上下文、指令继承、server 匹配、location 匹配、root 与 alias、try_files、rewrite、return、变量和可维护配置实践">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-routing.svg">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T13:51:07.454Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-routing.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "02-配置体系与请求匹配",
+  "url": "https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/02-%E9%85%8D%E7%BD%AE%E4%BD%93%E7%B3%BB%E4%B8%8E%E8%AF%B7%E6%B1%82%E5%8C%B9%E9%85%8D/",
+  "image": "https://suxilovef.github.io/image/post_cover/wujing-nginx-routing.svg",
+  "datePublished": "2026-07-10T16:00:00.000Z",
+  "dateModified": "2026-07-11T13:51:07.454Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/02-%E9%85%8D%E7%BD%AE%E4%BD%93%E7%B3%BB%E4%B8%8E%E8%AF%B7%E6%B1%82%E5%8C%B9%E9%85%8D/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '02-配置体系与请求匹配',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">28</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">02-配置体系与请求匹配</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">02-配置体系与请求匹配</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-11T13:51:07.454Z" title="更新于 2026-07-11 21:51:07">2026-07-11</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">10.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>42分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="02-配置体系与请求匹配"><a href="#02-配置体系与请求匹配" class="headerlink" title="02-配置体系与请求匹配"></a>02-配置体系与请求匹配</h1><h2 id="1-阶段定位"><a href="#1-阶段定位" class="headerlink" title="1. 阶段定位"></a>1. 阶段定位</h2><p>第二阶段是 Nginx 从“会部署、会启动、会看日志”进入“能写正确、稳定、可维护配置”的关键阶段。第一阶段重点是让 Nginx 跑起来，第二阶段重点是回答下面几个问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">一个请求进来以后：</span><br><span class="line">  -&gt; 先进入哪个 listen 端口</span><br><span class="line">  -&gt; 再进入哪个 server</span><br><span class="line">  -&gt; 再进入哪个 location</span><br><span class="line">  -&gt; URI 是否被改写</span><br><span class="line">  -&gt; 静态文件路径如何拼接</span><br><span class="line">  -&gt; try_files 是否发生内部跳转</span><br><span class="line">  -&gt; 最终返回文件、重定向，还是交给后续代理阶段</span><br></pre></td></tr></table></figure>
+
+<p>很多 Nginx 线上问题并不是因为 Nginx 不稳定，而是因为配置匹配规则理解不清。例如：</p>
+<ul>
+<li>请求进入了错误的 <code>server</code>。</li>
+<li><code>location</code> 优先级判断错误。</li>
+<li><code>root</code> 和 <code>alias</code> 混用导致静态资源 404。</li>
+<li><code>try_files</code> 内部跳转不清楚，导致前端路由异常。</li>
+<li><code>rewrite last</code> 和 <code>break</code> 混用，导致 URI 改写结果不符合预期。</li>
+<li><code>$uri</code> 和 <code>$request_uri</code> 混淆，导致日志、跳转、代理路径判断错误。</li>
+</ul>
+<p>本阶段完成后，你应该能做到：</p>
+<ul>
+<li>能读懂并设计 Nginx 配置层级结构。</li>
+<li>能解释指令在哪个上下文生效。</li>
+<li>能判断配置继承和覆盖关系。</li>
+<li>能准确判断请求命中哪个 <code>server</code>。</li>
+<li>能准确判断请求命中哪个 <code>location</code>。</li>
+<li>能解释 <code>root</code>、<code>alias</code>、<code>index</code>、<code>try_files</code> 的差异。</li>
+<li>能正确使用 <code>return</code> 做跳转和固定响应。</li>
+<li>能谨慎使用 <code>rewrite</code>，避免滥用和误匹配。</li>
+<li>能使用自定义 access log 打印变量，验证请求匹配过程。</li>
+<li>能写出结构清晰、可维护、可排查的 Nginx 配置。</li>
+</ul>
+<h2 id="2-学习边界"><a href="#2-学习边界" class="headerlink" title="2. 学习边界"></a>2. 学习边界</h2><p>第二阶段聚焦配置体系和请求匹配，不深入反向代理、负载均衡、HTTPS、安全限流和性能调优。</p>
+<h3 id="2-1-本阶段重点"><a href="#2-1-本阶段重点" class="headerlink" title="2.1 本阶段重点"></a>2.1 本阶段重点</h3><ul>
+<li>配置上下文：<code>main</code>、<code>events</code>、<code>http</code>、<code>server</code>、<code>location</code>、<code>upstream</code>。</li>
+<li>指令作用域、继承和覆盖。</li>
+<li><code>listen</code> 与默认 server。</li>
+<li><code>server_name</code> 匹配规则。</li>
+<li><code>location</code> 匹配规则和优先级。</li>
+<li>URI、request URI、normalized URI 的区别。</li>
+<li><code>root</code> 与 <code>alias</code> 的路径拼接差异。</li>
+<li><code>index</code> 的目录首页行为。</li>
+<li><code>try_files</code> 的文件检测和内部跳转。</li>
+<li><code>return</code> 的固定响应与跳转。</li>
+<li><code>rewrite</code> 的 URI 改写、正则捕获、<code>last</code>、<code>break</code>。</li>
+<li>常用变量：<code>$uri</code>、<code>$request_uri</code>、<code>$args</code>、<code>$host</code>、<code>$http_host</code>、<code>$remote_addr</code>。</li>
+<li>自定义日志格式验证匹配过程。</li>
+</ul>
+<h3 id="2-2-本阶段暂不深入"><a href="#2-2-本阶段暂不深入" class="headerlink" title="2.2 本阶段暂不深入"></a>2.2 本阶段暂不深入</h3><p>下面内容后续阶段再系统学习：</p>
+<ul>
+<li><code>proxy_pass</code> 的 URI 拼接规则。</li>
+<li><code>upstream</code> 负载均衡算法。</li>
+<li>后端超时、重试、连接池。</li>
+<li>HTTPS、证书、HTTP&#x2F;2。</li>
+<li>gzip、缓存、sendfile 深度优化。</li>
+<li>限流、限并发、安全防护。</li>
+<li>灰度发布、高可用、热升级。</li>
+<li>Nginx 源码 phase handler 机制。</li>
+</ul>
+<h2 id="3-配置体系总览"><a href="#3-配置体系总览" class="headerlink" title="3. 配置体系总览"></a>3. 配置体系总览</h2><p>Nginx 配置不是简单的键值对文本，而是一套有上下文、作用域、继承关系和执行阶段的配置体系。</p>
+<p>典型结构：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">user</span> nginx;</span><br><span class="line"><span class="attribute">worker_processes</span> auto;</span><br><span class="line"></span><br><span class="line"><span class="attribute">error_log</span> /var/log/nginx/<span class="literal">error</span>.log <span class="literal">warn</span>;</span><br><span class="line"><span class="attribute">pid</span> /run/nginx.pid;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">1024</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">include</span>       /etc/nginx/mime.types;</span><br><span class="line">    <span class="attribute">default_type</span>  application/octet-stream;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">log_format</span> main <span class="string">&#x27;<span class="variable">$remote_addr</span> <span class="variable">$host</span> &quot;<span class="variable">$request</span>&quot; <span class="variable">$status</span> <span class="variable">$uri</span> <span class="variable">$request_uri</span>&#x27;</span>;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log main;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">        <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">root</span> /usr/share/nginx/html;</span><br><span class="line">            <span class="attribute">index</span> index.html;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以把 Nginx 配置理解成下面层级：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">main 全局配置</span><br><span class="line">  -&gt; events 连接事件配置</span><br><span class="line">  -&gt; http HTTP 总配置</span><br><span class="line">       -&gt; server 虚拟主机配置</span><br><span class="line">            -&gt; location URI 处理配置</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-1-main-上下文"><a href="#3-1-main-上下文" class="headerlink" title="3.1 main 上下文"></a>3.1 main 上下文</h3><p><code>main</code> 是配置文件最外层，不需要显式写出名称。</p>
+<p>适合放：</p>
+<ul>
+<li>运行用户。</li>
+<li>worker 进程数。</li>
+<li>pid 文件。</li>
+<li>全局错误日志。</li>
+<li>全局 include。</li>
+<li>全局资源限制类配置。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">user</span> nginx;</span><br><span class="line"><span class="attribute">worker_processes</span> auto;</span><br><span class="line"><span class="attribute">error_log</span> /var/log/nginx/<span class="literal">error</span>.log <span class="literal">warn</span>;</span><br><span class="line"><span class="attribute">pid</span> /run/nginx.pid;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-events-上下文"><a href="#3-2-events-上下文" class="headerlink" title="3.2 events 上下文"></a>3.2 events 上下文</h3><p><code>events</code> 用于配置事件模型和连接处理能力。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">1024</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这一阶段只需要知道：它不处理 HTTP 路由，不写 <code>server</code>、<code>location</code>、<code>root</code>。</p>
+<h3 id="3-3-http-上下文"><a href="#3-3-http-上下文" class="headerlink" title="3.3 http 上下文"></a>3.3 http 上下文</h3><p><code>http</code> 是 HTTP 配置的总入口。</p>
+<p>适合放：</p>
+<ul>
+<li>MIME 类型。</li>
+<li>默认响应类型。</li>
+<li>日志格式。</li>
+<li>全局访问日志。</li>
+<li>gzip、sendfile 等 HTTP 级配置。</li>
+<li>多个 <code>server</code>。</li>
+<li><code>upstream</code>。</li>
+<li><code>map</code> 等 HTTP 级逻辑。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">include</span> /etc/nginx/mime.types;</span><br><span class="line">    <span class="attribute">default_type</span> application/octet-stream;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">include</span> /etc/nginx/conf.d/<span class="regexp">*.conf</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-server-上下文"><a href="#3-4-server-上下文" class="headerlink" title="3.4 server 上下文"></a>3.4 server 上下文</h3><p><code>server</code> 表示一个虚拟主机，也可以理解为一个站点入口。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /data/www/example;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>server</code> 主要解决：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这个请求应该进入哪个站点？</span><br></pre></td></tr></table></figure>
+
+<p>判断依据主要是：</p>
+<ul>
+<li>监听端口。</li>
+<li>监听 IP。</li>
+<li>Host 头。</li>
+<li><code>server_name</code>。</li>
+<li>默认 server。</li>
+</ul>
+<h3 id="3-5-location-上下文"><a href="#3-5-location-上下文" class="headerlink" title="3.5 location 上下文"></a>3.5 location 上下文</h3><p><code>location</code> 用于匹配 URI 路径，决定请求在当前 server 内如何处理。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>location</code> 主要解决：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这个请求在当前站点里应该由哪段规则处理？</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-6-upstream-上下文"><a href="#3-6-upstream-上下文" class="headerlink" title="3.6 upstream 上下文"></a>3.6 upstream 上下文</h3><p><code>upstream</code> 用于定义后端服务组，第三阶段反向代理与负载均衡会重点学习。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend_api &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:8081</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本阶段只需要知道：<code>upstream</code> 通常写在 <code>http</code> 中，不能写在 <code>server</code> 或 <code>location</code> 内。</p>
+<h2 id="4-指令上下文与作用域"><a href="#4-指令上下文与作用域" class="headerlink" title="4. 指令上下文与作用域"></a>4. 指令上下文与作用域</h2><p>不同指令只能出现在特定上下文中。写错位置，<code>nginx -t</code> 会报错。</p>
+<h3 id="4-1-常见上下文表"><a href="#4-1-常见上下文表" class="headerlink" title="4.1 常见上下文表"></a>4.1 常见上下文表</h3><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>常见合法上下文</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user</code></td>
+<td>main</td>
+<td>worker 运行用户</td>
+</tr>
+<tr>
+<td><code>worker_processes</code></td>
+<td>main</td>
+<td>worker 进程数量</td>
+</tr>
+<tr>
+<td><code>events</code></td>
+<td>main</td>
+<td>事件配置块</td>
+</tr>
+<tr>
+<td><code>http</code></td>
+<td>main</td>
+<td>HTTP 配置块</td>
+</tr>
+<tr>
+<td><code>server</code></td>
+<td>http</td>
+<td>虚拟主机</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td>server、location</td>
+<td>URI 匹配配置</td>
+</tr>
+<tr>
+<td><code>upstream</code></td>
+<td>http</td>
+<td>后端服务组</td>
+</tr>
+<tr>
+<td><code>log_format</code></td>
+<td>http</td>
+<td>定义日志格式</td>
+</tr>
+<tr>
+<td><code>access_log</code></td>
+<td>http、server、location</td>
+<td>访问日志</td>
+</tr>
+<tr>
+<td><code>error_log</code></td>
+<td>main、http、server、location</td>
+<td>错误日志</td>
+</tr>
+<tr>
+<td><code>root</code></td>
+<td>http、server、location</td>
+<td>静态资源根目录</td>
+</tr>
+<tr>
+<td><code>index</code></td>
+<td>http、server、location</td>
+<td>默认首页</td>
+</tr>
+<tr>
+<td><code>try_files</code></td>
+<td>server、location</td>
+<td>文件探测和内部跳转</td>
+</tr>
+<tr>
+<td><code>return</code></td>
+<td>server、location、if</td>
+<td>返回状态码或重定向</td>
+</tr>
+<tr>
+<td><code>rewrite</code></td>
+<td>server、location、if</td>
+<td>URI 改写</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-常见上下文错误"><a href="#4-2-常见上下文错误" class="headerlink" title="4.2 常见上下文错误"></a>4.2 常见上下文错误</h3><p>错误示例：把 <code>server</code> 写在最外层。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>正确示例：<code>server</code> 应该在 <code>http</code> 内。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>错误示例：把 <code>log_format</code> 写在 <code>server</code> 内。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">log_format</span> main <span class="string">&#x27;<span class="variable">$remote_addr</span> <span class="variable">$request</span>&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>log_format</code> 应写在 <code>http</code> 上下文。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">log_format</span> main <span class="string">&#x27;<span class="variable">$remote_addr</span> <span class="variable">$request</span>&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">access_log</span> /var/log/nginx/access.log main;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-指令继承与覆盖"><a href="#5-指令继承与覆盖" class="headerlink" title="5. 指令继承与覆盖"></a>5. 指令继承与覆盖</h2><p>Nginx 配置存在继承和覆盖关系。很多指令可以在 <code>http</code>、<code>server</code>、<code>location</code> 多层配置，子级不配置时使用上级配置，子级配置后覆盖上级。</p>
+<h3 id="5-1-access-log-继承示例"><a href="#5-1-access-log-继承示例" class="headerlink" title="5.1 access_log 继承示例"></a>5.1 access_log 继承示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log main;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> example.com;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">root</span> /data/www/example;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个例子中，<code>server</code> 和 <code>location</code> 没有单独配置 <code>access_log</code>，所以继承 <code>http</code> 级别访问日志。</p>
+<h3 id="5-2-server-覆盖-http"><a href="#5-2-server-覆盖-http" class="headerlink" title="5.2 server 覆盖 http"></a>5.2 server 覆盖 http</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log main;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> example.com;</span><br><span class="line">        <span class="attribute">access_log</span> /var/log/nginx/example.access.log main;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">root</span> /data/www/example;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个例子中，当前 <code>server</code> 的访问日志会写入 <code>/var/log/nginx/example.access.log</code>，而不是全局 access.log。</p>
+<h3 id="5-3-location-覆盖-server"><a href="#5-3-location-覆盖-server" class="headerlink" title="5.3 location 覆盖 server"></a>5.3 location 覆盖 server</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/example.access.log main;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /download/ &#123;</span><br><span class="line">        <span class="attribute">access_log</span> /var/log/nginx/download.access.log main;</span><br><span class="line">        <span class="attribute">root</span> /data/www;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>访问 <code>/download/file.zip</code> 时，会使用 location 内的日志路径。</p>
+<h3 id="5-4-继承不是简单叠加"><a href="#5-4-继承不是简单叠加" class="headerlink" title="5.4 继承不是简单叠加"></a>5.4 继承不是简单叠加</h3><p>很多指令不是“追加”，而是“覆盖”。例如子级配置了新的 <code>access_log</code> 后，通常不会同时自动写上级日志，除非你显式配置多个 <code>access_log</code>。</p>
+<p>学习阶段建议：</p>
+<ul>
+<li>全局默认配置放在 <code>http</code>。</li>
+<li>站点独有配置放在 <code>server</code>。</li>
+<li>特殊路径配置放在 <code>location</code>。</li>
+<li>不要在多个层级重复写同一指令，除非明确需要覆盖。</li>
+</ul>
+<h2 id="6-请求匹配总流程"><a href="#6-请求匹配总流程" class="headerlink" title="6. 请求匹配总流程"></a>6. 请求匹配总流程</h2><p>理解 Nginx 配置匹配，必须先建立整体流程。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">客户端请求</span><br><span class="line">  -&gt; 建立 TCP 连接</span><br><span class="line">  -&gt; 匹配 listen IP:port</span><br><span class="line">  -&gt; 在对应 listen 下选择 server</span><br><span class="line">  -&gt; 根据 Host 匹配 server_name</span><br><span class="line">  -&gt; 未匹配则进入 default_server</span><br><span class="line">  -&gt; 在选定 server 内匹配 location</span><br><span class="line">  -&gt; 执行 location 内处理逻辑</span><br><span class="line">  -&gt; 可能 return / rewrite / try_files / 静态文件 / 代理</span><br><span class="line">  -&gt; 记录 access_log</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-1-示例请求"><a href="#6-1-示例请求" class="headerlink" title="6.1 示例请求"></a>6.1 示例请求</h3><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/static/app.js?version=1</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>www.example.com</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 会依次判断：</p>
+<ol>
+<li>请求打到哪个本地 IP 和端口。</li>
+<li>该端口下有哪些 <code>server</code>。</li>
+<li>Host <code>www.example.com</code> 匹配哪个 <code>server_name</code>。</li>
+<li>URI <code>/static/app.js</code> 匹配哪个 <code>location</code>。</li>
+<li>根据 <code>root</code>、<code>alias</code>、<code>try_files</code> 等规则处理。</li>
+</ol>
+<h3 id="6-2-两级匹配核心"><a href="#6-2-两级匹配核心" class="headerlink" title="6.2 两级匹配核心"></a>6.2 两级匹配核心</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">server 匹配：解决“进哪个站点”</span><br><span class="line">location 匹配：解决“站点内哪个路径规则处理”</span><br></pre></td></tr></table></figure>
+
+<p>不要把 <code>server_name</code> 和 <code>location</code> 混为一谈。<code>server_name</code> 看 Host，<code>location</code> 看 URI。</p>
+<h2 id="7-listen-与默认-server"><a href="#7-listen-与默认-server" class="headerlink" title="7. listen 与默认 server"></a>7. listen 与默认 server</h2><p><code>listen</code> 决定 Nginx 在哪个 IP 和端口上接收请求。多个 <code>server</code> 可以监听同一个端口，此时 Nginx 会结合 <code>server_name</code> 和默认 server 决定请求进入哪个 <code>server</code>。</p>
+<h3 id="7-1-基础-listen-写法"><a href="#7-1-基础-listen-写法" class="headerlink" title="7.1 基础 listen 写法"></a>7.1 基础 listen 写法</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>表示监听所有可用 IP 的 80 端口。</p>
+<p>常见写法：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listen 80;</code></td>
+<td>监听 80 端口，通常绑定所有地址</td>
+</tr>
+<tr>
+<td><code>listen 0.0.0.0:80;</code></td>
+<td>监听所有 IPv4 地址的 80 端口</td>
+</tr>
+<tr>
+<td><code>listen 127.0.0.1:80;</code></td>
+<td>只监听本机回环地址</td>
+</tr>
+<tr>
+<td><code>listen 8080;</code></td>
+<td>监听 8080 端口</td>
+</tr>
+<tr>
+<td><code>listen [::]:80;</code></td>
+<td>监听 IPv6 80 端口</td>
+</tr>
+<tr>
+<td><code>listen 80 default_server;</code></td>
+<td>当前 server 作为该监听地址上的默认 server</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-同端口多-server"><a href="#7-2-同端口多-server" class="headerlink" title="7.2 同端口多 server"></a>7.2 同端口多 server</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> a.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;server a\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> b.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;server b\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: a.example.com&#x27;</span> http://127.0.0.1/</span><br><span class="line">curl -H <span class="string">&#x27;Host: b.example.com&#x27;</span> http://127.0.0.1/</span><br></pre></td></tr></table></figure>
+
+<p>预期：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">server a</span><br><span class="line">server b</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3-default-server-的作用"><a href="#7-3-default-server-的作用" class="headerlink" title="7.3 default_server 的作用"></a>7.3 default_server 的作用</h3><p>当请求 Host 没有匹配任何 <code>server_name</code> 时，会进入当前监听地址的默认 server。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">444</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;www.example.com\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个配置中：</p>
+<ul>
+<li>Host 是 <code>www.example.com</code>，进入第二个 server。</li>
+<li>Host 是 <code>unknown.example.com</code>，进入第一个 default server。</li>
+<li>没有 Host 或 Host 异常时，也可能进入 default server。</li>
+</ul>
+<p><code>return 444</code> 是 Nginx 特有状态，表示直接关闭连接，不返回响应。生产中常用它处理未知域名访问。</p>
+<h3 id="7-4-没写-default-server-时怎么办"><a href="#7-4-没写-default-server-时怎么办" class="headerlink" title="7.4 没写 default_server 时怎么办"></a>7.4 没写 default_server 时怎么办</h3><p>如果同一个 <code>listen</code> 地址上没有显式声明 <code>default_server</code>，Nginx 通常会把配置中第一个出现的 server 作为默认 server。</p>
+<p>不推荐依赖这个隐式规则。建议显式配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样配置更清晰，后续新增站点时也不容易误伤。</p>
+<h3 id="7-5-IP-维度的默认-server"><a href="#7-5-IP-维度的默认-server" class="headerlink" title="7.5 IP 维度的默认 server"></a>7.5 IP 维度的默认 server</h3><p>默认 server 是按监听地址和端口区分的。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">10.0.0.10:80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;default for 10.0.0.10\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">10.0.0.20:80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;default for 10.0.0.20\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果一台服务器有多个 IP，不同 IP:port 可以有不同默认 server。</p>
+<h3 id="7-6-listen-排查命令"><a href="#7-6-listen-排查命令" class="headerlink" title="7.6 listen 排查命令"></a>7.6 listen 排查命令</h3><p>查看配置最终展开：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nginx -T | grep -n <span class="string">&quot;listen\|server_name&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>查看端口监听：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ss -lntp | grep nginx</span><br></pre></td></tr></table></figure>
+
+<p>测试指定 Host：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v -H <span class="string">&#x27;Host: www.example.com&#x27;</span> http://127.0.0.1/</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-server-name-匹配规则"><a href="#8-server-name-匹配规则" class="headerlink" title="8. server_name 匹配规则"></a>8. server_name 匹配规则</h2><p><code>server_name</code> 用于根据 HTTP Host 头选择虚拟主机。</p>
+<h3 id="8-1-基础写法"><a href="#8-1-基础写法" class="headerlink" title="8.1 基础写法"></a>8.1 基础写法</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个 server 可以配置多个名称：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com www.example.com api.example.com;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-server-name-匹配优先级"><a href="#8-2-server-name-匹配优先级" class="headerlink" title="8.2 server_name 匹配优先级"></a>8.2 server_name 匹配优先级</h3><p>Nginx 的 <code>server_name</code> 匹配大致优先级如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 精确名称匹配</span><br><span class="line">2. 最长的前缀通配符匹配，例如 *.example.com</span><br><span class="line">3. 最长的后缀通配符匹配，例如 mail.*</span><br><span class="line">4. 第一个匹配的正则 server_name</span><br><span class="line">5. default_server</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-3-精确匹配"><a href="#8-3-精确匹配" class="headerlink" title="8.3 精确匹配"></a>8.3 精确匹配</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;exact www\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: www.example.com&#x27;</span> http://127.0.0.1/</span><br></pre></td></tr></table></figure>
+
+<p>精确匹配优先级最高。</p>
+<h3 id="8-4-前缀通配符匹配"><a href="#8-4-前缀通配符匹配" class="headerlink" title="8.4 前缀通配符匹配"></a>8.4 前缀通配符匹配</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> <span class="regexp">*.example.com</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;wildcard prefix\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可匹配：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">www.example.com</span><br><span class="line">api.example.com</span><br><span class="line">img.example.com</span><br></pre></td></tr></table></figure>
+
+<p>通常不匹配裸域名：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">example.com</span><br></pre></td></tr></table></figure>
+
+<p>如果裸域名也要匹配，应该显式写出：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">server_name</span> example.com <span class="regexp">*.example.com</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-5-后缀通配符匹配"><a href="#8-5-后缀通配符匹配" class="headerlink" title="8.5 后缀通配符匹配"></a>8.5 后缀通配符匹配</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> <span class="regexp">mail.*</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;wildcard suffix\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可匹配：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mail.example.com</span><br><span class="line">mail.test.com</span><br></pre></td></tr></table></figure>
+
+<p>这种写法相对少用，可维护性一般，不建议滥用。</p>
+<h3 id="8-6-正则匹配"><a href="#8-6-正则匹配" class="headerlink" title="8.6 正则匹配"></a>8.6 正则匹配</h3><p>正则 <code>server_name</code> 使用 <code>~</code> 开头。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> ~^www\d+\.example\.com$;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;regex server\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可匹配：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">www1.example.com</span><br><span class="line">www2.example.com</span><br></pre></td></tr></table></figure>
+
+<p>正则匹配注意事项：</p>
+<ul>
+<li>正则匹配优先级低于精确匹配和通配符匹配。</li>
+<li>多个正则 server 按配置出现顺序匹配，第一个命中生效。</li>
+<li>正则过多会降低可读性和可维护性。</li>
+<li>生产环境应优先使用精确名称和清晰通配符。</li>
+</ul>
+<h3 id="8-7-server-name-的意义"><a href="#8-7-server-name-的意义" class="headerlink" title="8.7 server_name _ 的意义"></a>8.7 server_name _ 的意义</h3><p>常见配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_</code> 并不是特殊通配符，只是一个普通但通常不会被真实 Host 使用的名称。真正让它成为兜底 server 的是 <code>default_server</code>，不是 <code>_</code> 本身。</p>
+<h3 id="8-8-Host、-host-与-http-host"><a href="#8-8-Host、-host-与-http-host" class="headerlink" title="8.8 Host、$host 与 $http_host"></a>8.8 Host、$host 与 $http_host</h3><p>Nginx 中常用两个变量观察 Host：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$http_host</code></td>
+<td>原始 Host 请求头，通常保留端口</td>
+</tr>
+<tr>
+<td><code>$host</code></td>
+<td>规范化后的 Host，可能来自请求行、Host 头或 server_name，通常不带端口</td>
+</tr>
+</tbody></table>
+<p>示例请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: www.example.com:8080&#x27;</span> http://127.0.0.1/</span><br></pre></td></tr></table></figure>
+
+<p>可能看到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$http_host = www.example.com:8080</span><br><span class="line">$host      = www.example.com</span><br></pre></td></tr></table></figure>
+
+<p>调试 Host 匹配时，建议自定义日志同时打印这两个变量。</p>
+<h2 id="9-URI-与请求变量基础"><a href="#9-URI-与请求变量基础" class="headerlink" title="9. URI 与请求变量基础"></a>9. URI 与请求变量基础</h2><p>第二阶段最容易混淆的是 URI 相关变量。理解它们对 <code>location</code>、<code>try_files</code>、<code>rewrite</code>、日志排查都很重要。</p>
+<h3 id="9-1-URL、URI、请求参数"><a href="#9-1-URL、URI、请求参数" class="headerlink" title="9.1 URL、URI、请求参数"></a>9.1 URL、URI、请求参数</h3><p>请求示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://www.example.com/static/app.js?version=1&amp;debug=true</span><br></pre></td></tr></table></figure>
+
+<p>拆开看：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>scheme</td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td>host</td>
+<td><code>www.example.com</code></td>
+</tr>
+<tr>
+<td>path &#x2F; URI 路径</td>
+<td><code>/static/app.js</code></td>
+</tr>
+<tr>
+<td>query string</td>
+<td><code>version=1&amp;debug=true</code></td>
+</tr>
+<tr>
+<td>request URI</td>
+<td><code>/static/app.js?version=1&amp;debug=true</code></td>
+</tr>
+</tbody></table>
+<h3 id="9-2-request-uri"><a href="#9-2-request-uri" class="headerlink" title="9.2 $request_uri"></a>9.2 $request_uri</h3><p><code>$request_uri</code> 表示客户端发来的原始 URI，通常包含查询参数。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js?version=1&amp;debug=true</span><br></pre></td></tr></table></figure>
+
+<p>特点：</p>
+<ul>
+<li>保留原始请求中的参数。</li>
+<li>通常不会随着内部 URI 规范化而变化。</li>
+<li>很适合日志记录和跳转保留原始路径。</li>
+</ul>
+<h3 id="9-3-uri"><a href="#9-3-uri" class="headerlink" title="9.3 $uri"></a>9.3 $uri</h3><p><code>$uri</code> 表示 Nginx 处理后的规范化 URI，不包含查询参数。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>特点：</p>
+<ul>
+<li>不包含 query string。</li>
+<li>可能被 <code>rewrite</code>、<code>try_files</code> 内部跳转改变。</li>
+<li>常用于路径匹配、文件查找和内部处理。</li>
+</ul>
+<h3 id="9-4-args-与-query-string"><a href="#9-4-args-与-query-string" class="headerlink" title="9.4 $args 与 $query_string"></a>9.4 $args 与 $query_string</h3><p><code>$args</code> 表示查询参数部分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">version=1&amp;debug=true</span><br></pre></td></tr></table></figure>
+
+<p><code>$query_string</code> 通常等价于 <code>$args</code>。</p>
+<p>可以通过下面方式返回变量观察：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /debug-uri &#123;</span><br><span class="line">    <span class="attribute">default_type</span> text/plain;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&quot;uri=<span class="variable">$uri</span>\nrequest_uri=<span class="variable">$request_uri</span>\nargs=<span class="variable">$args</span>\nhost=<span class="variable">$host</span>\nhttp_host=<span class="variable">$http_host</span>\n&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: www.example.com:8080&#x27;</span> <span class="string">&#x27;http://127.0.0.1/debug-uri?a=1&amp;b=2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="9-5-URI-变量对比表"><a href="#9-5-URI-变量对比表" class="headerlink" title="9.5 URI 变量对比表"></a>9.5 URI 变量对比表</h3><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>是否包含参数</th>
+<th>是否可能被内部改写影响</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$request_uri</code></td>
+<td>是</td>
+<td>通常保留原始请求</td>
+<td>日志、跳转、保留原始路径</td>
+</tr>
+<tr>
+<td><code>$uri</code></td>
+<td>否</td>
+<td>会</td>
+<td>文件查找、内部跳转、匹配调试</td>
+</tr>
+<tr>
+<td><code>$args</code></td>
+<td>只包含参数</td>
+<td>可被修改</td>
+<td>参数透传、日志</td>
+</tr>
+<tr>
+<td><code>$is_args</code></td>
+<td>有参数时为 <code>?</code></td>
+<td>跟随 args</td>
+<td>拼接跳转 URL</td>
+</tr>
+<tr>
+<td><code>$host</code></td>
+<td>不包含路径</td>
+<td>Host 规范化结果</td>
+<td>域名判断、代理头</td>
+</tr>
+<tr>
+<td><code>$http_host</code></td>
+<td>原始 Host 头</td>
+<td>原样来自请求头</td>
+<td>调试 Host</td>
+</tr>
+</tbody></table>
+<h2 id="10-location-匹配规则"><a href="#10-location-匹配规则" class="headerlink" title="10. location 匹配规则"></a>10. location 匹配规则</h2><p><code>location</code> 是第二阶段最重要的知识点之一。它决定 URI 在选定 server 内由哪段配置处理。</p>
+<h3 id="10-1-location-常见类型"><a href="#10-1-location-常见类型" class="headerlink" title="10.1 location 常见类型"></a>10.1 location 常见类型</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>精确匹配</td>
+<td><code>location = /</code></td>
+<td>URI 必须完全相等</td>
+</tr>
+<tr>
+<td>前缀匹配</td>
+<td><code>location /static/</code></td>
+<td>URI 以指定前缀开头</td>
+</tr>
+<tr>
+<td>优先前缀匹配</td>
+<td><code>location ^~ /static/</code></td>
+<td>命中后不再检查正则</td>
+</tr>
+<tr>
+<td>区分大小写正则</td>
+<td><code>location ~ \.jpg$</code></td>
+<td>正则匹配，区分大小写</td>
+</tr>
+<tr>
+<td>不区分大小写正则</td>
+<td><code>location ~* \.jpg$</code></td>
+<td>正则匹配，不区分大小写</td>
+</tr>
+<tr>
+<td>通用前缀</td>
+<td><code>location /</code></td>
+<td>兜底路径匹配</td>
+</tr>
+</tbody></table>
+<h3 id="10-2-location-匹配优先级"><a href="#10-2-location-匹配优先级" class="headerlink" title="10.2 location 匹配优先级"></a>10.2 location 匹配优先级</h3><p>核心规则可以记成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1. 先检查精确匹配 location =</span><br><span class="line">2. 再找最长前缀匹配</span><br><span class="line">3. 如果最长前缀是 ^~，直接使用它，不再检查正则</span><br><span class="line">4. 否则按配置顺序检查正则 location ~ / ~*</span><br><span class="line">5. 如果正则命中，使用第一个命中的正则 location</span><br><span class="line">6. 如果正则都不命中，使用之前找到的最长前缀 location</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-3-示例配置"><a href="#10-3-示例配置" class="headerlink" title="10.3 示例配置"></a>10.3 示例配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> = / &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;A exact /\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;B prefix /\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /static/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;C prefix /static/\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span><span class="regexp"> ^~</span> /static/images/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;D ^~ /static/images/\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~ \.jpg$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;E regex jpg\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~* \.png$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;F regex png ignore case\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试结果：</p>
+<table>
+<thead>
+<tr>
+<th>请求 URI</th>
+<th>命中 location</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code></td>
+<td><code>location = /</code></td>
+<td>精确匹配优先级最高</td>
+</tr>
+<tr>
+<td><code>/abc</code></td>
+<td><code>location /</code></td>
+<td>只有通用前缀匹配</td>
+</tr>
+<tr>
+<td><code>/static/app.js</code></td>
+<td><code>location /static/</code></td>
+<td>最长前缀，正则不命中</td>
+</tr>
+<tr>
+<td><code>/static/logo.jpg</code></td>
+<td><code>location ~ \.jpg$</code></td>
+<td>前缀先记录，随后正则命中并覆盖</td>
+</tr>
+<tr>
+<td><code>/static/images/a.jpg</code></td>
+<td><code>location ^~ /static/images/</code></td>
+<td><code>^~</code> 最长前缀命中后跳过正则</td>
+</tr>
+<tr>
+<td><code>/static/a.PNG</code></td>
+<td><code>location ~* \.png$</code></td>
+<td>不区分大小写正则命中</td>
+</tr>
+</tbody></table>
+<h3 id="10-4-精确匹配-location"><a href="#10-4-精确匹配-location" class="headerlink" title="10.4 精确匹配 location &#x3D;"></a>10.4 精确匹配 location &#x3D;</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> = /favicon.ico &#123;</span><br><span class="line">    <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">204</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>适合处理：</p>
+<ul>
+<li><code>/</code> 首页。</li>
+<li><code>/favicon.ico</code>。</li>
+<li><code>/robots.txt</code>。</li>
+<li>固定健康检查路径，例如 <code>/health</code>。</li>
+</ul>
+<p>精确匹配性能和可读性都很好，适合高频固定路径。</p>
+<h3 id="10-5-普通前缀匹配"><a href="#10-5-普通前缀匹配" class="headerlink" title="10.5 普通前缀匹配"></a>10.5 普通前缀匹配</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可匹配：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js</span><br><span class="line">/static/css/main.css</span><br><span class="line">/static/images/logo.png</span><br></pre></td></tr></table></figure>
+
+<p>多个普通前缀同时匹配时，使用最长的那个作为候选。</p>
+<h3 id="10-6-优先前缀匹配"><a href="#10-6-优先前缀匹配" class="headerlink" title="10.6 ^~ 优先前缀匹配"></a>10.6 ^~ 优先前缀匹配</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果 URI 以 <code>/assets/</code> 开头，且这是最长前缀匹配，Nginx 会直接使用该 location，不再检查正则 location。</p>
+<p>适合场景：</p>
+<ul>
+<li>静态资源目录明确，不希望被后面的正则劫持。</li>
+<li>下载目录明确，需要稳定匹配。</li>
+<li>图片、文件、前端资源路径不希望进入动态规则。</li>
+</ul>
+<h3 id="10-7-正则-location"><a href="#10-7-正则-location" class="headerlink" title="10.7 正则 location"></a>10.7 正则 location</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;php file\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~* \.(jpg|jpeg|png|gif|webp)$</span> &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;image file\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<ul>
+<li><code>~</code> 区分大小写。</li>
+<li><code>~*</code> 不区分大小写。</li>
+<li>多个正则按配置顺序匹配，第一个命中生效。</li>
+<li>正则 location 可读性较差，过多会增加维护成本。</li>
+</ul>
+<h3 id="10-8-location-兜底"><a href="#10-8-location-兜底" class="headerlink" title="10.8 location &#x2F; 兜底"></a>10.8 location &#x2F; 兜底</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>location /</code> 几乎可以匹配所有 URI，常作为兜底规则。建议每个 server 都有清晰的兜底 location，避免请求落入不可预期行为。</p>
+<h3 id="10-9-location-排查方法"><a href="#10-9-location-排查方法" class="headerlink" title="10.9 location 排查方法"></a>10.9 location 排查方法</h3><p>为了确认请求进入哪个 location，可以临时写 <code>return</code>：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;hit /api/\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也可以配置调试日志格式：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> match_debug <span class="string">&#x27;<span class="variable">$remote_addr</span> host=<span class="variable">$host</span> request=&quot;<span class="variable">$request</span>&quot; uri=<span class="variable">$uri</span> request_uri=<span class="variable">$request_uri</span> status=<span class="variable">$status</span>&#x27;</span>;</span><br><span class="line"><span class="attribute">access_log</span> /var/log/nginx/match_debug.log match_debug;</span><br></pre></td></tr></table></figure>
+
+<p>然后用 <code>curl</code> 验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: www.example.com&#x27;</span> <span class="string">&#x27;http://127.0.0.1/static/app.js?version=1&#x27;</span></span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">tail</span> -f /var/log/nginx/match_debug.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="11-root-与-alias"><a href="#11-root-与-alias" class="headerlink" title="11. root 与 alias"></a>11. root 与 alias</h2><p><code>root</code> 和 <code>alias</code> 都用于配置静态资源路径，但它们的路径拼接规则完全不同，是 Nginx 新手最容易踩坑的地方之一。</p>
+<h3 id="11-1-root-的拼接规则"><a href="#11-1-root-的拼接规则" class="headerlink" title="11.1 root 的拼接规则"></a>11.1 root 的拼接规则</h3><p><code>root</code> 的规则是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">真实文件路径 = root 路径 + 完整 URI</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>实际查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，<code>location</code> 匹配到的 <code>/static/</code> 仍然会保留在文件路径中。</p>
+<h3 id="11-2-alias-的拼接规则"><a href="#11-2-alias-的拼接规则" class="headerlink" title="11.2 alias 的拼接规则"></a>11.2 alias 的拼接规则</h3><p><code>alias</code> 的规则是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">真实文件路径 = alias 路径 + 去掉 location 前缀后的剩余 URI</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/assets/;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>实际查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>/static/</code> 不会出现在真实文件路径中。</p>
+<h3 id="11-3-root-与-alias-对比"><a href="#11-3-root-与-alias-对比" class="headerlink" title="11.3 root 与 alias 对比"></a>11.3 root 与 alias 对比</h3><table>
+<thead>
+<tr>
+<th>配置</th>
+<th>请求 URI</th>
+<th>实际文件路径</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>location /static/ { root /data/www; }</code></td>
+<td><code>/static/app.js</code></td>
+<td><code>/data/www/static/app.js</code></td>
+</tr>
+<tr>
+<td><code>location /static/ { alias /data/assets/; }</code></td>
+<td><code>/static/app.js</code></td>
+<td><code>/data/assets/app.js</code></td>
+</tr>
+<tr>
+<td><code>location /images/ { root /data/www; }</code></td>
+<td><code>/images/logo.png</code></td>
+<td><code>/data/www/images/logo.png</code></td>
+</tr>
+<tr>
+<td><code>location /images/ { alias /data/pictures/; }</code></td>
+<td><code>/images/logo.png</code></td>
+<td><code>/data/pictures/logo.png</code></td>
+</tr>
+</tbody></table>
+<h3 id="11-4-alias-末尾斜杠问题"><a href="#11-4-alias-末尾斜杠问题" class="headerlink" title="11.4 alias 末尾斜杠问题"></a>11.4 alias 末尾斜杠问题</h3><p>使用 <code>alias</code> 时，强烈建议 <code>location</code> 和 <code>alias</code> 都保持末尾斜杠一致。</p>
+<p>推荐：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/assets/;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不推荐：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/assets;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不一致时容易产生难以直观看出的路径拼接问题。</p>
+<h3 id="11-5-alias-与正则-location"><a href="#11-5-alias-与正则-location" class="headerlink" title="11.5 alias 与正则 location"></a>11.5 alias 与正则 location</h3><p>正则 location 中使用 <code>alias</code> 时通常需要捕获组。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~ ^/download/(.*)$</span> &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/files/<span class="variable">$1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/download/a/b/report.pdf</span><br></pre></td></tr></table></figure>
+
+<p>实际文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/files/a/b/report.pdf</span><br></pre></td></tr></table></figure>
+
+<p>这种配置可读性较差，生产中应谨慎使用。能用清晰前缀匹配解决时，不要优先使用正则 alias。</p>
+<h3 id="11-6-root-与-alias-选择建议"><a href="#11-6-root-与-alias-选择建议" class="headerlink" title="11.6 root 与 alias 选择建议"></a>11.6 root 与 alias 选择建议</h3><p>优先使用 <code>root</code> 的场景：</p>
+<ul>
+<li>URI 路径和磁盘路径结构一致。</li>
+<li><code>/static/</code> 对应磁盘 <code>/data/www/static/</code>。</li>
+<li>配置简单、直观、团队容易理解。</li>
+</ul>
+<p>适合使用 <code>alias</code> 的场景：</p>
+<ul>
+<li>URI 路径和磁盘路径结构不一致。</li>
+<li><code>/static/</code> 需要映射到 <code>/data/assets/</code>。</li>
+<li>某个 URL 前缀只是对外暴露路径，不希望出现在磁盘路径中。</li>
+</ul>
+<p>建议：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">能用 root 清晰表达，就优先 root。</span><br><span class="line">需要 URL 前缀映射到完全不同目录，再用 alias。</span><br></pre></td></tr></table></figure>
+
+<h2 id="12-index-指令"><a href="#12-index-指令" class="headerlink" title="12. index 指令"></a>12. index 指令</h2><p><code>index</code> 用于访问目录 URI 时，指定默认首页文件。</p>
+<h3 id="12-1-基础示例"><a href="#12-1-基础示例" class="headerlink" title="12.1 基础示例"></a>12.1 基础示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">index</span> index.html index.htm;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 会尝试查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/data/www/site/index.html</span><br><span class="line">/data/www/site/index.htm</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-2-访问目录与访问文件"><a href="#12-2-访问目录与访问文件" class="headerlink" title="12.2 访问目录与访问文件"></a>12.2 访问目录与访问文件</h3><p>如果请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/about/</span><br></pre></td></tr></table></figure>
+
+<p>且配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 会尝试查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/site/about/index.html</span><br></pre></td></tr></table></figure>
+
+<p>如果请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/about.html</span><br></pre></td></tr></table></figure>
+
+<p>则会直接查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/site/about.html</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-3-没有-index-时的-403"><a href="#12-3-没有-index-时的-403" class="headerlink" title="12.3 没有 index 时的 403"></a>12.3 没有 index 时的 403</h3><p>如果访问的是目录，并且目录下没有 <code>index</code> 指定的文件，通常会返回 <code>403 Forbidden</code>，错误日志中可能出现：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">directory index of &quot;/data/www/site/&quot; is forbidden</span><br></pre></td></tr></table></figure>
+
+<p>解决方式：</p>
+<ul>
+<li>补充 <code>index.html</code>。</li>
+<li>修改 <code>index</code> 指令。</li>
+<li>如果确实需要列目录，开启 <code>autoindex on;</code>。</li>
+</ul>
+<p>学习阶段了解 <code>autoindex</code> 即可，不建议生产随意开启目录列表。</p>
+<h2 id="13-try-files-执行逻辑"><a href="#13-try-files-执行逻辑" class="headerlink" title="13. try_files 执行逻辑"></a>13. try_files 执行逻辑</h2><p><code>try_files</code> 用于按顺序检查文件或目录是否存在，命中则使用该路径，全部不命中则跳转到最后一个参数。</p>
+<h3 id="13-1-基础语法"><a href="#13-1-基础语法" class="headerlink" title="13.1 基础语法"></a>13.1 基础语法</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">try_files</span> file ... uri;</span><br><span class="line"><span class="attribute">try_files</span> file ... =code;</span><br></pre></td></tr></table></figure>
+
+<p>常见写法：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行逻辑：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. 检查 /data/www/site + $uri 是否存在</span><br><span class="line">2. 如果不存在，检查 /data/www/site + $uri/ 是否存在目录</span><br><span class="line">3. 如果还不存在，内部跳转到 /index.html</span><br></pre></td></tr></table></figure>
+
+<h3 id="13-2-静态站点常用配置"><a href="#13-2-静态站点常用配置" class="headerlink" title="13.2 静态站点常用配置"></a>13.2 静态站点常用配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>适合普通静态站点：</p>
+<ul>
+<li>文件存在则返回文件。</li>
+<li>目录存在则尝试目录首页。</li>
+<li>都不存在则返回 404。</li>
+</ul>
+<h3 id="13-3-前端-history-路由配置"><a href="#13-3-前端-history-路由配置" class="headerlink" title="13.3 前端 history 路由配置"></a>13.3 前端 history 路由配置</h3><p>Vue、React、Angular 等前端单页应用使用 history 路由时，刷新 <code>/user/profile</code> 可能需要回退到 <code>/index.html</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">root</span> /data/www/frontend;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求 <code>/user/profile</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. 查找 /data/www/frontend/user/profile</span><br><span class="line">2. 查找 /data/www/frontend/user/profile/</span><br><span class="line">3. 都不存在，内部跳转到 /index.html</span><br></pre></td></tr></table></figure>
+
+<p>浏览器仍然显示 <code>/user/profile</code>，但 Nginx 返回的是前端入口文件 <code>index.html</code>。</p>
+<h3 id="13-4-try-files-最后一个参数"><a href="#13-4-try-files-最后一个参数" class="headerlink" title="13.4 try_files 最后一个参数"></a>13.4 try_files 最后一个参数</h3><p>最后一个参数可以是 URI：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br></pre></td></tr></table></figure>
+
+<p>也可以是状态码：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br></pre></td></tr></table></figure>
+
+<p>也可以跳转到命名 location：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">@fallback</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> <span class="variable">@fallback</span> &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>命名 location 以 <code>@</code> 开头，只能内部跳转，不能被客户端直接请求。</p>
+<h3 id="13-5-try-files-与-root-的关系"><a href="#13-5-try-files-与-root-的关系" class="headerlink" title="13.5 try_files 与 root 的关系"></a>13.5 try_files 与 root 的关系</h3><p><code>try_files</code> 检查文件时，会结合当前上下文中的 <code>root</code> 或 <code>alias</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">root</span> /data/www/site;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>检查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/site/static/app.js</span><br></pre></td></tr></table></figure>
+
+<h3 id="13-6-try-files-常见误区"><a href="#13-6-try-files-常见误区" class="headerlink" title="13.6 try_files 常见误区"></a>13.6 try_files 常见误区</h3><p>误区一：以为 <code>try_files</code> 会改变浏览器地址。</p>
+<p>实际：<code>try_files</code> 的 <code>/index.html</code> 是内部跳转，不会改变浏览器地址栏。</p>
+<p>误区二：忘记配置 <code>root</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果当前上下文没有正确 <code>root</code>，文件检查路径可能不是你预期的路径。</p>
+<p>误区三：前端项目把所有请求都回退到 <code>index.html</code>，导致真实 404 文件也返回 200。</p>
+<p>例如 <code>/not-exist.png</code> 也返回 <code>index.html</code>，这对静态资源不友好。更稳妥的做法是静态资源单独配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="14-return-指令"><a href="#14-return-指令" class="headerlink" title="14. return 指令"></a>14. return 指令</h2><p><code>return</code> 用于直接返回状态码、文本或重定向。它比 <code>rewrite</code> 更直接、更清晰，能用 <code>return</code> 解决的跳转，不要优先使用 <code>rewrite</code>。</p>
+<h3 id="14-1-返回固定状态码"><a href="#14-1-返回固定状态码" class="headerlink" title="14.1 返回固定状态码"></a>14.1 返回固定状态码</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /health &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;ok\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -i http://127.0.0.1/health</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-2-返回-404"><a href="#14-2-返回-404" class="headerlink" title="14.2 返回 404"></a>14.2 返回 404</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用于未知域名兜底。</p>
+<h3 id="14-3-返回-301-永久重定向"><a href="#14-3-返回-301-永久重定向" class="headerlink" title="14.3 返回 301 永久重定向"></a>14.3 返回 301 永久重定向</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> http://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>含义：访问 <code>example.com</code> 时，永久跳转到 <code>www.example.com</code>，并保留原始路径和参数。</p>
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/a/b?x=1</span><br></pre></td></tr></table></figure>
+
+<p>跳转到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://www.example.com/a/b?x=1</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-4-返回-302-临时重定向"><a href="#14-4-返回-302-临时重定向" class="headerlink" title="14.4 返回 302 临时重定向"></a>14.4 返回 302 临时重定向</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /old-page &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">302</span> /new-page;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>302 适合临时跳转，301 适合永久规范化跳转。</p>
+<h3 id="14-5-return-与-rewrite-的选择"><a href="#14-5-return-与-rewrite-的选择" class="headerlink" title="14.5 return 与 rewrite 的选择"></a>14.5 return 与 rewrite 的选择</h3><p>优先选择 <code>return</code> 的场景：</p>
+<ul>
+<li>域名跳转。</li>
+<li>HTTP 到 HTTPS 跳转。</li>
+<li>固定旧路径跳转新路径。</li>
+<li>健康检查返回文本。</li>
+<li>默认 server 返回 404 或 444。</li>
+</ul>
+<p><code>return</code> 的优点：</p>
+<ul>
+<li>执行直接。</li>
+<li>可读性强。</li>
+<li>不依赖复杂正则。</li>
+<li>不容易产生内部跳转副作用。</li>
+</ul>
+<h2 id="15-rewrite-指令"><a href="#15-rewrite-指令" class="headerlink" title="15. rewrite 指令"></a>15. rewrite 指令</h2><p><code>rewrite</code> 用于基于正则改写 URI。它很强大，但也容易被滥用。第二阶段要掌握它的基本行为，更要知道什么时候不该用。</p>
+<h3 id="15-1-基础语法"><a href="#15-1-基础语法" class="headerlink" title="15.1 基础语法"></a>15.1 基础语法</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span> regex replacement [flag];</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/old/(.*)$</span> /new/<span class="variable">$1</span> <span class="literal">last</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/old/a.html</span><br></pre></td></tr></table></figure>
+
+<p>改写为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/new/a.html</span><br></pre></td></tr></table></figure>
+
+<h3 id="15-2-常见-flag"><a href="#15-2-常见-flag" class="headerlink" title="15.2 常见 flag"></a>15.2 常见 flag</h3><table>
+<thead>
+<tr>
+<th>flag</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>last</code></td>
+<td>停止当前 rewrite，使用新 URI 重新进行 location 匹配</td>
+</tr>
+<tr>
+<td><code>break</code></td>
+<td>停止当前 rewrite，在当前 location 继续处理</td>
+</tr>
+<tr>
+<td><code>redirect</code></td>
+<td>返回 302 临时重定向</td>
+</tr>
+<tr>
+<td><code>permanent</code></td>
+<td>返回 301 永久重定向</td>
+</tr>
+</tbody></table>
+<h3 id="15-3-last-示例"><a href="#15-3-last-示例" class="headerlink" title="15.3 last 示例"></a>15.3 last 示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /old/ &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^/old/(.*)$</span> /new/<span class="variable">$1</span> <span class="literal">last</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /new/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;hit new location: <span class="variable">$uri</span>\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8088/old/a</span><br></pre></td></tr></table></figure>
+
+<p>流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 先命中 location /old/</span><br><span class="line">2. rewrite 把 URI 改成 /new/a</span><br><span class="line">3. last 触发重新匹配 location</span><br><span class="line">4. 命中 location /new/</span><br></pre></td></tr></table></figure>
+
+<h3 id="15-4-break-示例"><a href="#15-4-break-示例" class="headerlink" title="15.4 break 示例"></a>15.4 break 示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /old/ &#123;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/old/(.*)$</span> /new/<span class="variable">$1</span> <span class="literal">break</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;uri=<span class="variable">$uri</span>\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>break</code> 不会重新发起 location 匹配，而是在当前 location 内继续处理。</p>
+<h3 id="15-5-permanent-与-redirect"><a href="#15-5-permanent-与-redirect" class="headerlink" title="15.5 permanent 与 redirect"></a>15.5 permanent 与 redirect</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/old-page$</span> /new-page <span class="literal">permanent</span>;</span><br></pre></td></tr></table></figure>
+
+<p>等价于更推荐的：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> = /old-page &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> /new-page;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果只是跳转，优先使用 <code>return</code>。</p>
+<h3 id="15-6-rewrite-与参数"><a href="#15-6-rewrite-与参数" class="headerlink" title="15.6 rewrite 与参数"></a>15.6 rewrite 与参数</h3><p>默认情况下，replacement 中不写 <code>?</code> 时，原始参数可能会被保留。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/old$</span> /new <span class="literal">last</span>;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/old?a=1</span><br></pre></td></tr></table></figure>
+
+<p>可能变成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/new?a=1</span><br></pre></td></tr></table></figure>
+
+<p>如果想丢弃原参数，可以在 replacement 末尾加 <code>?</code>：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/old$</span> /new? <span class="literal">last</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这类细节容易引发线上问题，因此跳转类需求建议优先用 <code>return</code> 显式拼接。</p>
+<h3 id="15-7-rewrite-常见误区"><a href="#15-7-rewrite-常见误区" class="headerlink" title="15.7 rewrite 常见误区"></a>15.7 rewrite 常见误区</h3><ul>
+<li>用 rewrite 做所有跳转，导致配置难读。</li>
+<li>不理解 <code>last</code> 会重新匹配 location。</li>
+<li>不理解 <code>break</code> 仍留在当前 location。</li>
+<li>正则写得过宽，误伤其他 URI。</li>
+<li>忘记参数是否保留。</li>
+<li>多条 rewrite 连续执行，最终 URI 难以判断。</li>
+</ul>
+<p>建议：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">能用 return，就不用 rewrite。</span><br><span class="line">能用 location 精确匹配，就不用复杂正则。</span><br><span class="line">必须 rewrite 时，写清楚注释和测试用例。</span><br></pre></td></tr></table></figure>
+
+<h2 id="16-Nginx-常用变量"><a href="#16-Nginx-常用变量" class="headerlink" title="16. Nginx 常用变量"></a>16. Nginx 常用变量</h2><p>变量是理解 Nginx 请求处理过程的重要工具。第二阶段不要求掌握所有变量，但必须熟悉常用于匹配、日志、跳转和排查的变量。</p>
+<h3 id="16-1-请求与-URI-变量"><a href="#16-1-请求与-URI-变量" class="headerlink" title="16.1 请求与 URI 变量"></a>16.1 请求与 URI 变量</h3><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$request</code></td>
+<td><code>GET /a?x=1 HTTP/1.1</code></td>
+<td>完整请求行</td>
+</tr>
+<tr>
+<td><code>$request_method</code></td>
+<td><code>GET</code></td>
+<td>请求方法</td>
+</tr>
+<tr>
+<td><code>$request_uri</code></td>
+<td><code>/a?x=1</code></td>
+<td>原始请求 URI，包含参数</td>
+</tr>
+<tr>
+<td><code>$uri</code></td>
+<td><code>/a</code></td>
+<td>规范化 URI，不包含参数，可能被内部改写</td>
+</tr>
+<tr>
+<td><code>$document_uri</code></td>
+<td><code>/a</code></td>
+<td>通常等同于 <code>$uri</code></td>
+</tr>
+<tr>
+<td><code>$args</code></td>
+<td><code>x=1</code></td>
+<td>查询字符串</td>
+</tr>
+<tr>
+<td><code>$query_string</code></td>
+<td><code>x=1</code></td>
+<td>通常等同于 <code>$args</code></td>
+</tr>
+<tr>
+<td><code>$is_args</code></td>
+<td><code>?</code> 或空</td>
+<td>有参数时为 <code>?</code>，无参数为空</td>
+</tr>
+</tbody></table>
+<p>常见拼接：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$uri</span><span class="variable">$is_args</span><span class="variable">$args</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果只是保留用户原始路径和参数，通常更简单：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="16-2-Host-与客户端变量"><a href="#16-2-Host-与客户端变量" class="headerlink" title="16.2 Host 与客户端变量"></a>16.2 Host 与客户端变量</h3><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$host</code></td>
+<td>规范化 Host，不一定完全等于原始请求头</td>
+</tr>
+<tr>
+<td><code>$http_host</code></td>
+<td>原始 Host 请求头</td>
+</tr>
+<tr>
+<td><code>$server_name</code></td>
+<td>当前匹配 server 的 server_name</td>
+</tr>
+<tr>
+<td><code>$server_addr</code></td>
+<td>服务端地址</td>
+</tr>
+<tr>
+<td><code>$server_port</code></td>
+<td>服务端端口</td>
+</tr>
+<tr>
+<td><code>$remote_addr</code></td>
+<td>客户端 IP</td>
+</tr>
+<tr>
+<td><code>$remote_port</code></td>
+<td>客户端端口</td>
+</tr>
+<tr>
+<td><code>$server_protocol</code></td>
+<td>协议版本，例如 <code>HTTP/1.1</code></td>
+</tr>
+</tbody></table>
+<p>注意：如果 Nginx 前面还有负载均衡或 CDN，<code>$remote_addr</code> 可能是上一层代理 IP，而不是真实用户 IP。真实客户端 IP 的处理后续阶段再学习。</p>
+<h3 id="16-3-请求头变量"><a href="#16-3-请求头变量" class="headerlink" title="16.3 请求头变量"></a>16.3 请求头变量</h3><p>Nginx 会把请求头转换成 <code>$http_头名</code> 变量：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">User-Agent        -&gt; $http_user_agent</span><br><span class="line">Referer           -&gt; $http_referer</span><br><span class="line">X-Forwarded-For   -&gt; $http_x_forwarded_for</span><br><span class="line">X-Real-IP         -&gt; $http_x_real_ip</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> header_debug <span class="string">&#x27;<span class="variable">$remote_addr</span> host=<span class="variable">$host</span> ua=&quot;<span class="variable">$http_user_agent</span>&quot; xff=&quot;<span class="variable">$http_x_forwarded_for</span>&quot;&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="16-4-响应与日志变量"><a href="#16-4-响应与日志变量" class="headerlink" title="16.4 响应与日志变量"></a>16.4 响应与日志变量</h3><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$status</code></td>
+<td>HTTP 响应状态码</td>
+</tr>
+<tr>
+<td><code>$body_bytes_sent</code></td>
+<td>响应体字节数</td>
+</tr>
+<tr>
+<td><code>$bytes_sent</code></td>
+<td>总发送字节数</td>
+</tr>
+<tr>
+<td><code>$request_time</code></td>
+<td>请求总耗时，单位秒</td>
+</tr>
+<tr>
+<td><code>$time_local</code></td>
+<td>本地时间格式</td>
+</tr>
+<tr>
+<td><code>$msec</code></td>
+<td>秒级时间戳，带毫秒</td>
+</tr>
+</tbody></table>
+<p>第二阶段重点用它们辅助判断匹配结果，不急着做性能分析。</p>
+<h3 id="16-5-变量调试-location"><a href="#16-5-变量调试-location" class="headerlink" title="16.5 变量调试 location"></a>16.5 变量调试 location</h3><p>可以临时增加一个调试接口：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> = /debug-vars &#123;</span><br><span class="line">    <span class="attribute">default_type</span> text/plain;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&quot;request=<span class="variable">$request</span>\nuri=<span class="variable">$uri</span>\nrequest_uri=<span class="variable">$request_uri</span>\nargs=<span class="variable">$args</span>\nhost=<span class="variable">$host</span>\nhttp_host=<span class="variable">$http_host</span>\nserver_name=<span class="variable">$server_name</span>\nremote_addr=<span class="variable">$remote_addr</span>\n&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: www.example.com:8088&#x27;</span> <span class="string">&#x27;http://127.0.0.1:8088/debug-vars?a=1&amp;b=2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="17-自定义日志验证匹配过程"><a href="#17-自定义日志验证匹配过程" class="headerlink" title="17. 自定义日志验证匹配过程"></a>17. 自定义日志验证匹配过程</h2><p>复杂配置不要靠猜，应该让日志帮助你确认请求进入了哪个 server、哪个 location，以及 URI 是否发生变化。</p>
+<h3 id="17-1-定义调试日志格式"><a href="#17-1-定义调试日志格式" class="headerlink" title="17.1 定义调试日志格式"></a>17.1 定义调试日志格式</h3><p>在 <code>http</code> 中定义：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> match_debug <span class="string">&#x27;time=<span class="variable">$time_local</span> remote=<span class="variable">$remote_addr</span> &#x27;</span></span><br><span class="line">                       <span class="string">&#x27;host=<span class="variable">$host</span> http_host=<span class="variable">$http_host</span> server_name=<span class="variable">$server_name</span> &#x27;</span></span><br><span class="line">                       <span class="string">&#x27;request=&quot;<span class="variable">$request</span>&quot; uri=<span class="variable">$uri</span> request_uri=<span class="variable">$request_uri</span> args=&quot;<span class="variable">$args</span>&quot; &#x27;</span></span><br><span class="line">                       <span class="string">&#x27;status=<span class="variable">$status</span> bytes=<span class="variable">$body_bytes_sent</span> request_time=<span class="variable">$request_time</span>&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>server</code> 中启用：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">access_log</span> /var/log/nginx/match_debug.log match_debug;</span><br></pre></td></tr></table></figure>
+
+<h3 id="17-2-使用响应头标记-location"><a href="#17-2-使用响应头标记-location" class="headerlink" title="17.2 使用响应头标记 location"></a>17.2 使用响应头标记 location</h3><p>有时可以在不同 location 加响应头，辅助浏览器或 curl 判断命中规则。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">add_header</span> X-Matched-Location <span class="string">&#x27;/static/&#x27;</span> always;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">add_header</span> X-Matched-Location <span class="string">&#x27;/&#x27;</span> always;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I http://127.0.0.1:8088/static/app.js</span><br></pre></td></tr></table></figure>
+
+<p>观察：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">X-Matched-Location: /static/</span><br></pre></td></tr></table></figure>
+
+<h3 id="17-3-使用-return-做最小验证"><a href="#17-3-使用-return-做最小验证" class="headerlink" title="17.3 使用 return 做最小验证"></a>17.3 使用 return 做最小验证</h3><p>当你不确定匹配顺序时，最简单的验证方式就是临时 <code>return</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;hit ^~ /assets/\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> <span class="regexp">~ \.js$</span> &#123;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;hit regex js\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8088/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p>如果返回 <code>hit ^~ /assets/</code>，说明 <code>^~</code> 阻止了正则继续匹配。</p>
+<h2 id="18-多-server-name-实验"><a href="#18-多-server-name-实验" class="headerlink" title="18. 多 server_name 实验"></a>18. 多 server_name 实验</h2><h3 id="18-1-实验目标"><a href="#18-1-实验目标" class="headerlink" title="18.1 实验目标"></a>18.1 实验目标</h3><p>验证同端口多个 <code>server</code> 时，Host 如何决定请求进入哪个虚拟主机。</p>
+<h3 id="18-2-实验配置"><a href="#18-2-实验配置" class="headerlink" title="18.2 实验配置"></a>18.2 实验配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;default server\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> a.test.local;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;server a\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> b.test.local;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;server b\n&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8088</span>;</span><br><span class="line">    <span class="attribute">server_name</span> <span class="regexp">*.wild.test.local</span>;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;wildcard server\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="18-3-验证命令"><a href="#18-3-验证命令" class="headerlink" title="18.3 验证命令"></a>18.3 验证命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nginx -t</span><br><span class="line"><span class="built_in">sudo</span> systemctl reload nginx</span><br><span class="line"></span><br><span class="line">curl -H <span class="string">&#x27;Host: a.test.local&#x27;</span> http://127.0.0.1:8088/</span><br><span class="line">curl -H <span class="string">&#x27;Host: b.test.local&#x27;</span> http://127.0.0.1:8088/</span><br><span class="line">curl -H <span class="string">&#x27;Host: api.wild.test.local&#x27;</span> http://127.0.0.1:8088/</span><br><span class="line">curl -H <span class="string">&#x27;Host: unknown.local&#x27;</span> http://127.0.0.1:8088/</span><br></pre></td></tr></table></figure>
+
+<h3 id="18-4-预期结果"><a href="#18-4-预期结果" class="headerlink" title="18.4 预期结果"></a>18.4 预期结果</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">server a</span><br><span class="line">server b</span><br><span class="line">wildcard server</span><br><span class="line">default server</span><br></pre></td></tr></table></figure>
+
+<h3 id="18-5-实验结论"><a href="#18-5-实验结论" class="headerlink" title="18.5 实验结论"></a>18.5 实验结论</h3><ul>
+<li><code>listen</code> 先确定端口范围。</li>
+<li><code>server_name</code> 再根据 Host 匹配 server。</li>
+<li>未匹配任何 <code>server_name</code> 时进入 <code>default_server</code>。</li>
+<li><code>_</code> 本身不是通配符，兜底能力来自 <code>default_server</code>。</li>
+</ul>
+<h2 id="19-location-优先级实验"><a href="#19-location-优先级实验" class="headerlink" title="19. location 优先级实验"></a>19. location 优先级实验</h2><h3 id="19-1-实验目标"><a href="#19-1-实验目标" class="headerlink" title="19.1 实验目标"></a>19.1 实验目标</h3><p>通过实际请求验证 <code>location =</code>、普通前缀、<code>^~</code>、<code>~</code>、<code>~*</code> 的优先级。</p>
+<h3 id="19-2-实验配置"><a href="#19-2-实验配置" class="headerlink" title="19.2 实验配置"></a>19.2 实验配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8089</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> = / &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;exact root\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;prefix root\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /static/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;prefix static\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span><span class="regexp"> ^~</span> /static/images/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;priority prefix images\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~ \.jpg$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;regex jpg\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~* \.png$</span> &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;regex png ignore case\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="19-3-验证命令"><a href="#19-3-验证命令" class="headerlink" title="19.3 验证命令"></a>19.3 验证命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8089/</span><br><span class="line">curl http://127.0.0.1:8089/abc</span><br><span class="line">curl http://127.0.0.1:8089/static/app.js</span><br><span class="line">curl http://127.0.0.1:8089/static/logo.jpg</span><br><span class="line">curl http://127.0.0.1:8089/static/images/a.jpg</span><br><span class="line">curl http://127.0.0.1:8089/static/a.PNG</span><br></pre></td></tr></table></figure>
+
+<h3 id="19-4-结论表"><a href="#19-4-结论表" class="headerlink" title="19.4 结论表"></a>19.4 结论表</h3><table>
+<thead>
+<tr>
+<th>请求</th>
+<th>预期返回</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code></td>
+<td><code>exact root</code></td>
+<td>精确匹配最高</td>
+</tr>
+<tr>
+<td><code>/abc</code></td>
+<td><code>prefix root</code></td>
+<td>兜底前缀</td>
+</tr>
+<tr>
+<td><code>/static/app.js</code></td>
+<td><code>prefix static</code></td>
+<td>最长前缀且无正则命中</td>
+</tr>
+<tr>
+<td><code>/static/logo.jpg</code></td>
+<td><code>regex jpg</code></td>
+<td>正则覆盖普通前缀</td>
+</tr>
+<tr>
+<td><code>/static/images/a.jpg</code></td>
+<td><code>priority prefix images</code></td>
+<td><code>^~</code> 跳过正则</td>
+</tr>
+<tr>
+<td><code>/static/a.PNG</code></td>
+<td><code>regex png ignore case</code></td>
+<td><code>~*</code> 不区分大小写</td>
+</tr>
+</tbody></table>
+<h2 id="20-root-与-alias-实验"><a href="#20-root-与-alias-实验" class="headerlink" title="20. root 与 alias 实验"></a>20. root 与 alias 实验</h2><h3 id="20-1-实验目标"><a href="#20-1-实验目标" class="headerlink" title="20.1 实验目标"></a>20.1 实验目标</h3><p>通过真实文件访问验证 <code>root</code> 和 <code>alias</code> 的路径拼接差异。</p>
+<h3 id="20-2-准备文件"><a href="#20-2-准备文件" class="headerlink" title="20.2 准备文件"></a>20.2 准备文件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /data/www/static</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /data/assets</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;from root static&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /data/www/static/root.txt</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&#x27;from alias assets&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /data/assets/alias.txt</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">chmod</span> -R 755 /data/www /data/assets</span><br></pre></td></tr></table></figure>
+
+<h3 id="20-3-实验配置"><a href="#20-3-实验配置" class="headerlink" title="20.3 实验配置"></a>20.3 实验配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8090</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /static-root/ &#123;</span><br><span class="line">        <span class="attribute">root</span> /data/www;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /static-alias/ &#123;</span><br><span class="line">        <span class="attribute">alias</span> /data/assets/;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="20-4-关键现象"><a href="#20-4-关键现象" class="headerlink" title="20.4 关键现象"></a>20.4 关键现象</h3><p>请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8090/static-root/root.txt</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/static-root/root.txt</span><br></pre></td></tr></table></figure>
+
+<p>这通常会 404，因为真实文件在：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/www/static/root.txt</span><br></pre></td></tr></table></figure>
+
+<p>如果要用 <code>root</code>，URI 前缀要和磁盘目录一致：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8090/static-alias/alias.txt</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 查找：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/data/assets/alias.txt</span><br></pre></td></tr></table></figure>
+
+<p>这就是 <code>alias</code> 的前缀替换效果。</p>
+<h2 id="21-try-files-实验"><a href="#21-try-files-实验" class="headerlink" title="21. try_files 实验"></a>21. try_files 实验</h2><h3 id="21-1-普通静态站点"><a href="#21-1-普通静态站点" class="headerlink" title="21.1 普通静态站点"></a>21.1 普通静态站点</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8091</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">root</span> /data/www/site;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>准备文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /data/www/site/about</span><br><span class="line"><span class="built_in">printf</span> <span class="string">&#x27;home\n&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /data/www/site/index.html</span><br><span class="line"><span class="built_in">printf</span> <span class="string">&#x27;about\n&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /data/www/site/about/index.html</span><br><span class="line"><span class="built_in">printf</span> <span class="string">&#x27;app\n&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /data/www/site/app.js</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8091/</span><br><span class="line">curl http://127.0.0.1:8091/about/</span><br><span class="line">curl http://127.0.0.1:8091/app.js</span><br><span class="line">curl -I http://127.0.0.1:8091/not-exist</span><br></pre></td></tr></table></figure>
+
+<h3 id="21-2-前端-history-路由"><a href="#21-2-前端-history-路由" class="headerlink" title="21.2 前端 history 路由"></a>21.2 前端 history 路由</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8092</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">root</span> /data/www/frontend;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个配置的好处：</p>
+<ul>
+<li><code>/assets/app.js</code> 必须真实存在，不存在就 404。</li>
+<li><code>/user/profile</code> 不存在时回退到 <code>/index.html</code>。</li>
+<li>前端 history 路由刷新不再由 Nginx 返回 404。</li>
+</ul>
+<h2 id="22-rewrite-与-return-实验"><a href="#22-rewrite-与-return-实验" class="headerlink" title="22. rewrite 与 return 实验"></a>22. rewrite 与 return 实验</h2><h3 id="22-1-return-域名跳转"><a href="#22-1-return-域名跳转" class="headerlink" title="22.1 return 域名跳转"></a>22.1 return 域名跳转</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8093</span>;</span><br><span class="line">    <span class="attribute">server_name</span> old.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> http://new.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I -H <span class="string">&#x27;Host: old.example.com&#x27;</span> <span class="string">&#x27;http://127.0.0.1:8093/a/b?x=1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>观察 <code>Location</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Location: http://new.example.com/a/b?x=1</span><br></pre></td></tr></table></figure>
+
+<h3 id="22-2-rewrite-last"><a href="#22-2-rewrite-last" class="headerlink" title="22.2 rewrite last"></a>22.2 rewrite last</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8094</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /old/ &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^/old/(.*)$</span> /new/<span class="variable">$1</span> <span class="literal">last</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /new/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;new uri=<span class="variable">$uri</span> request_uri=<span class="variable">$request_uri</span>\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl <span class="string">&#x27;http://127.0.0.1:8094/old/test?a=1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>重点观察：</p>
+<ul>
+<li><code>$uri</code> 可能变成 <code>/new/test</code>。</li>
+<li><code>$request_uri</code> 仍能体现原始请求 <code>/old/test?a=1</code>。</li>
+<li><code>last</code> 会重新匹配 location。</li>
+</ul>
+<h3 id="22-3-rewrite-break"><a href="#22-3-rewrite-break" class="headerlink" title="22.3 rewrite break"></a>22.3 rewrite break</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8095</span>;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /old/ &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^/old/(.*)$</span> /new/<span class="variable">$1</span> <span class="literal">break</span>;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;still in old location, uri=<span class="variable">$uri</span>\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /new/ &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;new location\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8095/old/test</span><br></pre></td></tr></table></figure>
+
+<p>预期仍在 <code>/old/</code> location 内处理，不会重新进入 <code>/new/</code> location。</p>
+<h2 id="23-可维护配置实践"><a href="#23-可维护配置实践" class="headerlink" title="23. 可维护配置实践"></a>23. 可维护配置实践</h2><h3 id="23-1-推荐目录拆分"><a href="#23-1-推荐目录拆分" class="headerlink" title="23.1 推荐目录拆分"></a>23.1 推荐目录拆分</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/etc/nginx/nginx.conf</span><br><span class="line">/etc/nginx/conf.d/00-default.conf</span><br><span class="line">/etc/nginx/conf.d/site-blog.conf</span><br><span class="line">/etc/nginx/conf.d/site-admin.conf</span><br><span class="line">/etc/nginx/conf.d/site-api.conf</span><br><span class="line">/etc/nginx/snippets/security-headers.conf</span><br><span class="line">/etc/nginx/snippets/static-cache.conf</span><br></pre></td></tr></table></figure>
+
+<p>建议：</p>
+<ul>
+<li><code>nginx.conf</code> 只放全局通用配置。</li>
+<li><code>conf.d/*.conf</code> 每个文件对应一个站点或一类入口。</li>
+<li>可复用片段放在 <code>snippets</code>。</li>
+<li>文件名用数字或业务名控制顺序和含义。</li>
+<li>默认 server 显式命名为 <code>00-default.conf</code>。</li>
+</ul>
+<h3 id="23-2-推荐-server-结构"><a href="#23-2-推荐-server-结构" class="headerlink" title="23.2 推荐 server 结构"></a>23.2 推荐 server 结构</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/www.example.com.access.log main;</span><br><span class="line">    <span class="attribute">error_log</span>  /var/log/nginx/www.example.com.<span class="literal">error</span>.log <span class="literal">warn</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">root</span> /data/www/www.example.com;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> = /health &#123;</span><br><span class="line">        <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">200</span> <span class="string">&#x27;ok\n&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="23-3-配置书写原则"><a href="#23-3-配置书写原则" class="headerlink" title="23.3 配置书写原则"></a>23.3 配置书写原则</h3><ul>
+<li>先写默认 server，再写业务 server。</li>
+<li>先写精确 location，再写特殊前缀，再写兜底 <code>/</code>。</li>
+<li>静态资源路径优先使用 <code>^~</code> 避免被正则误伤。</li>
+<li>能用 <code>return</code> 就不用 <code>rewrite</code>。</li>
+<li>能用清晰前缀匹配就不用正则。</li>
+<li><code>root</code> 与 <code>alias</code> 不要混淆，使用 <code>alias</code> 时保持末尾斜杠一致。</li>
+<li>每个站点配置独立 access log 和 error log，便于排查。</li>
+<li>每次修改配置后执行 <code>nginx -t</code>，再 reload。</li>
+</ul>
+<h2 id="24-常见误区与反例"><a href="#24-常见误区与反例" class="headerlink" title="24. 常见误区与反例"></a>24. 常见误区与反例</h2><h3 id="24-1-误以为-server-name-是通配符"><a href="#24-1-误以为-server-name-是通配符" class="headerlink" title="24.1 误以为 server_name _ 是通配符"></a>24.1 误以为 server_name _ 是通配符</h3><p>错误理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server_name _ 可以匹配所有域名</span><br></pre></td></tr></table></figure>
+
+<p>正确理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_ 只是普通名称，兜底效果来自 default_server</span><br></pre></td></tr></table></figure>
+
+<h3 id="24-2-误以为最长前缀一定最终生效"><a href="#24-2-误以为最长前缀一定最终生效" class="headerlink" title="24.2 误以为最长前缀一定最终生效"></a>24.2 误以为最长前缀一定最终生效</h3><p>普通最长前缀只是候选。如果后续正则 location 命中，正则会覆盖普通前缀。除非最长前缀使用 <code>^~</code>。</p>
+<h3 id="24-3-root-与-alias-混用"><a href="#24-3-root-与-alias-混用" class="headerlink" title="24.3 root 与 alias 混用"></a>24.3 root 与 alias 混用</h3><p>错误：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/assets;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>建议：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /static/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/assets/;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="24-4-前端-history-路由吞掉静态资源-404"><a href="#24-4-前端-history-路由吞掉静态资源-404" class="headerlink" title="24.4 前端 history 路由吞掉静态资源 404"></a>24.4 前端 history 路由吞掉静态资源 404</h3><p>问题配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果所有资源都走这个规则，不存在的 JS&#x2F;CSS&#x2F;图片也可能返回 <code>index.html</code>。建议静态资源单独配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="24-5-rewrite-过度使用"><a href="#24-5-rewrite-过度使用" class="headerlink" title="24.5 rewrite 过度使用"></a>24.5 rewrite 过度使用</h3><p>不推荐：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/(.*)$</span> https://www.example.com/<span class="variable">$1</span> <span class="literal">permanent</span>;</span><br></pre></td></tr></table></figure>
+
+<p>推荐：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="25-第二阶段必做实验清单"><a href="#25-第二阶段必做实验清单" class="headerlink" title="25. 第二阶段必做实验清单"></a>25. 第二阶段必做实验清单</h2><ol>
+<li>配置多个 <code>server_name</code>，验证 Host 匹配规则。</li>
+<li>配置 <code>default_server</code>，验证未知 Host 进入默认 server。</li>
+<li>配置精确、前缀、<code>^~</code>、正则 location，验证完整优先级。</li>
+<li>对比 <code>root</code> 和 <code>alias</code> 在不同 URI 下的文件路径拼接结果。</li>
+<li>使用 <code>try_files $uri $uri/ =404</code> 配置普通静态站点。</li>
+<li>使用 <code>try_files $uri $uri/ /index.html</code> 支持前端 history 路由。</li>
+<li>使用 <code>return 301</code> 做域名规范化跳转。</li>
+<li>使用 <code>rewrite last</code> 做 URI 内部改写并观察重新匹配。</li>
+<li>使用 <code>rewrite break</code> 验证停留在当前 location 的行为。</li>
+<li>配置自定义 access log，打印 <code>$uri</code>、<code>$request_uri</code>、<code>$host</code>、<code>$http_host</code>。</li>
+<li>故意制造 location 误匹配，并通过日志和 <code>return</code> 修复。</li>
+<li>故意制造 root&#x2F;alias 404，并通过 error log 解释真实文件路径。</li>
+</ol>
+<h2 id="26-第二阶段命令速查表"><a href="#26-第二阶段命令速查表" class="headerlink" title="26. 第二阶段命令速查表"></a>26. 第二阶段命令速查表</h2><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo nginx -t</code></td>
+<td>检查配置语法</td>
+</tr>
+<tr>
+<td><code>sudo nginx -T</code></td>
+<td>输出完整配置，包含 include 后内容</td>
+</tr>
+<tr>
+<td><code>sudo systemctl reload nginx</code></td>
+<td>平滑加载新配置</td>
+</tr>
+<tr>
+<td>&#96;sudo ss -lntp</td>
+<td>grep nginx&#96;</td>
+</tr>
+<tr>
+<td><code>curl -H &#39;Host: a.test.local&#39; http://127.0.0.1:8088/</code></td>
+<td>指定 Host 测试 server 匹配</td>
+</tr>
+<tr>
+<td><code>curl -I http://127.0.0.1:8088/path</code></td>
+<td>查看响应头和跳转</td>
+</tr>
+<tr>
+<td><code>curl -v http://127.0.0.1:8088/path</code></td>
+<td>查看详细请求响应过程</td>
+</tr>
+<tr>
+<td><code>sudo tail -f /var/log/nginx/access.log</code></td>
+<td>实时查看访问日志</td>
+</tr>
+<tr>
+<td><code>sudo tail -f /var/log/nginx/error.log</code></td>
+<td>实时查看错误日志</td>
+</tr>
+<tr>
+<td>&#96;sudo nginx -T</td>
+<td>grep -n “server_name|location|root|alias”&#96;</td>
+</tr>
+</tbody></table>
+<h2 id="27-第二阶段知识检查"><a href="#27-第二阶段知识检查" class="headerlink" title="27. 第二阶段知识检查"></a>27. 第二阶段知识检查</h2><h3 id="27-1-配置体系"><a href="#27-1-配置体系" class="headerlink" title="27.1 配置体系"></a>27.1 配置体系</h3><ol>
+<li><code>main</code>、<code>events</code>、<code>http</code>、<code>server</code>、<code>location</code> 的职责分别是什么？</li>
+<li>为什么 <code>server</code> 不能写在最外层？</li>
+<li><code>log_format</code> 应该写在哪个上下文？</li>
+<li><code>access_log</code> 在 <code>http</code>、<code>server</code>、<code>location</code> 中如何继承和覆盖？</li>
+<li>为什么建议一个站点一个配置文件？</li>
+</ol>
+<h3 id="27-2-server-匹配"><a href="#27-2-server-匹配" class="headerlink" title="27.2 server 匹配"></a>27.2 server 匹配</h3><ol>
+<li><code>listen 80 default_server</code> 的作用是什么？</li>
+<li>没有显式配置 <code>default_server</code> 时，未知 Host 会进入哪里？</li>
+<li><code>server_name _</code> 是否是通配符？</li>
+<li><code>server_name</code> 精确匹配、通配符、正则的优先级是什么？</li>
+<li><code>$host</code> 和 <code>$http_host</code> 有什么区别？</li>
+</ol>
+<h3 id="27-3-location-匹配"><a href="#27-3-location-匹配" class="headerlink" title="27.3 location 匹配"></a>27.3 location 匹配</h3><ol>
+<li><code>location = /</code> 的优先级是什么？</li>
+<li>普通前缀和正则 location 谁最终生效？</li>
+<li><code>^~</code> 的作用是什么？</li>
+<li>多个正则 location 都能匹配时，哪个生效？</li>
+<li>为什么建议静态资源目录使用 <code>^~</code>？</li>
+</ol>
+<h3 id="27-4-静态路径"><a href="#27-4-静态路径" class="headerlink" title="27.4 静态路径"></a>27.4 静态路径</h3><ol>
+<li><code>root</code> 的路径拼接规则是什么？</li>
+<li><code>alias</code> 的路径拼接规则是什么？</li>
+<li><code>alias</code> 为什么建议末尾带 <code>/</code>？</li>
+<li>访问目录没有 index 文件时为什么常见 403？</li>
+<li>如何通过 error log 判断真实文件路径？</li>
+</ol>
+<h3 id="27-5-try-files-与-rewrite"><a href="#27-5-try-files-与-rewrite" class="headerlink" title="27.5 try_files 与 rewrite"></a>27.5 try_files 与 rewrite</h3><ol>
+<li><code>try_files $uri $uri/ /index.html</code> 的执行顺序是什么？</li>
+<li><code>try_files</code> 的最后一个参数可以是什么？</li>
+<li><code>return 301</code> 和 <code>rewrite ... permanent</code> 更推荐哪个？为什么？</li>
+<li><code>rewrite last</code> 和 <code>rewrite break</code> 有什么区别？</li>
+<li><code>$uri</code> 和 <code>$request_uri</code> 在 rewrite 后可能有什么差异？</li>
+</ol>
+<h2 id="28-第二阶段过关标准"><a href="#28-第二阶段过关标准" class="headerlink" title="28. 第二阶段过关标准"></a>28. 第二阶段过关标准</h2><p>完成本阶段后，你应该达到下面标准：</p>
+<ul>
+<li>能手写一个多域名、多 location 的 Nginx 配置。</li>
+<li>能准确解释一次请求最终进入哪个 <code>server</code> 和哪个 <code>location</code>。</li>
+<li>能说明 <code>listen</code>、<code>default_server</code>、<code>server_name</code> 的关系。</li>
+<li>能说明 <code>location =</code>、<code>^~</code>、<code>~</code>、<code>~*</code>、普通前缀的优先级。</li>
+<li>能准确解释 <code>root</code> 和 <code>alias</code> 的文件路径拼接差异。</li>
+<li>能使用 <code>try_files</code> 支持普通静态站点和前端 history 路由。</li>
+<li>能优先使用 <code>return</code> 做清晰跳转，避免 rewrite 滥用。</li>
+<li>能解释 <code>rewrite last</code> 与 <code>break</code> 的差异。</li>
+<li>能通过自定义 access log 打印变量，验证匹配和改写是否符合预期。</li>
+<li>能根据 <code>nginx -T</code>、access log、error log 排查配置匹配问题。</li>
+</ul>
+<h2 id="29-推荐练习顺序"><a href="#29-推荐练习顺序" class="headerlink" title="29. 推荐练习顺序"></a>29. 推荐练习顺序</h2><p>建议按下面顺序练习：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">配置上下文</span><br><span class="line">  -&gt; 指令继承与覆盖</span><br><span class="line">  -&gt; listen/default_server</span><br><span class="line">  -&gt; server_name 精确与通配符匹配</span><br><span class="line">  -&gt; location 优先级</span><br><span class="line">  -&gt; root 与 alias</span><br><span class="line">  -&gt; index 与目录访问</span><br><span class="line">  -&gt; try_files 静态站点</span><br><span class="line">  -&gt; try_files 前端 history 路由</span><br><span class="line">  -&gt; return 跳转</span><br><span class="line">  -&gt; rewrite last/break</span><br><span class="line">  -&gt; 自定义日志打印变量</span><br><span class="line">  -&gt; 综合排障</span><br></pre></td></tr></table></figure>
+
+<p>不要一开始就写复杂正则和 rewrite。先把 server、location、root、alias、try_files 这些基础规则练熟。</p>
+<h2 id="30-阶段总结"><a href="#30-阶段总结" class="headerlink" title="30. 阶段总结"></a>30. 阶段总结</h2><p>第二阶段的核心是“请求到底命中了哪段配置”。真正掌握本阶段后，你应该能清楚说明：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">请求进入哪个 listen</span><br><span class="line">请求进入哪个 server</span><br><span class="line">Host 如何匹配 server_name</span><br><span class="line">未知 Host 如何进入 default_server</span><br><span class="line">URI 如何匹配 location</span><br><span class="line">location 优先级如何判断</span><br><span class="line">root 和 alias 如何生成真实文件路径</span><br><span class="line">try_files 如何按顺序检查并内部跳转</span><br><span class="line">return 为什么比 rewrite 更适合简单跳转</span><br><span class="line">rewrite last 和 break 为什么行为不同</span><br><span class="line">如何通过日志变量验证判断结果</span><br></pre></td></tr></table></figure>
+
+<p>完成本阶段后，再进入第三阶段“反向代理与负载均衡”。那时你已经能稳定判断请求入口和路径匹配，再学习 <code>proxy_pass</code>、<code>upstream</code>、超时、重试和 Header 传递就会更清晰。</p>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

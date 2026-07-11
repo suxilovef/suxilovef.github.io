@@ -1,0 +1,1106 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>06-生产排障高可用与运维体系 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Nginx 第六阶段学习文档：生产排障、高可用与运维体系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="06-生产排障高可用与运维体系">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/06-%E7%94%9F%E4%BA%A7%E6%8E%92%E9%9A%9C%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Nginx 第六阶段学习文档：生产排障、高可用与运维体系">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-ops.svg">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T13:49:57.946Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-ops.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "06-生产排障高可用与运维体系",
+  "url": "https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/06-%E7%94%9F%E4%BA%A7%E6%8E%92%E9%9A%9C%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB/",
+  "image": "https://suxilovef.github.io/image/post_cover/wujing-nginx-ops.svg",
+  "datePublished": "2026-07-10T16:00:00.000Z",
+  "dateModified": "2026-07-11T13:49:57.946Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/06-%E7%94%9F%E4%BA%A7%E6%8E%92%E9%9A%9C%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '06-生产排障高可用与运维体系',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">28</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">06-生产排障高可用与运维体系</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">06-生产排障高可用与运维体系</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-11T13:49:57.946Z" title="更新于 2026-07-11 21:49:57">2026-07-11</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">7.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>29分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="06-生产排障高可用与运维体系"><a href="#06-生产排障高可用与运维体系" class="headerlink" title="06-生产排障高可用与运维体系"></a>06-生产排障高可用与运维体系</h1><h2 id="1-阶段定位"><a href="#1-阶段定位" class="headerlink" title="1. 阶段定位"></a>1. 阶段定位</h2><p>第六阶段的目标是从“会配置 Nginx”进入“能守住生产 Nginx”。前五个阶段关注部署、配置、代理、HTTPS、安全、缓存和性能；本阶段关注真实流量下的稳定性、可观测性、故障定位、高可用、灰度发布、变更回滚和运维治理。</p>
+<p>生产环境中，Nginx 往往位于客户端、DNS、CDN、云负载均衡、后端应用之间。它可能是真正的故障点，也可能只是故障暴露点。大量 499、502、504、慢请求、上传失败、证书异常、连接耗尽、灰度不生效等问题，表面发生在 Nginx，根因却可能在客户端、网络、系统内核、后端服务、数据库、缓存或发布流程中。</p>
+<p>本阶段建立的核心闭环是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">日志可观测 -&gt; 指标可告警 -&gt; 故障可定位 -&gt; 变更可回滚 -&gt; 节点可切换 -&gt; 发布可灰度 -&gt; 问题可复盘</span><br></pre></td></tr></table></figure>
+
+<p>完成本阶段后，你应该能回答：为什么 499 激增、502 和 504 如何区分、reload 是否会中断请求、如何设计 access log 字段、如何搭建 Keepalived + VIP、如何做 Header&#x2F;Cookie&#x2F;IP 灰度、如何写生产变更和回滚 SOP。</p>
+<h2 id="2-学习边界"><a href="#2-学习边界" class="headerlink" title="2. 学习边界"></a>2. 学习边界</h2><p>本阶段重点学习生产运维和故障治理，不深入源码实现。源码中 master&#x2F;worker、事件模型、upstream、filter、内存池、模块开发等内容留到第七阶段。</p>
+<p>本阶段必须掌握：</p>
+<ul>
+<li>access log 字段设计、JSON 日志、请求 ID 和 upstream 观测。</li>
+<li>error log 级别、典型错误含义和排障方法。</li>
+<li><code>$request_time</code>、<code>$upstream_connect_time</code>、<code>$upstream_header_time</code>、<code>$upstream_response_time</code> 的含义。</li>
+<li>400、403、404、405、408、413、414、429、499 等 4xx 排查。</li>
+<li>500、502、503、504 等 5xx 排查。</li>
+<li><code>stub_status</code>、连接状态、系统指标、网络抓包和日志采集。</li>
+<li>平滑 reload、优雅退出、日志重开、二进制热升级和回滚。</li>
+<li>logrotate、日志归档、磁盘治理和审计留存。</li>
+<li>Keepalived + VIP、云负载均衡、Ingress Controller、API Gateway 的职责边界。</li>
+<li>灰度发布、蓝绿发布、按 Header&#x2F;Cookie&#x2F;IP&#x2F;比例分流。</li>
+<li>配置变更评审、发布窗口、发布后观察、故障复盘。</li>
+</ul>
+<h2 id="3-生产环境中的-Nginx-角色"><a href="#3-生产环境中的-Nginx-角色" class="headerlink" title="3. 生产环境中的 Nginx 角色"></a>3. 生产环境中的 Nginx 角色</h2><p>排障前必须先判断 Nginx 在架构中的角色，因为不同角色关注的指标和风险完全不同。</p>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>主要职责</th>
+<th>重点风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>静态资源服务器</td>
+<td>提供 HTML、CSS、JS、图片、下载文件</td>
+<td>404、权限、缓存策略、磁盘 IO、带宽</td>
+</tr>
+<tr>
+<td>反向代理入口</td>
+<td>转发客户端请求到后端</td>
+<td>502、504、Header 透传、连接耗尽、超时</td>
+</tr>
+<tr>
+<td>负载均衡器</td>
+<td>在多个后端之间分发请求</td>
+<td>后端摘除、权重、长连接、健康检查</td>
+</tr>
+<tr>
+<td>HTTPS 终止层</td>
+<td>处理 TLS 握手和证书</td>
+<td>证书过期、TLS 版本、加密套件、CPU</td>
+</tr>
+<tr>
+<td>安全治理层</td>
+<td>限流、访问控制、基础防护</td>
+<td>403、429、误拦截、规则绕过</td>
+</tr>
+<tr>
+<td>缓存层</td>
+<td>缓存静态或动态响应</td>
+<td>缓存污染、穿透、击穿、雪崩</td>
+</tr>
+<tr>
+<td>灰度入口</td>
+<td>按规则分流到新旧版本</td>
+<td>分流不准、回滚慢、会话不一致</td>
+</tr>
+<tr>
+<td>高可用节点</td>
+<td>配合 VIP 或 LB 提供冗余</td>
+<td>单点故障、脑裂、漂移失败</td>
+</tr>
+</tbody></table>
+<p>第一句话要先问：这台 Nginx 是入口层、静态层、缓存层、代理层、灰度层，还是高可用节点？角色明确后，排障证据才有方向。</p>
+<h2 id="4-生产排障方法论"><a href="#4-生产排障方法论" class="headerlink" title="4. 生产排障方法论"></a>4. 生产排障方法论</h2><p>生产排障不要靠猜，建议固定流程。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. 确认影响面：全站、单域名、单接口、单地区、单用户群还是单节点。</span><br><span class="line">2. 确认故障类型：4xx、5xx、超时、慢请求、连接失败、TLS 失败、静态资源异常。</span><br><span class="line">3. 确认时间窗口：是否与发布、配置变更、证书续期、流量突增、云厂商变更有关。</span><br><span class="line">4. 确认入口表现：access log、error log、Nginx 进程、连接数、系统资源。</span><br><span class="line">5. 确认 upstream 表现：upstream 地址、状态码、连接耗时、首包耗时、响应耗时。</span><br><span class="line">6. 确认系统网络：CPU、内存、磁盘、IO、文件描述符、端口、丢包、DNS、路由。</span><br><span class="line">7. 临时止血：回滚、摘除异常节点、扩容、降级、限流、切流。</span><br><span class="line">8. 根因复盘：写清楚原因、影响、处理过程、改进项和监控补齐。</span><br></pre></td></tr></table></figure>
+
+<p>排障时优先回答三个问题：谁报错、哪里慢、影响是否扩大。不要一上来就改配置，正确顺序是：观察证据 &gt; 快速止血 &gt; 小步验证 &gt; 最小变更 &gt; 保留现场 &gt; 复盘固化。</p>
+<h2 id="5-生产日志体系设计"><a href="#5-生产日志体系设计" class="headerlink" title="5. 生产日志体系设计"></a>5. 生产日志体系设计</h2><p>默认 access log 不够支撑生产排障，建议使用 JSON 日志并记录请求 ID、upstream 信息和耗时字段。</p>
+<p>生产日志至少应该包含：客户端 IP、真实 IP、X-Forwarded-For、请求 ID、Host、server_name、方法、URI、原始 request_uri、状态码、响应大小、请求体大小、总耗时、upstream 地址、upstream 状态码、upstream 连接耗时、upstream 首包耗时、upstream 响应耗时、缓存状态、Referer、User-Agent。</p>
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> main_json escape=json</span><br><span class="line">    <span class="string">&#x27;&#123;&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;time&quot;:&quot;<span class="variable">$time_iso8601</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;remote_addr&quot;:&quot;<span class="variable">$remote_addr</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;xff&quot;:&quot;<span class="variable">$http_x_forwarded_for</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;request_id&quot;:&quot;<span class="variable">$request_id</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;host&quot;:&quot;<span class="variable">$host</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;method&quot;:&quot;<span class="variable">$request_method</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;request_uri&quot;:&quot;<span class="variable">$request_uri</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;status&quot;:<span class="variable">$status</span>,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;body_bytes_sent&quot;:<span class="variable">$body_bytes_sent</span>,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;request_length&quot;:<span class="variable">$request_length</span>,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;request_time&quot;:<span class="variable">$request_time</span>,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_addr&quot;:&quot;<span class="variable">$upstream_addr</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_status&quot;:&quot;<span class="variable">$upstream_status</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_connect_time&quot;:&quot;<span class="variable">$upstream_connect_time</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_header_time&quot;:&quot;<span class="variable">$upstream_header_time</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_response_time&quot;:&quot;<span class="variable">$upstream_response_time</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;upstream_cache_status&quot;:&quot;<span class="variable">$upstream_cache_status</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;referer&quot;:&quot;<span class="variable">$http_referer</span>&quot;,&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&quot;user_agent&quot;:&quot;<span class="variable">$http_user_agent</span>&quot;&#x27;</span></span><br><span class="line">    <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line"><span class="attribute">access_log</span> /var/log/nginx/access.log main_json;</span><br></pre></td></tr></table></figure>
+
+<p>如果业务已经有链路 ID，应优先透传：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">map</span> <span class="variable">$http_x_request_id</span> <span class="variable">$trace_id</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="variable">$http_x_request_id</span>;</span><br><span class="line">    &quot;&quot;      $request_id;</span><br><span class="line">&#125;</span><br><span class="line"><span class="attribute">proxy_set_header</span> X-Request-Id <span class="variable">$trace_id</span>;</span><br><span class="line"><span class="attribute">add_header</span> X-Request-Id <span class="variable">$trace_id</span> always;</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-1-request-time"><a href="#6-1-request-time" class="headerlink" title="6.1 $request_time"></a>6.1 <code>$request_time</code></h2><p>从读取客户端第一个字节到日志写入的总耗时，包含客户端上传、Nginx 处理、upstream 连接和响应、Nginx 回传客户端。</p>
+<p>判断要点：高且 upstream 高：后端慢；高但 upstream 低：客户端接收慢、响应体大或网络慢；高且无 upstream：静态、本地处理或客户端上传慢。</p>
+<h2 id="6-2-upstream-connect-time"><a href="#6-2-upstream-connect-time" class="headerlink" title="6.2 $upstream_connect_time"></a>6.2 <code>$upstream_connect_time</code></h2><p>Nginx 与 upstream 建立 TCP 连接的耗时。</p>
+<p>判断要点：升高时检查后端端口、连接队列、网络丢包、防火墙、安全组、upstream keepalive 和后端 CPU。</p>
+<h2 id="6-3-upstream-header-time"><a href="#6-3-upstream-header-time" class="headerlink" title="6.3 $upstream_header_time"></a>6.3 <code>$upstream_header_time</code></h2><p>Nginx 连接 upstream 后到收到响应头的耗时。</p>
+<p>判断要点：通常代表后端开始返回前的业务处理时间；升高时检查慢 SQL、线程池、连接池、GC、外部依赖。</p>
+<h2 id="6-4-upstream-response-time"><a href="#6-4-upstream-response-time" class="headerlink" title="6.4 $upstream_response_time"></a>6.4 <code>$upstream_response_time</code></h2><p>Nginx 从 upstream 接收完整响应的耗时。</p>
+<p>判断要点：header 低但 response 高：响应体大、后端发送慢或网络慢；多个值说明发生 upstream 重试。</p>
+<h2 id="6-5-upstream-status"><a href="#6-5-upstream-status" class="headerlink" title="6.5 $upstream_status"></a>6.5 <code>$upstream_status</code></h2><p>upstream 返回给 Nginx 的状态码，不一定等于最终 <code>$status</code>。</p>
+<p>判断要点：<code>status=200 upstream_status=&quot;502, 200&quot;</code> 表示第一次失败，重试后成功。</p>
+<h2 id="6-6-upstream-addr"><a href="#6-6-upstream-addr" class="headerlink" title="6.6 $upstream_addr"></a>6.6 <code>$upstream_addr</code></h2><p>实际访问的后端地址。</p>
+<p>判断要点：用于定位哪台后端错误率高、响应慢、未摘除，或灰度流量是否进入预期节点。</p>
+<h2 id="7-error-log-核心用法"><a href="#7-error-log-核心用法" class="headerlink" title="7. error log 核心用法"></a>7. error log 核心用法</h2><p>access log 看请求结果，error log 看内部原因。生产环境常用 <code>warn</code>，排障可短时间调到 <code>info</code>，debug 需要编译 <code>--with-debug</code> 且日志量极大，不应长期打开。</p>
+<table>
+<thead>
+<tr>
+<th>日志片段</th>
+<th>常见含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>connect() failed (111: Connection refused) while connecting to upstream</code></td>
+<td>后端端口拒绝连接，服务未启动或端口不监听</td>
+</tr>
+<tr>
+<td><code>upstream timed out while connecting to upstream</code></td>
+<td>连接后端超时</td>
+</tr>
+<tr>
+<td><code>upstream timed out while reading response header from upstream</code></td>
+<td>后端处理太慢，响应头超时</td>
+</tr>
+<tr>
+<td><code>recv() failed (104: Connection reset by peer)</code></td>
+<td>后端主动重置连接</td>
+</tr>
+<tr>
+<td><code>client intended to send too large body</code></td>
+<td>请求体超过 <code>client_max_body_size</code></td>
+</tr>
+<tr>
+<td><code>open() failed (13: Permission denied)</code></td>
+<td>文件权限不足</td>
+</tr>
+<tr>
+<td><code>open() failed (2: No such file or directory)</code></td>
+<td>文件不存在或 root&#x2F;alias 配错</td>
+</tr>
+<tr>
+<td><code>no live upstreams while connecting to upstream</code></td>
+<td>upstream 中没有可用后端</td>
+</tr>
+<tr>
+<td><code>too many open files</code></td>
+<td>文件描述符不足</td>
+</tr>
+<tr>
+<td><code>worker_connections are not enough</code></td>
+<td>worker 连接数不足</td>
+</tr>
+<tr>
+<td><code>upstream sent too big header</code></td>
+<td>后端响应头过大，buffer 不足</td>
+</tr>
+</tbody></table>
+<p>error log 是定位 502、504、权限、上传限制、文件句柄和 buffer 问题的关键证据。</p>
+<h2 id="8-4xx-状态码生产排查"><a href="#8-4xx-状态码生产排查" class="headerlink" title="8. 4xx 状态码生产排查"></a>8. 4xx 状态码生产排查</h2><h3 id="8-1-400-Bad-Request"><a href="#8-1-400-Bad-Request" class="headerlink" title="8.1 400 Bad Request"></a>8.1 400 Bad Request</h3><p>请求行&#x2F;Header 格式错误、Header 太大、Host 不合法、HTTPS 打到 HTTP 端口。检查 <code>large_client_header_buffers</code>、curl -v 和客户端代理行为。</p>
+<h3 id="8-2-401-Unauthorized"><a href="#8-2-401-Unauthorized" class="headerlink" title="8.2 401 Unauthorized"></a>8.2 401 Unauthorized</h3><p>auth_basic、上游鉴权、Authorization Header 未透传。检查认证配置和 <code>proxy_set_header Authorization $http_authorization;</code>。</p>
+<h3 id="8-3-403-Forbidden"><a href="#8-3-403-Forbidden" class="headerlink" title="8.3 403 Forbidden"></a>8.3 403 Forbidden</h3><p>文件权限、deny、目录无 index、SELinux&#x2F;AppArmor、防盗链、root&#x2F;alias 权限错误。用 <code>namei -l</code> 和 error log 定位。</p>
+<h3 id="8-4-404-Not-Found"><a href="#8-4-404-Not-Found" class="headerlink" title="8.4 404 Not Found"></a>8.4 404 Not Found</h3><p>文件不存在、root&#x2F;alias 配错、try_files 回退错误、SPA 路由未回 index、命中错误 server&#x2F;location。</p>
+<h3 id="8-5-405-Method-Not-Allowed"><a href="#8-5-405-Method-Not-Allowed" class="headerlink" title="8.5 405 Method Not Allowed"></a>8.5 405 Method Not Allowed</h3><p>静态 location 收到 POST&#x2F;PUT&#x2F;DELETE、limit_except、后端不支持、OPTIONS 预检未处理。</p>
+<h3 id="8-6-408-Request-Timeout"><a href="#8-6-408-Request-Timeout" class="headerlink" title="8.6 408 Request Timeout"></a>8.6 408 Request Timeout</h3><p>客户端发送请求头或请求体太慢、网络差、上传中断。检查 <code>client_header_timeout</code> 和 <code>client_body_timeout</code>。</p>
+<h3 id="8-7-413-Request-Entity-Too-Large"><a href="#8-7-413-Request-Entity-Too-Large" class="headerlink" title="8.7 413 Request Entity Too Large"></a>8.7 413 Request Entity Too Large</h3><p>上传超过 <code>client_max_body_size</code>，还要检查 CDN、LB、Ingress、API Gateway 和后端框架限制。</p>
+<h3 id="8-8-414-URI-Too-Large"><a href="#8-8-414-URI-Too-Large" class="headerlink" title="8.8 414 URI Too Large"></a>8.8 414 URI Too Large</h3><p>GET 参数过长、SSO 回调过长、URL 嵌套。根治通常是改 POST body 或服务端状态存储。</p>
+<h3 id="8-9-429-Too-Many-Requests"><a href="#8-9-429-Too-Many-Requests" class="headerlink" title="8.9 429 Too Many Requests"></a>8.9 429 Too Many Requests</h3><p>limit_req 或网关限流。重点检查限流 key、NAT 出口误伤、burst、白名单和健康检查。</p>
+<h3 id="8-10-499-Client-Closed-Request"><a href="#8-10-499-Client-Closed-Request" class="headerlink" title="8.10 499 Client Closed Request"></a>8.10 499 Client Closed Request</h3><p>客户端在 Nginx 返回前主动断开。若 upstream_response_time 高，多半后端慢导致客户端放弃；若 request_time 很短，多半客户端取消、探测或网络中断。</p>
+<h2 id="9-5xx-状态码生产排查"><a href="#9-5xx-状态码生产排查" class="headerlink" title="9. 5xx 状态码生产排查"></a>9. 5xx 状态码生产排查</h2><h3 id="9-1-500-Internal-Server-Error"><a href="#9-1-500-Internal-Server-Error" class="headerlink" title="9.1 500 Internal Server Error"></a>9.1 500 Internal Server Error</h3><p>如果 <code>$upstream_status=500</code>，通常是后端返回；如果无 upstream 信息，可能是 Nginx 本地处理、FastCGI、Lua、SSI 或脚本异常。排查顺序：access log -&gt; error log -&gt; 后端日志 -&gt; 最近发布 -&gt; request_id 复现。</p>
+<h3 id="9-2-502-Bad-Gateway"><a href="#9-2-502-Bad-Gateway" class="headerlink" title="9.2 502 Bad Gateway"></a>9.2 502 Bad Gateway</h3><p>表示 Nginx 作为代理时无法从 upstream 获得有效响应。常见原因：后端未启动、端口不监听、进程崩溃、主动 reset、协议错误、响应头过大、网络不通。第一证据通常是 error log。常用命令：<code>curl -v http://10.0.0.11:8080/health</code>、<code>ss -lntp | grep 8080</code>。</p>
+<h3 id="9-3-503-Service-Unavailable"><a href="#9-3-503-Service-Unavailable" class="headerlink" title="9.3 503 Service Unavailable"></a>9.3 503 Service Unavailable</h3><p>常见原因：upstream 无可用节点、维护页、限流、健康检查失败、<code>max_fails/fail_timeout</code> 过严、灰度 upstream 没有节点。重点看 <code>no live upstreams</code>、upstream 配置和健康检查。</p>
+<h3 id="9-4-504-Gateway-Timeout"><a href="#9-4-504-Gateway-Timeout" class="headerlink" title="9.4 504 Gateway Timeout"></a>9.4 504 Gateway Timeout</h3><p>表示等待 upstream 超时。常见原因：后端处理慢、连接建立慢、线程池&#x2F;连接池耗尽、数据库慢、外部依赖慢、网络丢包。根据 error log 中 <code>while connecting</code>、<code>while sending request</code>、<code>while reading response header</code>、<code>while reading upstream</code> 区分阶段。不要靠无限调大超时解决，应优化慢接口、异步化长任务、设置合理 SLA。</p>
+<h2 id="10-502、503、504-对比"><a href="#10-502、503、504-对比" class="headerlink" title="10. 502、503、504 对比"></a>10. 502、503、504 对比</h2><table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>核心含义</th>
+<th>常见原因</th>
+<th>第一证据</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>502</td>
+<td>upstream 响应无效或连接异常</td>
+<td>拒绝连接、reset、协议错误、响应头过大</td>
+<td>error log</td>
+</tr>
+<tr>
+<td>503</td>
+<td>当前没有可用服务或主动不可用</td>
+<td>upstream 全不可用、限流、维护、健康检查失败</td>
+<td>access log + upstream 状态</td>
+</tr>
+<tr>
+<td>504</td>
+<td>等待 upstream 超时</td>
+<td>后端慢、网络慢、连接慢、读超时</td>
+<td>upstream 时间 + error log</td>
+</tr>
+</tbody></table>
+<p>口诀：502 是连上或读到的东西不对；503 是没有可用服务；504 是等太久没有等到。</p>
+<h2 id="11-Nginx-状态观测-stub-status"><a href="#11-Nginx-状态观测-stub-status" class="headerlink" title="11. Nginx 状态观测 stub_status"></a>11. Nginx 状态观测 stub_status</h2><p>开启方式：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">127.0.0.1:8088</span>;</span><br><span class="line">    <span class="section">location</span> /nginx_status &#123;</span><br><span class="line">        stub_status;</span><br><span class="line">        <span class="attribute">allow</span> <span class="number">127.0.0.1</span>;</span><br><span class="line">        <span class="attribute">allow</span> <span class="number">10.0.0.0</span>/<span class="number">8</span>;</span><br><span class="line">        <span class="attribute">deny</span> all;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Active connections: 291</span><br><span class="line">server accepts handled requests</span><br><span class="line"> 16630948 16630948 31070465</span><br><span class="line">Reading: 6 Writing: 179 Waiting: 106</span><br></pre></td></tr></table></figure>
+
+<p>Active 是当前活跃连接，accepts 是已接受连接，handled 是已处理连接，requests 是请求数，Reading 是读请求头，Writing 是返回响应，Waiting 是 keepalive 空闲连接。Reading 高可能是慢客户端或攻击，Writing 高可能是后端慢、响应体大或客户端接收慢，Waiting 高通常代表 keepalive 多，不一定异常。</p>
+<h2 id="12-监控告警体系"><a href="#12-监控告警体系" class="headerlink" title="12. 监控告警体系"></a>12. 监控告警体系</h2><p>Nginx 监控不能只看进程存活，要覆盖可用性、性能、错误、资源、安全和变更。</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>指标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>可用性</td>
+<td>80&#x2F;443 探测、进程、端口、VIP、健康检查</td>
+</tr>
+<tr>
+<td>请求</td>
+<td>QPS、状态码分布、域名&#x2F;URI Top、请求大小、响应大小</td>
+</tr>
+<tr>
+<td>延迟</td>
+<td>request_time、upstream_connect&#x2F;header&#x2F;response_time、P95&#x2F;P99</td>
+</tr>
+<tr>
+<td>错误</td>
+<td>4xx、5xx、499、502、503、504、error log 关键字</td>
+</tr>
+<tr>
+<td>连接</td>
+<td>Active、Reading、Writing、Waiting、worker_connections 使用率</td>
+</tr>
+<tr>
+<td>资源</td>
+<td>CPU、内存、磁盘、IO、带宽、文件描述符、端口</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>403、429、异常 UA、异常 IP、扫描路径、证书到期</td>
+</tr>
+<tr>
+<td>变更</td>
+<td>nginx -t、reload 成功率、版本、配置漂移</td>
+</tr>
+</tbody></table>
+<p>典型告警：5xx 比例持续升高、502&#x2F;504 激增、499 激增、P99 延迟超过基线、连接数接近上限、日志盘超过 80%、证书 15&#x2F;30 天内过期、VIP 丢失或双主、reload 失败。</p>
+<h2 id="13-日志采集、切割与分析"><a href="#13-日志采集、切割与分析" class="headerlink" title="13. 日志采集、切割与分析"></a>13. 日志采集、切割与分析</h2><p>推荐链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Nginx access.log / error.log -&gt; logrotate -&gt; Fluent Bit / Vector / Filebeat / Promtail -&gt; Kafka / Loki / Elasticsearch / ClickHouse / 对象存储 -&gt; Grafana / Kibana / SQL / 告警</span><br></pre></td></tr></table></figure>
+
+<p>logrotate 示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">/var/log/nginx/*.log &#123;</span><br><span class="line">    daily</span><br><span class="line">    missingok</span><br><span class="line">    rotate 14</span><br><span class="line">    compress</span><br><span class="line">    delaycompress</span><br><span class="line">    notifempty</span><br><span class="line">    create 0640 nginx adm</span><br><span class="line">    sharedscripts</span><br><span class="line">    postrotate</span><br><span class="line">        if [ -f /run/nginx.pid ]; then</span><br><span class="line">            kill -USR1 `cat /run/nginx.pid`</span><br><span class="line">        fi</span><br><span class="line">    endscript</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>常用分析命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">awk <span class="string">&#x27;&#123;print $9&#125;&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr</span><br><span class="line">awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr | <span class="built_in">head</span></span><br><span class="line">grep -E <span class="string">&#x27;upstream|connect\(\)|timed out|reset&#x27;</span> /var/log/nginx/error.log | <span class="built_in">tail</span> -100</span><br><span class="line">jq <span class="string">&#x27;select(.status &gt;= 500)&#x27;</span> /var/log/nginx/access.log</span><br><span class="line">jq -r <span class="string">&#x27;select(.status == 502) | .upstream_addr&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr</span><br></pre></td></tr></table></figure>
+
+<p>不要直接删除当前正在写入的日志文件。若删除了仍被进程占用的日志，磁盘空间可能不会释放，可用 <code>lsof | grep deleted</code> 检查。</p>
+<h2 id="14-进程、信号与平滑-reload"><a href="#14-进程、信号与平滑-reload" class="headerlink" title="14. 进程、信号与平滑 reload"></a>14. 进程、信号与平滑 reload</h2><p>常用信号：</p>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>命令</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TERM&#x2F;INT</td>
+<td><code>nginx -s stop</code></td>
+<td>快速停止，可能中断请求</td>
+</tr>
+<tr>
+<td>QUIT</td>
+<td><code>nginx -s quit</code></td>
+<td>优雅停止，等待请求完成</td>
+</tr>
+<tr>
+<td>HUP</td>
+<td><code>nginx -s reload</code></td>
+<td>平滑加载新配置</td>
+</tr>
+<tr>
+<td>USR1</td>
+<td><code>kill -USR1 &lt;pid&gt;</code></td>
+<td>重新打开日志文件</td>
+</tr>
+<tr>
+<td>USR2</td>
+<td><code>kill -USR2 &lt;pid&gt;</code></td>
+<td>平滑升级二进制</td>
+</tr>
+<tr>
+<td>WINCH</td>
+<td><code>kill -WINCH &lt;pid&gt;</code></td>
+<td>优雅关闭 worker</td>
+</tr>
+</tbody></table>
+<p>reload 流程：master 收到 HUP -&gt; 检查新配置 -&gt; 打开新日志 -&gt; 启动新 worker -&gt; 通知旧 worker 优雅退出 -&gt; 旧 worker 不再接新连接 -&gt; 处理完已有请求后退出。reload 通常不中断请求，但长连接、WebSocket、大文件下载会让旧 worker 存活更久。</p>
+<p>生产 reload SOP：备份配置 -&gt; 测试环境验证 -&gt; <code>nginx -t</code> -&gt; 低峰分批 reload -&gt; 观察 5xx、延迟、连接数、error log -&gt; 异常则回滚并 reload。</p>
+<h2 id="15-二进制热升级与回滚"><a href="#15-二进制热升级与回滚" class="headerlink" title="15. 二进制热升级与回滚"></a>15. 二进制热升级与回滚</h2><p>热升级流程：保留旧二进制 -&gt; 安装新二进制 -&gt; <code>nginx -t</code> -&gt; <code>kill -USR2 $(cat /run/nginx.pid)</code> -&gt; 新 master&#x2F;worker 启动 -&gt; <code>kill -WINCH $(cat /run/nginx.pid.oldbin)</code> 关闭旧 worker -&gt; 观察新版本 -&gt; <code>kill -QUIT $(cat /run/nginx.pid.oldbin)</code> 退出旧 master。</p>
+<p>如果新版本异常，可让旧 master 拉起 worker 并退出新 master：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">kill</span> -HUP $(<span class="built_in">cat</span> /run/nginx.pid.oldbin)</span><br><span class="line"><span class="built_in">kill</span> -QUIT $(<span class="built_in">cat</span> /run/nginx.pid)</span><br></pre></td></tr></table></figure>
+
+<p>热升级必须先在测试环境演练，确认模块和配置兼容，保留旧二进制并准备回滚。多数普通场景下，负载均衡摘流 + 滚动重启比手工热升级更可靠。</p>
+<h2 id="16-系统层排障"><a href="#16-系统层排障" class="headerlink" title="16. 系统层排障"></a>16. 系统层排障</h2><p>常用命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">top; <span class="built_in">uptime</span>; free -h; <span class="built_in">df</span> -h; iostat -x 1; vmstat 1</span><br><span class="line">ss -s; ss -lntp; ss -antp | <span class="built_in">head</span></span><br><span class="line"><span class="built_in">ulimit</span> -n; <span class="built_in">cat</span> /proc/$(<span class="built_in">cat</span> /run/nginx.pid)/limits</span><br><span class="line">lsof -p $(<span class="built_in">cat</span> /run/nginx.pid) | <span class="built_in">wc</span> -l</span><br><span class="line">sar -n TCP,ETCP 1; sar -n DEV 1</span><br></pre></td></tr></table></figure>
+
+<p>常见瓶颈：CPU 高可能来自 TLS、gzip、日志或攻击；内存高可能来自连接、buffer、缓存和 page cache；磁盘满通常是日志、缓存或临时文件；IO 高可能是静态大文件、日志写入、缓存读写；文件描述符不足会导致连接失败；TIME_WAIT 多常见于短连接、keepalive 不合理或回源连接过多。</p>
+<p>Nginx 配置要和系统限制配合：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_rlimit_nofile</span> <span class="number">65535</span>;</span><br><span class="line"><span class="section">events</span> &#123; <span class="attribute">worker_connections</span> <span class="number">16384</span>; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>systemd 还要配置 <code>LimitNOFILE=65535</code>。</p>
+<h2 id="17-网络层排障"><a href="#17-网络层排障" class="headerlink" title="17. 网络层排障"></a>17. 网络层排障</h2><p>常用命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dig example.com; nslookup example.com</span><br><span class="line">curl -v http://10.0.0.11:8080/health</span><br><span class="line">nc -vz 10.0.0.11 8080</span><br><span class="line">ip route; traceroute 10.0.0.11; mtr 10.0.0.11</span><br><span class="line">ss -ant | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c | <span class="built_in">sort</span> -nr</span><br></pre></td></tr></table></figure>
+
+<p>抓包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 host 10.0.0.11 and port 8080 -nn -s 0 -w upstream.pcap</span><br><span class="line">tcpdump -i eth0 port 443 -nn -s 0 -w https.pcap</span><br></pre></td></tr></table></figure>
+
+<p>SYN 无响应通常是网络、防火墙、安全组或后端未监听；SYN 后 RST 通常是端口拒绝或应用主动拒绝；建连后无响应常见于后端处理慢；大量 retransmission 表示丢包或拥塞；后端发 RST 表示后端主动重置。</p>
+<h2 id="18-curl-与-openssl-排障"><a href="#18-curl-与-openssl-排障" class="headerlink" title="18. curl 与 openssl 排障"></a>18. curl 与 openssl 排障</h2><p>curl 分段耗时：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">curl -o /dev/null -s -w <span class="string">&#x27;</span></span><br><span class="line"><span class="string">namelookup: %&#123;time_namelookup&#125;</span></span><br><span class="line"><span class="string">connect: %&#123;time_connect&#125;</span></span><br><span class="line"><span class="string">appconnect: %&#123;time_appconnect&#125;</span></span><br><span class="line"><span class="string">pretransfer: %&#123;time_pretransfer&#125;</span></span><br><span class="line"><span class="string">starttransfer: %&#123;time_starttransfer&#125;</span></span><br><span class="line"><span class="string">total: %&#123;time_total&#125;</span></span><br><span class="line"><span class="string">http_code: %&#123;http_code&#125;</span></span><br><span class="line"><span class="string">&#x27;</span> https://www.example.com/</span><br></pre></td></tr></table></figure>
+
+<p>DNS 高看解析链路，connect 高看 TCP 建连和服务端 accept，appconnect 高看 TLS，starttransfer 高看后端处理或 Nginx 排队，total 高但 starttransfer 低看响应体下载和客户端网络。</p>
+<p>证书检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openssl s_client -connect www.example.com:443 -servername www.example.com &lt;/dev/null</span><br><span class="line"><span class="built_in">echo</span> | openssl s_client -connect www.example.com:443 -servername www.example.com 2&gt;/dev/null | openssl x509 -noout -dates -subject -issuer -ext subjectAltName</span><br></pre></td></tr></table></figure>
+
+<p>常见 HTTPS 问题包括证书过期、域名不匹配、证书链不完整、TLS 版本不兼容、HTTPS 请求打到 HTTP 端口、续期后忘记 reload 或访问到未更新节点。</p>
+<h2 id="19-upstream-排障与代理模板"><a href="#19-upstream-排障与代理模板" class="headerlink" title="19. upstream 排障与代理模板"></a>19. upstream 排障与代理模板</h2><p>生产代理配置要便于观测和控制：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> app_backend &#123;</span><br><span class="line">    least_conn;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">10s</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.12:8080</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">10s</span>;</span><br><span class="line">    <span class="attribute">keepalive</span> <span class="number">64</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="section">location</span> /api/ &#123;</span><br><span class="line">        <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Request-Id <span class="variable">$request_id</span>;</span><br><span class="line">        <span class="attribute">proxy_connect_timeout</span> <span class="number">3s</span>;</span><br><span class="line">        <span class="attribute">proxy_send_timeout</span> <span class="number">30s</span>;</span><br><span class="line">        <span class="attribute">proxy_read_timeout</span> <span class="number">60s</span>;</span><br><span class="line">        <span class="attribute">proxy_next_upstream</span> <span class="literal">error</span> timeout http_502 http_503 http_504;</span><br><span class="line">        <span class="attribute">proxy_next_upstream_tries</span> <span class="number">2</span>;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://app_backend;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>排查重点：是否命中预期 upstream、是否发生重试、哪台后端错误率最高、哪台响应最慢、连接是否复用、健康检查是否准确、超时是否符合业务 SLA。</p>
+<h2 id="20-高可用架构"><a href="#20-高可用架构" class="headerlink" title="20. 高可用架构"></a>20. 高可用架构</h2><p>单台 Nginx 有机器宕机、进程异常、系统资源耗尽、网卡故障、配置误操作、证书异常、磁盘满等单点风险。</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>说明</th>
+<th>优点</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>云负载均衡 + 多台 Nginx</td>
+<td>云 LB 负责入口，后面挂多台 Nginx</td>
+<td>简单、托管、稳定</td>
+<td>成本和厂商依赖</td>
+</tr>
+<tr>
+<td>Keepalived + VIP</td>
+<td>主备共享虚拟 IP</td>
+<td>经典、成本低</td>
+<td>脑裂、二层网络限制</td>
+</tr>
+<tr>
+<td>DNS 多 A 记录</td>
+<td>DNS 返回多个入口 IP</td>
+<td>简单</td>
+<td>切换慢、客户端缓存</td>
+</tr>
+<tr>
+<td>Kubernetes Ingress</td>
+<td>控制器管理入口规则</td>
+<td>云原生友好</td>
+<td>依赖集群和控制面</td>
+</tr>
+<tr>
+<td>Anycast&#x2F;BGP</td>
+<td>多地入口调度</td>
+<td>大规模可用性强</td>
+<td>复杂度高</td>
+</tr>
+</tbody></table>
+<p>云上更推荐云 LB + 多 Nginx；传统机房可使用 Keepalived + VIP。</p>
+<h2 id="21-Keepalived-VIP"><a href="#21-Keepalived-VIP" class="headerlink" title="21. Keepalived + VIP"></a>21. Keepalived + VIP</h2><p>典型架构：VIP <code>10.0.0.100</code>，Nginx-A <code>10.0.0.11</code> 为 MASTER，Nginx-B <code>10.0.0.12</code> 为 BACKUP。</p>
+<p>主节点配置示例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">vrrp_script chk_nginx &#123;</span><br><span class="line">    script &quot;/etc/keepalived/check_nginx.sh&quot;</span><br><span class="line">    interval 2</span><br><span class="line">    timeout 2</span><br><span class="line">    fall 2</span><br><span class="line">    rise 2</span><br><span class="line">    weight -20</span><br><span class="line">&#125;</span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    state MASTER</span><br><span class="line">    interface eth0</span><br><span class="line">    virtual_router_id 51</span><br><span class="line">    priority 100</span><br><span class="line">    advert_int 1</span><br><span class="line">    authentication &#123; auth_type PASS; auth_pass nginx-ha; &#125;</span><br><span class="line">    virtual_ipaddress &#123; 10.0.0.100/24 &#125;</span><br><span class="line">    track_script &#123; chk_nginx &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>备节点使用 <code>state BACKUP</code> 和较低 <code>priority 90</code>。健康检查不要只检查进程，还要检查 HTTP 响应：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">pgrep -x nginx &gt;/dev/null || <span class="built_in">exit</span> 1</span><br><span class="line">curl -fsS http://127.0.0.1/nginx_health &gt;/dev/null || <span class="built_in">exit</span> 1</span><br><span class="line"><span class="built_in">exit</span> 0</span><br></pre></td></tr></table></figure>
+
+<p>生产注意：放通 VRRP、避免 <code>virtual_router_id</code> 冲突、监控 VIP 所在节点、防止脑裂、变更前演练切换，可考虑 <code>nopreempt</code> 减少频繁抢占。</p>
+<h2 id="22-云-LB、Ingress、API-Gateway-边界"><a href="#22-云-LB、Ingress、API-Gateway-边界" class="headerlink" title="22. 云 LB、Ingress、API Gateway 边界"></a>22. 云 LB、Ingress、API Gateway 边界</h2><p>多层入口常见链路：客户端 -&gt; CDN -&gt; 云 LB -&gt; Nginx -&gt; API Gateway&#x2F;应用 -&gt; 后端。看到 502 要先判断是谁返回的：CDN、云 LB、Nginx 还是应用。方法包括看响应 Header、查 Nginx access log 是否有请求、看云 LB&#x2F;CDN 日志、用 <code>curl --resolve</code> 直接访问指定 Nginx 节点。</p>
+<p>Kubernetes Ingress 中，Nginx 配置通常由 Ingress、ConfigMap、Annotation 生成，排障要看 Ingress 规则、Service Endpoints、Pod Ready、Controller 日志和 reload 结果。</p>
+<p>Nginx 能做反向代理、TLS、路由、基础限流和简单安全控制，但不等于完整 API Gateway。复杂鉴权、多租户、配额、API 生命周期、控制台和动态插件治理，通常由 API Gateway 承担。</p>
+<h2 id="23-灰度发布"><a href="#23-灰度发布" class="headerlink" title="23. 灰度发布"></a>23. 灰度发布</h2><p>灰度维度包括 Header、Cookie、IP、用户 ID、请求参数、比例随机、地域和渠道。</p>
+<p>Header 灰度：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> app_stable &#123; <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span>; <span class="attribute">server</span> <span class="number">10.0.0.12:8080</span>; &#125;</span><br><span class="line"><span class="section">upstream</span> app_gray &#123; <span class="attribute">server</span> <span class="number">10.0.0.21:8080</span>; &#125;</span><br><span class="line"><span class="attribute">map</span> <span class="variable">$http_x_gray</span> <span class="variable">$target_upstream</span> &#123; <span class="attribute">default</span> app_stable; &quot;true&quot; app_gray; &#125;</span><br><span class="line"><span class="section">server</span> &#123; <span class="section">location</span> /api/ &#123; <span class="attribute">proxy_pass</span> http://<span class="variable">$target_upstream</span>; &#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Cookie 灰度适合固定用户：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">map</span> <span class="variable">$cookie_gray</span> <span class="variable">$target_upstream</span> &#123; <span class="attribute">default</span> app_stable; &quot;v2&quot; app_gray; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>IP 灰度适合办公网和特定客户，但要处理 CDN&#x2F;LB 后真实 IP：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">geo</span> <span class="variable">$gray_ip</span> &#123; <span class="attribute">default</span> <span class="number">0</span>; 10.10.0.0/16 1; &#125;</span><br><span class="line"><span class="attribute">map</span> <span class="variable">$gray_ip</span> <span class="variable">$target_upstream</span> &#123; 0 app_stable; 1 app_gray; &#125;</span><br><span class="line"><span class="attribute">set_real_ip_from</span> <span class="number">10.0.0.0</span>/<span class="number">8</span>;</span><br><span class="line"><span class="attribute">real_ip_header</span> X-Forwarded-For;</span><br><span class="line"><span class="attribute">real_ip_recursive</span> <span class="literal">on</span>;</span><br></pre></td></tr></table></figure>
+
+<p>比例灰度使用 <code>split_clients</code>，分桶 key 必须稳定，优先使用用户 ID、设备 ID 或稳定 Cookie，不建议用每次都变化的 request_id。</p>
+<p>灰度推进建议：1% 内部观察 -&gt; 5% 小流量 -&gt; 10% -&gt; 30% -&gt; 50% -&gt; 100%。每一步都观察错误率、延迟、业务指标和日志，并准备一键切回稳定版本。</p>
+<h2 id="24-蓝绿发布"><a href="#24-蓝绿发布" class="headerlink" title="24. 蓝绿发布"></a>24. 蓝绿发布</h2><p>蓝绿发布维护两套完整环境：Blue 为当前生产，Green 为新版本。流程是 Green 部署并冒烟验证，随后切流到 Green，保留 Blue 作为回滚环境。</p>
+<p>Nginx 可以通过 upstream 或 map 切换，但生产中更推荐在云 LB、服务注册发现或发布平台切换，减少手工配置风险。蓝绿发布必须保证数据库结构、缓存 key、消息格式、静态资源版本兼容；如果数据库变更不可逆，回滚方案必须提前设计。</p>
+<h2 id="25-生产变更与回滚-SOP"><a href="#25-生产变更与回滚-SOP" class="headerlink" title="25. 生产变更与回滚 SOP"></a>25. 生产变更与回滚 SOP</h2><p>变更 SOP：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">1. 需求确认：目的、域名、接口、时间、影响范围。</span><br><span class="line">2. 方案评审：配置差异、风险点、验证方式、回滚方式。</span><br><span class="line">3. 测试验证：相同 Nginx 版本和模块。</span><br><span class="line">4. 配置检查：nginx -t 必须通过。</span><br><span class="line">5. 备份当前配置：nginx.conf、conf.d、证书、upstream。</span><br><span class="line">6. 发布窗口：低峰期，通知相关团队。</span><br><span class="line">7. 分批发布：多节点逐台 reload，不同时全量变更。</span><br><span class="line">8. 发布观察：5xx、延迟、error log、业务指标。</span><br><span class="line">9. 异常回滚：恢复备份配置并 reload。</span><br><span class="line">10. 记录归档：记录变更人、时间、内容、结果、问题。</span><br></pre></td></tr></table></figure>
+
+<p>没有回滚方案的发布不应进入生产。回滚对象包括配置、证书、upstream 节点、灰度比例、DNS&#x2F;LB 切流、缓存策略和限流规则。故障中不要同时做多个不相关变更，否则会增加定位难度。</p>
+<h2 id="26-容量评估与压测"><a href="#26-容量评估与压测" class="headerlink" title="26. 容量评估与压测"></a>26. 容量评估与压测</h2><p>容量评估关注峰值 QPS、并发连接数、平均响应大小、峰值带宽、TLS 握手比例、keepalive 数、upstream 连接数、worker 数、文件描述符、CPU、内存、磁盘 IO。</p>
+<p>理论连接上限约等于：<code>worker_processes × worker_connections</code>，但实际还受文件描述符、CPU、内存、网卡、内核参数、upstream 能力、TLS&#x2F;gzip、日志写入限制。</p>
+<p>压测命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wrk -t4 -c200 -d60s http://example.com/</span><br><span class="line">ab -n 10000 -c 200 http://example.com/</span><br><span class="line">hey -n 10000 -c 200 http://example.com/</span><br></pre></td></tr></table></figure>
+
+<p>压测必须逐步加压，不要只看平均值，要记录 P50&#x2F;P90&#x2F;P95&#x2F;P99、错误率、超时、Nginx 指标、后端指标和数据库指标。不要在生产高峰直接压测。</p>
+<h2 id="27-安全运维与审计"><a href="#27-安全运维与审计" class="headerlink" title="27. 安全运维与审计"></a>27. 安全运维与审计</h2><p>安全巡检关注 TLS 证书有效期、弱协议和弱 cipher、管理路径暴露、敏感文件暴露、目录遍历、请求体限制、异常频率、扫描器、恶意 Header、Host 头攻击、日志敏感信息泄露。</p>
+<p>禁止暴露敏感文件：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~* /(?:\.git|\.svn|\.hg|\.env|composer\.json|package-lock\.json)</span> &#123;</span><br><span class="line">    <span class="attribute">deny</span> all;</span><br><span class="line">    <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">    <span class="attribute">log_not_found</span> <span class="literal">off</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span> default_server;</span><br><span class="line">    <span class="attribute">server_name</span> _;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">444</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生产建议：关闭 <code>server_tokens</code>、管理接口只允许内网、限制上传大小、对登录&#x2F;短信&#x2F;支付接口限流、定期扫描证书、审计配置变更、不在日志中记录完整敏感 Token。</p>
+<h2 id="28-配置管理与目录规范"><a href="#28-配置管理与目录规范" class="headerlink" title="28. 配置管理与目录规范"></a>28. 配置管理与目录规范</h2><p>推荐目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/etc/nginx/</span><br><span class="line">  nginx.conf</span><br><span class="line">  conf.d/</span><br><span class="line">    00-base.conf</span><br><span class="line">    10-log-format.conf</span><br><span class="line">    20-upstream-app.conf</span><br><span class="line">    30-server-www.conf</span><br><span class="line">  snippets/</span><br><span class="line">    proxy-headers.conf</span><br><span class="line">    security-headers.conf</span><br><span class="line">    gzip.conf</span><br><span class="line">    ssl-params.conf</span><br><span class="line">  certs/</span><br><span class="line">  backup/</span><br><span class="line">  sites-available/</span><br><span class="line">  sites-enabled/</span><br></pre></td></tr></table></figure>
+
+<p>原则：通用 Header、SSL 参数、upstream、gzip、安全 Header 分开；每个域名一个 server 文件；生产配置纳入 Git；发布由 CI&#x2F;CD 或配置管理工具执行；不要把所有内容堆在一个巨大 <code>nginx.conf</code> 中。</p>
+<h2 id="29-生产故障案例"><a href="#29-生产故障案例" class="headerlink" title="29. 生产故障案例"></a>29. 生产故障案例</h2><h3 id="29-1-404-静态资源异常"><a href="#29-1-404-静态资源异常" class="headerlink" title="29.1 404 静态资源异常"></a>29.1 404 静态资源异常</h3><p>确认 Host、URI、status；检查 server_name、location、root&#x2F;alias、try_files、文件是否存在和 error log。常见根因是发布产物缺失、root 错误、alias 斜杠错误、旧 HTML 引用已删除 hash 文件、CDN 缓存旧入口。</p>
+<h3 id="29-2-413-上传失败"><a href="#29-2-413-上传失败" class="headerlink" title="29.2 413 上传失败"></a>29.2 413 上传失败</h3><p>查 error log 的 <code>client intended to send too large body</code>；检查 Nginx、CDN、LB、Ingress、API Gateway、后端框架的大小限制。上传限制必须全链路一致。</p>
+<h3 id="29-3-499-激增"><a href="#29-3-499-激增" class="headerlink" title="29.3 499 激增"></a>29.3 499 激增</h3><p>按 URI 统计，查看 request_time 和 upstream_response_time，结合后端耗时、客户端超时、移动端版本、地区运营商。499 是现象，不是根因。</p>
+<h3 id="29-4-502-后端拒绝连接"><a href="#29-4-502-后端拒绝连接" class="headerlink" title="29.4 502 后端拒绝连接"></a>29.4 502 后端拒绝连接</h3><p>error log 常见 <code>connect() failed (111: Connection refused)</code>。根据 upstream_addr 找异常后端，curl health，查 ss 端口，查应用进程和崩溃日志，临时摘除异常节点。</p>
+<h3 id="29-5-504-后端处理慢"><a href="#29-5-504-后端处理慢" class="headerlink" title="29.5 504 后端处理慢"></a>29.5 504 后端处理慢</h3><p>error log 常见 <code>upstream timed out while reading response header</code>。查 upstream_header_time、后端 request_id、慢 SQL、线程池、连接池、大查询或导出任务。长任务应异步化。</p>
+<h3 id="29-6-日志盘打满"><a href="#29-6-日志盘打满" class="headerlink" title="29.6 日志盘打满"></a>29.6 日志盘打满</h3><p>查 df、du、日志目录和 lsof deleted。常见原因是未配置 logrotate、debug 长期开启、访问量突增、error log 高频打印、采集失败。</p>
+<h2 id="30-必做实验清单"><a href="#30-必做实验清单" class="headerlink" title="30. 必做实验清单"></a>30. 必做实验清单</h2><ol>
+<li>自定义 JSON access log 并用 jq 查询 5xx、慢请求、upstream_addr。</li>
+<li>复现 404、403、413 并记录 access log、error log、配置项和修复动作。</li>
+<li>使用 <code>curl --max-time 1</code> 复现 499，观察 request_time 和 upstream 行为。</li>
+<li>让 upstream 指向不存在端口复现 502，让后端 sleep 超过 proxy_read_timeout 复现 504。</li>
+<li>开启 stub_status，配合 wrk 观察 Active、Reading、Writing、Waiting。</li>
+<li>请求慢接口过程中执行 <code>nginx -t &amp;&amp; nginx -s reload</code>，验证请求是否中断。</li>
+<li>配置 logrotate，执行 dry-run 和强制切割，确认 USR1 后新日志继续写入。</li>
+<li>搭建 Keepalived + Nginx 双机 VIP，停止主节点验证漂移。</li>
+<li>配置 Header&#x2F;Cookie&#x2F;IP 灰度，验证 stable&#x2F;gray 命中和快速回滚。</li>
+</ol>
+<h2 id="31-故障排查-SOP-模板"><a href="#31-故障排查-SOP-模板" class="headerlink" title="31. 故障排查 SOP 模板"></a>31. 故障排查 SOP 模板</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">故障标题：</span><br><span class="line">故障时间：</span><br><span class="line">影响范围：</span><br><span class="line">发现方式：监控 / 用户反馈 / 巡检 / 其他</span><br><span class="line">影响域名：</span><br><span class="line">影响接口：</span><br><span class="line">状态码：</span><br><span class="line">错误比例：</span><br><span class="line">峰值 QPS：</span><br><span class="line"></span><br><span class="line">一、现象描述</span><br><span class="line">- 客户端表现：</span><br><span class="line">- Nginx access log：</span><br><span class="line">- Nginx error log：</span><br><span class="line">- upstream 表现：</span><br><span class="line">- 系统指标：</span><br><span class="line"></span><br><span class="line">二、时间线</span><br><span class="line">- HH:MM 首次告警</span><br><span class="line">- HH:MM 开始排查</span><br><span class="line">- HH:MM 定位根因</span><br><span class="line">- HH:MM 临时恢复</span><br><span class="line">- HH:MM 完全恢复</span><br><span class="line"></span><br><span class="line">三、根因分析</span><br><span class="line">- 直接原因：</span><br><span class="line">- 深层原因：</span><br><span class="line">- 为什么监控没有提前发现：</span><br><span class="line"></span><br><span class="line">四、处理过程</span><br><span class="line">- 临时止血：</span><br><span class="line">- 配置变更：</span><br><span class="line">- 回滚动作：</span><br><span class="line">- 后端处理：</span><br><span class="line"></span><br><span class="line">五、改进项</span><br><span class="line">- 监控补齐：</span><br><span class="line">- 配置治理：</span><br><span class="line">- 发布流程：</span><br><span class="line">- 容量优化：</span><br><span class="line">- 文档沉淀：</span><br></pre></td></tr></table></figure>
+
+<h2 id="32-生产巡检清单"><a href="#32-生产巡检清单" class="headerlink" title="32. 生产巡检清单"></a>32. 生产巡检清单</h2><p>每日：5xx、499、P95&#x2F;P99、error log 高频错误、磁盘空间、证书剩余时间、节点健康。</p>
+<p>每周：logrotate、线上配置与仓库一致性、upstream 长期异常节点、限流误伤、缓存目录增长、Keepalived 主备状态、告警阈值。</p>
+<p>每月：证书续期演练、高可用切换演练、配置回滚演练、容量趋势分析、慢接口 Top、安全配置审计、依赖版本评估。</p>
+<h2 id="33-常用命令速查表"><a href="#33-常用命令速查表" class="headerlink" title="33. 常用命令速查表"></a>33. 常用命令速查表</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">nginx -t; nginx -T; nginx -V</span><br><span class="line">systemctl status nginx; systemctl reload nginx; journalctl -u nginx -n 100 --no-pager</span><br><span class="line"><span class="built_in">tail</span> -f /var/log/nginx/access.log; <span class="built_in">tail</span> -f /var/log/nginx/error.log</span><br><span class="line">grep <span class="string">&#x27; 502 &#x27;</span> /var/log/nginx/access.log</span><br><span class="line">ss -s; ss -lntp; ss -antp | grep nginx</span><br><span class="line">top; free -h; <span class="built_in">df</span> -h; iostat -x 1; vmstat 1</span><br><span class="line">curl -v http://example.com/; curl -vk https://example.com/</span><br><span class="line">dig example.com; tcpdump -i eth0 port 443 -nn</span><br><span class="line">openssl s_client -connect example.com:443 -servername example.com &lt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<h2 id="34-常见误区"><a href="#34-常见误区" class="headerlink" title="34. 常见误区"></a>34. 常见误区</h2><ul>
+<li>看到 502 就认为一定是 Nginx 问题。</li>
+<li>看到 499 就完全归因于客户端，不分析后端耗时。</li>
+<li>通过无限调大超时时间解决 504。</li>
+<li>只看平均响应时间，不看 P95&#x2F;P99。</li>
+<li>access log 没有 upstream 字段，故障时无法定位后端。</li>
+<li>debug 日志长期打开导致磁盘打满。</li>
+<li>生产变更前不执行 <code>nginx -t</code>。</li>
+<li>多节点同时 reload，没有分批和回滚。</li>
+<li>Keepalived 只检查进程，不检查真实 HTTP 响应。</li>
+<li>高可用只关注 VIP 漂移，不监控脑裂。</li>
+<li>灰度只做分流，不做指标观察和快速回滚。</li>
+<li>日志只保存在本机，没有集中采集。</li>
+<li>证书续期后忘记 reload。</li>
+<li>把 CDN、云 LB、API Gateway 返回的错误误判为 Nginx 错误。</li>
+</ul>
+<h2 id="35-学习检查清单"><a href="#35-学习检查清单" class="headerlink" title="35. 学习检查清单"></a>35. 学习检查清单</h2><ul>
+<li>能设计生产 JSON access log。</li>
+<li>能解释 request_time 和 upstream 三个时间字段。</li>
+<li>能根据 access log 判断 upstream 重试。</li>
+<li>能根据 error log 判断 502 直接原因。</li>
+<li>能区分 502、503、504。</li>
+<li>能解释 499 的常见原因。</li>
+<li>能用 curl -w 分析分段耗时。</li>
+<li>能用 ss、lsof、top、iostat、sar 排查系统瓶颈。</li>
+<li>能用 tcpdump 分析连接异常。</li>
+<li>能配置 stub_status 并解释字段。</li>
+<li>能设计 Nginx 监控告警项。</li>
+<li>能配置 logrotate 并理解 USR1。</li>
+<li>能说明 reload 机制和风险。</li>
+<li>能写变更与回滚 SOP。</li>
+<li>能搭建 Keepalived + VIP。</li>
+<li>能配置 Header&#x2F;Cookie&#x2F;IP&#x2F;比例灰度。</li>
+<li>能区分 Nginx、CDN、云 LB、Ingress、API Gateway、后端服务的问题边界。</li>
+</ul>
+<h2 id="36-过关标准"><a href="#36-过关标准" class="headerlink" title="36. 过关标准"></a>36. 过关标准</h2><p>达到下面标准，说明本阶段基本过关：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1. 能在 10 分钟内根据日志判断 502/504/499 的主要方向。</span><br><span class="line">2. 能为生产域名设计完整 access log 字段。</span><br><span class="line">3. 能搭建 stub_status 并接入基础监控。</span><br><span class="line">4. 能写出发布、回滚、日志切割和故障排查 SOP。</span><br><span class="line">5. 能独立完成 Keepalived + Nginx VIP 高可用实验。</span><br><span class="line">6. 能设计按 Header/Cookie/IP/比例的灰度发布方案。</span><br><span class="line">7. 能区分 Nginx、CDN、云 LB、Ingress、API Gateway、后端服务的问题边界。</span><br></pre></td></tr></table></figure>
+
+<p>如果只能写配置，但无法根据日志定位问题，说明还没有真正完成第六阶段。</p>
+<h2 id="37-推荐练习顺序"><a href="#37-推荐练习顺序" class="headerlink" title="37. 推荐练习顺序"></a>37. 推荐练习顺序</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">自定义 JSON access log</span><br><span class="line">  -&gt; 理解 request_time 和 upstream 时间</span><br><span class="line">  -&gt; 复现 404/403/413/499/502/504</span><br><span class="line">  -&gt; 使用 error log 定位根因</span><br><span class="line">  -&gt; 开启 stub_status</span><br><span class="line">  -&gt; 接入日志切割</span><br><span class="line">  -&gt; 验证 reload 是否中断请求</span><br><span class="line">  -&gt; 使用 curl、ss、tcpdump 做链路排查</span><br><span class="line">  -&gt; 编写变更和回滚 SOP</span><br><span class="line">  -&gt; 搭建 Keepalived + VIP</span><br><span class="line">  -&gt; 实现 Header/Cookie/IP 灰度</span><br></pre></td></tr></table></figure>
+
+<p>不要先做高可用和灰度，必须先掌握日志和排障，否则系统复杂后问题会更难定位。</p>
+<h2 id="38-阶段总结"><a href="#38-阶段总结" class="headerlink" title="38. 阶段总结"></a>38. 阶段总结</h2><p>第六阶段的核心是生产治理能力。Nginx 不再只是一个配置文件和代理进程，而是入口稳定性体系的一部分。你需要用日志还原现场，用指标发现异常，用 SOP 控制变更，用高可用避免单点，用灰度降低发布风险，用复盘减少重复故障。</p>
+<p>完成本阶段后，再进入第七阶段源码学习，会更容易理解 Nginx 为什么能平滑 reload、为什么 master&#x2F;worker 适合高并发、为什么 upstream 和 filter 机制会影响代理、缓存、日志和故障表现。</p>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

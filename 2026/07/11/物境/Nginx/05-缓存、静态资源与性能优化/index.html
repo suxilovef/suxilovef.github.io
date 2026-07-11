@@ -1,0 +1,2233 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>05-缓存、静态资源与性能优化 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Nginx 第五阶段学习文档：静态资源优化、浏览器缓存、HTTP 缓存、gzip、Brotli、sendfile、aio、open_file_cache、proxy_cache、缓存清理、性能压测、连接调优、内核参数与资源治理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="05-缓存、静态资源与性能优化">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/05-%E7%BC%93%E5%AD%98%E3%80%81%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E4%B8%8E%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Nginx 第五阶段学习文档：静态资源优化、浏览器缓存、HTTP 缓存、gzip、Brotli、sendfile、aio、open_file_cache、proxy_cache、缓存清理、性能压测、连接调优、内核参数与资源治理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-cache.svg">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T13:51:07.464Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-cache.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "05-缓存、静态资源与性能优化",
+  "url": "https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/05-%E7%BC%93%E5%AD%98%E3%80%81%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E4%B8%8E%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/",
+  "image": "https://suxilovef.github.io/image/post_cover/wujing-nginx-cache.svg",
+  "datePublished": "2026-07-10T16:00:00.000Z",
+  "dateModified": "2026-07-11T13:51:07.464Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/05-%E7%BC%93%E5%AD%98%E3%80%81%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E4%B8%8E%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '05-缓存、静态资源与性能优化',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">28</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">05-缓存、静态资源与性能优化</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">05-缓存、静态资源与性能优化</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-11T13:51:07.464Z" title="更新于 2026-07-11 21:51:07">2026-07-11</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">13.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>49分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="05-缓存、静态资源与性能优化"><a href="#05-缓存、静态资源与性能优化" class="headerlink" title="05-缓存、静态资源与性能优化"></a>05-缓存、静态资源与性能优化</h1><h2 id="1-阶段定位"><a href="#1-阶段定位" class="headerlink" title="1. 阶段定位"></a>1. 阶段定位</h2><p>第五阶段是 Nginx 从“安全可靠入口层”进入“高性能资源治理层”的关键阶段。前四个阶段已经解决了部署、配置体系、请求匹配、反向代理、负载均衡、HTTPS、安全治理和入口访问控制。本阶段重点解决下面这些问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">一个请求进入 Nginx 后：</span><br><span class="line">  -&gt; 如果请求的是静态资源，如何尽快返回</span><br><span class="line">  -&gt; 如果资源可以缓存，缓存应该放在浏览器、Nginx 还是上游系统</span><br><span class="line">  -&gt; 浏览器缓存、协商缓存、代理缓存分别解决什么问题</span><br><span class="line">  -&gt; gzip、Brotli 是否应该开启，开启后 CPU 和带宽如何权衡</span><br><span class="line">  -&gt; sendfile、tcp_nopush、tcp_nodelay、open_file_cache 如何影响性能</span><br><span class="line">  -&gt; proxy_cache 如何设计 key、TTL、绕过规则、刷新规则和清理策略</span><br><span class="line">  -&gt; 动态接口、登录态接口、个性化数据能不能缓存</span><br><span class="line">  -&gt; 大文件、视频、下载、图片、前端构建产物如何治理</span><br><span class="line">  -&gt; worker、连接数、文件描述符、端口、内核参数如何配合调优</span><br><span class="line">  -&gt; 如何通过压测和指标判断 Nginx 性能瓶颈</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 的性能优化不是把所有参数调大，也不是盲目开启缓存。真正重要的是先理解资源类型、请求链路和瓶颈位置，再选择合适的优化手段。</p>
+<p>完成本阶段后，应该具备下面的能力：</p>
+<ul>
+<li>能设计静态资源目录结构、缓存头、过期时间、版本化文件和回滚策略。</li>
+<li>能解释浏览器强缓存、协商缓存、代理缓存、CDN 缓存和 Nginx 本地缓存的区别。</li>
+<li>能正确配置 <code>expires</code>、<code>Cache-Control</code>、<code>ETag</code>、<code>Last-Modified</code> 等缓存相关响应头。</li>
+<li>能配置 gzip 压缩，并理解压缩等级、压缩类型、CPU 消耗和传输收益。</li>
+<li>能理解 Brotli 的适用场景，以及开源 Nginx 默认不内置 Brotli 的事实。</li>
+<li>能配置 <code>sendfile</code>、<code>tcp_nopush</code>、<code>tcp_nodelay</code>、<code>aio</code>、<code>directio</code> 等静态文件发送相关参数。</li>
+<li>能使用 <code>open_file_cache</code> 减少频繁文件元数据查询带来的系统调用开销。</li>
+<li>能设计和落地 <code>proxy_cache</code>，包括缓存区、缓存 key、TTL、状态码策略、绕过规则、锁、防穿透和清理。</li>
+<li>能识别哪些内容不能缓存，避免缓存用户隐私数据、权限数据、个性化响应和错误响应。</li>
+<li>能使用 <code>wrk</code>、<code>ab</code>、<code>hey</code>、<code>curl</code>、日志字段和系统指标评估优化效果。</li>
+<li>能从 CPU、内存、磁盘 IO、网络带宽、文件描述符、连接状态和 upstream 能力判断瓶颈。</li>
+</ul>
+<h2 id="2-学习边界"><a href="#2-学习边界" class="headerlink" title="2. 学习边界"></a>2. 学习边界</h2><h3 id="2-1-本阶段重点"><a href="#2-1-本阶段重点" class="headerlink" title="2.1 本阶段重点"></a>2.1 本阶段重点</h3><p>本阶段重点关注 Nginx 性能优化和缓存治理，包括：</p>
+<ul>
+<li>静态资源服务优化。</li>
+<li>浏览器缓存与 HTTP 缓存语义。</li>
+<li><code>expires</code> 与 <code>Cache-Control</code>。</li>
+<li><code>ETag</code> 与 <code>Last-Modified</code>。</li>
+<li>前端构建产物缓存策略。</li>
+<li>图片、CSS、JS、字体、下载文件缓存策略。</li>
+<li>gzip 压缩配置与验证。</li>
+<li>Brotli 基础认知与部署边界。</li>
+<li><code>sendfile</code>、<code>tcp_nopush</code>、<code>tcp_nodelay</code>。</li>
+<li><code>aio</code>、<code>directio</code> 与大文件下载。</li>
+<li><code>open_file_cache</code> 文件缓存。</li>
+<li><code>proxy_cache_path</code>、<code>proxy_cache</code>、<code>proxy_cache_key</code>。</li>
+<li>缓存 TTL、状态码缓存、缓存锁、缓存绕过、缓存刷新。</li>
+<li><code>X-Cache-Status</code> 缓存命中观测。</li>
+<li>防止缓存穿透、缓存击穿和缓存雪崩。</li>
+<li>Nginx worker、连接数和文件描述符调优。</li>
+<li>Linux 内核参数与网络队列基础调优。</li>
+<li>压测方法、指标解释和性能优化闭环。</li>
+</ul>
+<h3 id="2-2-本阶段暂不深入"><a href="#2-2-本阶段暂不深入" class="headerlink" title="2.2 本阶段暂不深入"></a>2.2 本阶段暂不深入</h3><p>下面内容与性能有关，但不是本阶段重点：</p>
+<ul>
+<li>CDN 厂商平台的完整边缘缓存体系。</li>
+<li>OpenResty Lua 动态缓存和本地字典缓存。</li>
+<li>Redis、Memcached 等应用层缓存设计。</li>
+<li>Kubernetes Ingress Controller 性能注解体系。</li>
+<li>HTTP&#x2F;3、QUIC 的深入机制。</li>
+<li>Nginx 源码中的 sendfile、event loop 和 filter chain 实现细节。</li>
+<li>大规模 WAF、Bot 管理、边缘计算和全局流量调度。</li>
+<li>自研缓存淘汰算法或代理缓存模块开发。</li>
+</ul>
+<p>本阶段目标不是把 Nginx 变成完整 CDN，而是掌握生产中最常见、最实用的静态资源优化、代理缓存和系统性能调优能力。</p>
+<h2 id="3-性能优化的基本原则"><a href="#3-性能优化的基本原则" class="headerlink" title="3. 性能优化的基本原则"></a>3. 性能优化的基本原则</h2><h3 id="3-1-不要先调参数，要先定位瓶颈"><a href="#3-1-不要先调参数，要先定位瓶颈" class="headerlink" title="3.1 不要先调参数，要先定位瓶颈"></a>3.1 不要先调参数，要先定位瓶颈</h3><p>很多人学习 Nginx 性能优化时，会先搜索一份“高并发配置模板”，然后直接复制下面这些配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_processes</span> auto;</span><br><span class="line"><span class="attribute">worker_connections</span> <span class="number">65535</span>;</span><br><span class="line"><span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">gzip</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">keepalive_timeout</span> <span class="number">65</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这些配置本身并不一定错，但如果不了解瓶颈位置，盲目使用可能没有收益，甚至产生副作用。</p>
+<p>常见瓶颈来源包括：</p>
+<table>
+<thead>
+<tr>
+<th>瓶颈位置</th>
+<th>表现</th>
+<th>常见原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td><code>top</code> 显示 Nginx worker CPU 很高</td>
+<td>gzip 等压缩开销、TLS 开销、日志过多、正则匹配复杂</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>系统内存持续上涨或发生 OOM</td>
+<td>缓冲区过大、连接过多、缓存区规划不合理</td>
+</tr>
+<tr>
+<td>磁盘 IO</td>
+<td>静态文件或缓存读取慢</td>
+<td>磁盘性能差、缓存目录随机 IO 多、日志同步写入压力大</td>
+</tr>
+<tr>
+<td>网络带宽</td>
+<td>Nginx CPU 不高但吞吐上不去</td>
+<td>出口带宽打满、网卡队列瓶颈、包量过大</td>
+</tr>
+<tr>
+<td>文件描述符</td>
+<td>出现 <code>too many open files</code></td>
+<td><code>worker_rlimit_nofile</code>、系统 <code>ulimit</code> 太低</td>
+</tr>
+<tr>
+<td>连接队列</td>
+<td>大量连接超时或拒绝</td>
+<td><code>somaxconn</code>、backlog、worker 连接数不足</td>
+</tr>
+<tr>
+<td>上游服务</td>
+<td>Nginx 等待 upstream 时间长</td>
+<td>后端慢、连接池不足、数据库慢、线程池耗尽</td>
+</tr>
+<tr>
+<td>客户端</td>
+<td>日志中 <code>$request_time</code> 高但 upstream 不高</td>
+<td>客户端网络慢、下载慢、移动网络不稳定</td>
+</tr>
+</tbody></table>
+<p>性能优化要先回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">当前慢在哪里？</span><br><span class="line">  -&gt; 是 Nginx 自身慢</span><br><span class="line">  -&gt; 是磁盘慢</span><br><span class="line">  -&gt; 是网络慢</span><br><span class="line">  -&gt; 是后端慢</span><br><span class="line">  -&gt; 是客户端慢</span><br><span class="line">  -&gt; 是缓存未命中</span><br><span class="line">  -&gt; 是压缩或 TLS 消耗太高</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-性能优化闭环"><a href="#3-2-性能优化闭环" class="headerlink" title="3.2 性能优化闭环"></a>3.2 性能优化闭环</h3><p>推荐使用下面的闭环做优化：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">明确目标</span><br><span class="line">  -&gt; 建立基线</span><br><span class="line">  -&gt; 单项调整</span><br><span class="line">  -&gt; 压测验证</span><br><span class="line">  -&gt; 观察指标</span><br><span class="line">  -&gt; 对比结果</span><br><span class="line">  -&gt; 保留有效调整</span><br><span class="line">  -&gt; 回滚无效调整</span><br></pre></td></tr></table></figure>
+
+<p>不要一次改十几个参数。否则性能变好或变差时，很难知道真正原因。</p>
+<h3 id="3-3-常见优化目标"><a href="#3-3-常见优化目标" class="headerlink" title="3.3 常见优化目标"></a>3.3 常见优化目标</h3><p>不同场景下，优化目标不同：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>优化目标</th>
+<th>重点手段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>静态站点</td>
+<td>降低延迟、提高吞吐、减少带宽</td>
+<td><code>sendfile</code>、缓存头、gzip、Brotli、文件版本化</td>
+</tr>
+<tr>
+<td>图片站点</td>
+<td>提高命中率、降低源站压力</td>
+<td>长缓存、CDN、文件名版本化、合理压缩</td>
+</tr>
+<tr>
+<td>API 网关</td>
+<td>降低后端压力、控制突发流量</td>
+<td><code>proxy_cache</code>、限流、连接复用、超时治理</td>
+</tr>
+<tr>
+<td>下载站点</td>
+<td>稳定大文件传输</td>
+<td><code>sendfile</code>、<code>aio</code>、<code>directio</code>、限速、Range 支持</td>
+</tr>
+<tr>
+<td>高并发入口</td>
+<td>增加连接承载能力</td>
+<td>worker、连接数、文件描述符、内核队列</td>
+</tr>
+<tr>
+<td>低带宽环境</td>
+<td>减少传输体积</td>
+<td>gzip、Brotli、图片压缩、缓存</td>
+</tr>
+<tr>
+<td>后端慢接口</td>
+<td>减少重复请求</td>
+<td>短 TTL 代理缓存、缓存锁、降级策略</td>
+</tr>
+</tbody></table>
+<h2 id="4-静态资源服务基础"><a href="#4-静态资源服务基础" class="headerlink" title="4. 静态资源服务基础"></a>4. 静态资源服务基础</h2><p>Nginx 天然适合服务静态资源。静态资源通常包括：HTML 页面、CSS 文件、JavaScript 文件、图片文件、字体文件、视频文件、下载文件、前端构建产物、文档、压缩包和安装包。</p>
+<p>最基础的静态资源配置如下：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> static.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">root</span> /data/www/static;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设请求 <code>GET http://static.example.com/assets/app.js</code>，实际查找路径是 <code>/data/www/static/assets/app.js</code>。</p>
+<h3 id="4-1-root-与-alias-复习"><a href="#4-1-root-与-alias-复习" class="headerlink" title="4.1 root 与 alias 复习"></a>4.1 root 与 alias 复习</h3><p><code>root</code> 是把请求 URI 追加到指定目录后面：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /images/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/www;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求 <code>/images/a.png</code> 对应文件路径 <code>/data/www/images/a.png</code>。</p>
+<p><code>alias</code> 是把 location 前缀替换成指定目录：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /images/ &#123;</span><br><span class="line">    <span class="attribute">alias</span> /data/pictures/;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求 <code>/images/a.png</code> 对应文件路径 <code>/data/pictures/a.png</code>。</p>
+<p>生产中要特别注意：<code>alias</code> 目录通常要以 <code>/</code> 结尾，<code>location</code> 前缀也建议以 <code>/</code> 结尾，避免路径拼接异常。</p>
+<h3 id="4-2-静态资源目录建议"><a href="#4-2-静态资源目录建议" class="headerlink" title="4.2 静态资源目录建议"></a>4.2 静态资源目录建议</h3><p>推荐将不同类型资源拆分目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">/data/www/site/</span><br><span class="line">  ├── index.html</span><br><span class="line">  ├── assets/</span><br><span class="line">  │   ├── css/</span><br><span class="line">  │   ├── js/</span><br><span class="line">  │   ├── img/</span><br><span class="line">  │   └── fonts/</span><br><span class="line">  ├── upload/</span><br><span class="line">  ├── download/</span><br><span class="line">  └── error_pages/</span><br></pre></td></tr></table></figure>
+
+<p>不同目录使用不同缓存策略：</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>资源特点</th>
+<th>建议缓存策略</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/assets/</code></td>
+<td>构建产物，文件名带 hash</td>
+<td>长缓存，一年或更久</td>
+</tr>
+<tr>
+<td><code>/img/</code></td>
+<td>图片资源，较少变化</td>
+<td>较长缓存，按版本或路径更新</td>
+</tr>
+<tr>
+<td><code>/fonts/</code></td>
+<td>字体文件，较少变化</td>
+<td>长缓存，注意跨域</td>
+</tr>
+<tr>
+<td><code>/upload/</code></td>
+<td>用户上传内容，可能变化</td>
+<td>按业务决定，谨慎长缓存</td>
+</tr>
+<tr>
+<td><code>/download/</code></td>
+<td>大文件下载</td>
+<td>支持 Range，可限速</td>
+</tr>
+<tr>
+<td><code>/index.html</code></td>
+<td>前端入口 HTML</td>
+<td>不建议长缓存，通常短缓存或不缓存</td>
+</tr>
+<tr>
+<td><code>/api/</code></td>
+<td>动态接口</td>
+<td>默认不按静态资源缓存</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-前端单页应用配置"><a href="#4-3-前端单页应用配置" class="headerlink" title="4.3 前端单页应用配置"></a>4.3 前端单页应用配置</h3><p>前端 SPA 常见配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> app.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">root</span> /data/www/app;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /assets/ &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">        <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">        <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, immutable&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> = /index.html &#123;</span><br><span class="line">        <span class="attribute">expires</span> -<span class="number">1</span>;</span><br><span class="line">        <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-cache, no-store, must-revalidate&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的关键点是：</p>
+<ul>
+<li><code>/assets/</code> 中的文件名通常带 hash，例如 <code>app.8f3a2c.js</code>，可以长缓存。</li>
+<li><code>index.html</code> 是入口文件，经常引用新的资源文件，不应该长缓存。</li>
+<li><code>try_files $uri $uri/ /index.html</code> 用于支持前端路由刷新。</li>
+<li>API 请求不要误落入 <code>/index.html</code>，一般应单独配置 <code>/api/</code> 代理。</li>
+</ul>
+<h3 id="4-4-错误示例：把所有内容都长缓存"><a href="#4-4-错误示例：把所有内容都长缓存" class="headerlink" title="4.4 错误示例：把所有内容都长缓存"></a>4.4 错误示例：把所有内容都长缓存</h3><p>错误配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public&quot;</span>;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题：</p>
+<ul>
+<li><code>index.html</code> 被长缓存后，前端发布新版本，用户仍可能加载旧入口文件。</li>
+<li>如果 HTML 引用的新旧资源不一致，可能出现白屏、接口异常或静态文件 404。</li>
+<li>动态页面或用户相关页面被缓存，可能产生严重安全问题。</li>
+</ul>
+<p>正确思路：入口 HTML 短缓存或不缓存，带 hash 的静态资源长缓存，动态接口默认不缓存，用户相关内容谨慎缓存。</p>
+<h2 id="5-HTTP-缓存基础"><a href="#5-HTTP-缓存基础" class="headerlink" title="5. HTTP 缓存基础"></a>5. HTTP 缓存基础</h2><p>HTTP 缓存主要分为三类：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">强缓存</span><br><span class="line">  -&gt; 浏览器直接使用本地缓存，不向服务端发请求</span><br><span class="line"></span><br><span class="line">协商缓存</span><br><span class="line">  -&gt; 浏览器向服务端验证资源是否变化</span><br><span class="line">  -&gt; 未变化返回 304</span><br><span class="line">  -&gt; 已变化返回 200 + 新内容</span><br><span class="line"></span><br><span class="line">代理缓存</span><br><span class="line">  -&gt; 缓存在代理层，例如 Nginx、CDN、网关</span><br><span class="line">  -&gt; 多个用户共享缓存结果</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-1-强缓存"><a href="#5-1-强缓存" class="headerlink" title="5.1 强缓存"></a>5.1 强缓存</h3><p>强缓存主要由下面响应头控制：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>max-age=31536000</span><br><span class="line"><span class="attribute">Expires</span><span class="punctuation">: </span>Sat, 11 Jul 2027 00:00:00 GMT</span><br></pre></td></tr></table></figure>
+
+<p>现代浏览器优先使用 <code>Cache-Control</code>。<code>Expires</code> 是 HTTP&#x2F;1.0 时代的字段，仍常用于兼容。</p>
+<p>Nginx 配置示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span> always;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果同时使用 <code>expires</code> 和 <code>add_header Cache-Control ...</code>，需要避免多个 <code>Cache-Control</code> 头语义冲突。生产中建议统一规划，明确每类资源的缓存策略。</p>
+<h3 id="5-2-Cache-Control-常用指令"><a href="#5-2-Cache-Control-常用指令" class="headerlink" title="5.2 Cache-Control 常用指令"></a>5.2 Cache-Control 常用指令</h3><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>含义</th>
+<th>常见场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>public</code></td>
+<td>可以被浏览器和共享缓存保存</td>
+<td>静态资源</td>
+</tr>
+<tr>
+<td><code>private</code></td>
+<td>只能被用户浏览器缓存，不应被共享缓存保存</td>
+<td>用户个人页面</td>
+</tr>
+<tr>
+<td><code>max-age=秒</code></td>
+<td>浏览器缓存有效期</td>
+<td>静态资源、短缓存接口</td>
+</tr>
+<tr>
+<td><code>s-maxage=秒</code></td>
+<td>共享缓存有效期，优先于 <code>max-age</code></td>
+<td>CDN、代理缓存</td>
+</tr>
+<tr>
+<td><code>no-cache</code></td>
+<td>可以存储，但每次使用前必须验证</td>
+<td>HTML、频繁变化资源</td>
+</tr>
+<tr>
+<td><code>no-store</code></td>
+<td>不允许存储</td>
+<td>登录、支付、敏感数据</td>
+</tr>
+<tr>
+<td><code>must-revalidate</code></td>
+<td>过期后必须重新验证</td>
+<td>严格一致性资源</td>
+</tr>
+<tr>
+<td><code>immutable</code></td>
+<td>有效期内资源不会变化</td>
+<td>带 hash 的构建产物</td>
+</tr>
+</tbody></table>
+<p>常见策略：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 带 hash 的静态资源</span></span><br><span class="line"><span class="section">location</span> /assets/ &#123;</span><br><span class="line">    <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span> always;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># HTML 入口文件</span></span><br><span class="line"><span class="section">location</span> = /index.html &#123;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-cache, no-store, must-revalidate&quot;</span> always;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 用户敏感页面</span></span><br><span class="line"><span class="section">location</span> /account/ &#123;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;private, no-store&quot;</span> always;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-3-协商缓存"><a href="#5-3-协商缓存" class="headerlink" title="5.3 协商缓存"></a>5.3 协商缓存</h3><p>协商缓存主要依赖 <code>Last-Modified</code>、<code>If-Modified-Since</code>、<code>ETag</code>、<code>If-None-Match</code>。</p>
+<p>流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">第一次请求：</span><br><span class="line">  服务端返回 200 + 内容 + Last-Modified/ETag</span><br><span class="line"></span><br><span class="line">第二次请求：</span><br><span class="line">  浏览器携带 If-Modified-Since/If-None-Match</span><br><span class="line">  服务端判断资源是否变化</span><br><span class="line">    -&gt; 未变化：返回 304，不返回响应体</span><br><span class="line">    -&gt; 已变化：返回 200 + 新响应体</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 默认会对静态文件返回 <code>Last-Modified</code>，也通常会启用 <code>ETag</code>。可以通过下面指令控制：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">etag</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">if_modified_since</span> exact;</span><br></pre></td></tr></table></figure>
+
+<p>不建议随意关闭 <code>ETag</code>。如果有多台静态资源服务器，且文件元数据不一致，可能出现 ETag 不一致问题，此时可以考虑关闭 ETag，然后依赖文件名 hash 和 <code>Cache-Control</code> 做版本治理。</p>
+<h3 id="5-4-304-不是错误"><a href="#5-4-304-不是错误" class="headerlink" title="5.4 304 不是错误"></a>5.4 304 不是错误</h3><p>访问日志中如果看到大量 <code>304</code>，一般不是错误。它表示客户端缓存可用，服务端无需返回完整响应体。</p>
+<table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>含义</th>
+<th>是否异常</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>200</code></td>
+<td>返回完整资源</td>
+<td>正常</td>
+</tr>
+<tr>
+<td><code>304</code></td>
+<td>资源未变化，使用本地缓存</td>
+<td>正常</td>
+</tr>
+<tr>
+<td><code>404</code></td>
+<td>文件不存在</td>
+<td>需要检查路径或发布结果</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td>权限不足或目录禁止访问</td>
+<td>需要检查权限和配置</td>
+</tr>
+<tr>
+<td><code>416</code></td>
+<td>Range 请求范围不合法</td>
+<td>大文件下载场景需要关注</td>
+</tr>
+</tbody></table>
+<h2 id="6-静态资源缓存策略设计"><a href="#6-静态资源缓存策略设计" class="headerlink" title="6. 静态资源缓存策略设计"></a>6. 静态资源缓存策略设计</h2><h3 id="6-1-推荐策略总表"><a href="#6-1-推荐策略总表" class="headerlink" title="6.1 推荐策略总表"></a>6.1 推荐策略总表</h3><table>
+<thead>
+<tr>
+<th>资源类型</th>
+<th>是否适合长缓存</th>
+<th>推荐策略</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML 入口文件</td>
+<td>否</td>
+<td><code>no-cache</code> 或短缓存</td>
+</tr>
+<tr>
+<td>带 hash 的 JS&#x2F;CSS</td>
+<td>是</td>
+<td><code>public, max-age=31536000, immutable</code></td>
+</tr>
+<tr>
+<td>不带 hash 的 JS&#x2F;CSS</td>
+<td>谨慎</td>
+<td>短缓存或改造成带版本号</td>
+</tr>
+<tr>
+<td>图片资源</td>
+<td>通常适合</td>
+<td>长缓存，依赖 URL 版本变化</td>
+</tr>
+<tr>
+<td>字体资源</td>
+<td>适合</td>
+<td>长缓存，注意 CORS</td>
+</tr>
+<tr>
+<td>用户头像</td>
+<td>视业务而定</td>
+<td>URL 带版本号可长缓存，否则短缓存</td>
+</tr>
+<tr>
+<td>下载文件</td>
+<td>适合</td>
+<td>长缓存，支持 Range</td>
+</tr>
+<tr>
+<td>API 响应</td>
+<td>默认不适合</td>
+<td>根据接口语义单独设计</td>
+</tr>
+<tr>
+<td>登录态页面</td>
+<td>不适合</td>
+<td><code>private, no-store</code></td>
+</tr>
+<tr>
+<td>支付、订单、账户</td>
+<td>不适合</td>
+<td><code>no-store</code></td>
+</tr>
+</tbody></table>
+<h3 id="6-2-文件名-hash-是长缓存前提"><a href="#6-2-文件名-hash-是长缓存前提" class="headerlink" title="6.2 文件名 hash 是长缓存前提"></a>6.2 文件名 hash 是长缓存前提</h3><p>长缓存最可靠的方式是“内容变，文件名变”。例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">app.js                 不适合长缓存</span><br><span class="line">app.20260711.js        可以缓存，但版本粒度粗</span><br><span class="line">app.8f3a2c91.js        更适合长缓存</span><br><span class="line">style.a81c0f09.css     更适合长缓存</span><br></pre></td></tr></table></figure>
+
+<p>推荐发布流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">构建生成带 hash 文件</span><br><span class="line">  -&gt; 上传静态资源到服务器</span><br><span class="line">  -&gt; 确认新资源文件存在</span><br><span class="line">  -&gt; 更新 index.html 引用</span><br><span class="line">  -&gt; reload 或无感发布</span><br><span class="line">  -&gt; 保留旧 hash 文件一段时间</span><br><span class="line">  -&gt; 定期清理历史资源</span><br></pre></td></tr></table></figure>
+
+<p>不要发布新版本时立即删除旧资源。因为用户浏览器可能还缓存着旧的 <code>index.html</code>，它仍会引用旧 hash 文件。如果旧文件被删除，就会出现静态资源 404。</p>
+<h3 id="6-3-SPA-发布缓存策略"><a href="#6-3-SPA-发布缓存策略" class="headerlink" title="6.3 SPA 发布缓存策略"></a>6.3 SPA 发布缓存策略</h3><p>推荐配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> app.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">root</span> /data/www/app;</span><br><span class="line">    <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /api/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_api;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /assets/ &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">        <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">        <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span> always;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~* \.(?:css|js|mjs|png|jpg|jpeg|gif|webp|svg|ico|woff2?)$</span> &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">        <span class="attribute">expires</span> <span class="number">30d</span>;</span><br><span class="line">        <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=2592000&quot;</span> always;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> = /index.html &#123;</span><br><span class="line">        <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-cache, no-store, must-revalidate&quot;</span> always;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意顺序：<code>/api/</code> 要优先独立代理，不要落到前端路由；<code>/assets/</code> 带 hash 的资源可以长缓存；<code>index.html</code> 不要长缓存；前端路由由最后的 <code>location /</code> 兜底。</p>
+<h3 id="6-4-字体跨域缓存"><a href="#6-4-字体跨域缓存" class="headerlink" title="6.4 字体跨域缓存"></a>6.4 字体跨域缓存</h3><p>如果字体资源被多个域名引用，可能需要 CORS：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~* \.(?:woff|woff2|ttf|otf)$</span> &#123;</span><br><span class="line">    <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">    <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span> always;</span><br><span class="line">    <span class="attribute">add_header</span> Access-Control-Allow-Origin <span class="string">&quot;*&quot;</span> always;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不要对所有资源无脑加 <code>Access-Control-Allow-Origin &quot;*&quot;</code>。字体、公开图片等静态资源可以这样做，但带用户身份或敏感数据的接口不能这样处理。</p>
+<h2 id="7-gzip-压缩"><a href="#7-gzip-压缩" class="headerlink" title="7. gzip 压缩"></a>7. gzip 压缩</h2><h3 id="7-1-gzip-解决什么问题"><a href="#7-1-gzip-解决什么问题" class="headerlink" title="7.1 gzip 解决什么问题"></a>7.1 gzip 解决什么问题</h3><p>gzip 用 CPU 换带宽。它适合压缩文本类资源，例如 HTML、CSS、JavaScript、JSON、XML、SVG 等。它不适合重复压缩已经压缩过的资源，例如 jpg、png、webp、gif、mp4、zip、gz、br 等。</p>
+<p>压缩收益取决于资源类型：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>gzip 收益</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTML</td>
+<td>高</td>
+<td>文本重复多</td>
+</tr>
+<tr>
+<td>CSS</td>
+<td>高</td>
+<td>文本规则多</td>
+</tr>
+<tr>
+<td>JS</td>
+<td>高</td>
+<td>文本重复多</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>高</td>
+<td>字段名重复多</td>
+</tr>
+<tr>
+<td>SVG</td>
+<td>高</td>
+<td>XML 文本</td>
+</tr>
+<tr>
+<td>JPEG&#x2F;PNG&#x2F;WebP</td>
+<td>低</td>
+<td>已经是压缩格式</td>
+</tr>
+<tr>
+<td>ZIP&#x2F;GZ&#x2F;BR</td>
+<td>几乎无收益</td>
+<td>已压缩</td>
+</tr>
+<tr>
+<td>视频</td>
+<td>几乎无收益</td>
+<td>已压缩</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-gzip-基础配置"><a href="#7-2-gzip-基础配置" class="headerlink" title="7.2 gzip 基础配置"></a>7.2 gzip 基础配置</h3><p>推荐放在 <code>http</code> 上下文：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">gzip</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_comp_level</span> <span class="number">5</span>;</span><br><span class="line">    <span class="attribute">gzip_min_length</span> <span class="number">1024</span>;</span><br><span class="line">    <span class="attribute">gzip_vary</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_proxied</span> any;</span><br><span class="line">    <span class="attribute">gzip_disable</span> <span class="string">&quot;msie6&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">gzip_types</span></span><br><span class="line">        text/plain</span><br><span class="line">        text/css</span><br><span class="line">        text/xml</span><br><span class="line">        text/javascript</span><br><span class="line">        application/javascript</span><br><span class="line">        application/json</span><br><span class="line">        application/xml</span><br><span class="line">        application/rss+xml</span><br><span class="line">        application/atom+xml</span><br><span class="line">        image/svg+xml;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>说明</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>gzip on</code></td>
+<td>开启 gzip</td>
+<td>常用</td>
+</tr>
+<tr>
+<td><code>gzip_comp_level</code></td>
+<td>压缩等级，1-9</td>
+<td>生产常用 4-6</td>
+</tr>
+<tr>
+<td><code>gzip_min_length</code></td>
+<td>小于该大小不压缩</td>
+<td>1KB 或 2KB 起</td>
+</tr>
+<tr>
+<td><code>gzip_vary</code></td>
+<td>返回 <code>Vary: Accept-Encoding</code></td>
+<td>建议开启</td>
+</tr>
+<tr>
+<td><code>gzip_proxied</code></td>
+<td>对代理请求启用压缩</td>
+<td>视场景配置</td>
+</tr>
+<tr>
+<td><code>gzip_types</code></td>
+<td>指定压缩 MIME 类型</td>
+<td>只压缩文本类</td>
+</tr>
+<tr>
+<td><code>gzip_disable</code></td>
+<td>禁用老旧客户端</td>
+<td>一般保留</td>
+</tr>
+</tbody></table>
+<h3 id="7-3-gzip-验证"><a href="#7-3-gzip-验证" class="headerlink" title="7.3 gzip 验证"></a>7.3 gzip 验证</h3><p>使用 curl 验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I -H <span class="string">&#x27;Accept-Encoding: gzip&#x27;</span> http://static.example.com/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p>重点看：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Content-Encoding</span><span class="punctuation">: </span>gzip</span><br><span class="line"><span class="attribute">Vary</span><span class="punctuation">: </span>Accept-Encoding</span><br></pre></td></tr></table></figure>
+
+<p>也可以下载对比大小：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Accept-Encoding: gzip&#x27;</span> -o /tmp/app.js.gz http://static.example.com/assets/app.js</span><br><span class="line">curl -H <span class="string">&#x27;Accept-Encoding:&#x27;</span> -o /tmp/app.js http://static.example.com/assets/app.js</span><br><span class="line"><span class="built_in">ls</span> -lh /tmp/app.js /tmp/app.js.gz</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-gzip-常见问题"><a href="#7-4-gzip-常见问题" class="headerlink" title="7.4 gzip 常见问题"></a>7.4 gzip 常见问题</h3><p>开启 gzip 后没生效，优先检查客户端是否发送 <code>Accept-Encoding: gzip</code>、响应 <code>Content-Type</code> 是否在 <code>gzip_types</code> 中、文件大小是否小于 <code>gzip_min_length</code>、是否已经被上游压缩、是否命中了不压缩的 location、是否为图片或视频等不适合 gzip 的类型。</p>
+<p>压缩等级不是越高越好。<code>gzip_comp_level 9</code> 会显著增加 CPU 消耗，但比 5 或 6 多出来的压缩收益通常有限。CPU 充足且带宽昂贵时可以提高到 6；高并发且 CPU 紧张时使用 4 或 5；极端高吞吐静态站应考虑预压缩或 CDN。</p>
+<h2 id="8-Brotli-压缩"><a href="#8-Brotli-压缩" class="headerlink" title="8. Brotli 压缩"></a>8. Brotli 压缩</h2><h3 id="8-1-Brotli-是什么"><a href="#8-1-Brotli-是什么" class="headerlink" title="8.1 Brotli 是什么"></a>8.1 Brotli 是什么</h3><p>Brotli 是一种压缩算法，通常对文本资源的压缩率优于 gzip，尤其适合 HTML、CSS、JavaScript、JSON、SVG 等资源。浏览器通过 <code>Accept-Encoding: br, gzip, deflate</code> 声明支持，服务端通过 <code>Content-Encoding: br</code> 返回压缩结果。</p>
+<h3 id="8-2-Nginx-与-Brotli-的关系"><a href="#8-2-Nginx-与-Brotli-的关系" class="headerlink" title="8.2 Nginx 与 Brotli 的关系"></a>8.2 Nginx 与 Brotli 的关系</h3><p>开源 Nginx 官方默认模块中不包含 Brotli。要使用 Brotli，常见方式是：</p>
+<ul>
+<li>使用带 Brotli 模块的发行版。</li>
+<li>自行编译第三方 <code>ngx_brotli</code> 模块。</li>
+<li>在 CDN 层开启 Brotli。</li>
+<li>对静态资源做预压缩，配合支持模块返回 <code>.br</code> 文件。</li>
+</ul>
+<p>如果没有明确的编译和维护能力，不建议在生产核心入口上随意引入第三方模块。很多场景下，在 CDN 层开启 Brotli 更简单、更稳定。</p>
+<h3 id="8-3-Brotli-配置示例"><a href="#8-3-Brotli-配置示例" class="headerlink" title="8.3 Brotli 配置示例"></a>8.3 Brotli 配置示例</h3><p>如果已经安装 Brotli 模块，常见配置类似：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">brotli</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">brotli_comp_level</span> <span class="number">5</span>;</span><br><span class="line"><span class="attribute">brotli_min_length</span> <span class="number">1024</span>;</span><br><span class="line"><span class="attribute">brotli_types</span></span><br><span class="line">    text/plain</span><br><span class="line">    text/css</span><br><span class="line">    text/xml</span><br><span class="line">    text/javascript</span><br><span class="line">    application/javascript</span><br><span class="line">    application/json</span><br><span class="line">    application/xml</span><br><span class="line">    image/svg+xml;</span><br></pre></td></tr></table></figure>
+
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I -H <span class="string">&#x27;Accept-Encoding: br&#x27;</span> http://static.example.com/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p>重点看 <code>Content-Encoding: br</code>。</p>
+<h3 id="8-4-gzip-与-Brotli-如何选择"><a href="#8-4-gzip-与-Brotli-如何选择" class="headerlink" title="8.4 gzip 与 Brotli 如何选择"></a>8.4 gzip 与 Brotli 如何选择</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通站点</td>
+<td>gzip 足够</td>
+</tr>
+<tr>
+<td>前端静态资源较多</td>
+<td>gzip 必开，可考虑 CDN Brotli</td>
+</tr>
+<tr>
+<td>带宽成本很高</td>
+<td>Brotli 有价值</td>
+</tr>
+<tr>
+<td>CPU 已经紧张</td>
+<td>谨慎动态 Brotli</td>
+</tr>
+<tr>
+<td>没有模块维护能力</td>
+<td>不建议自行编译第三方模块</td>
+</tr>
+<tr>
+<td>已使用 CDN</td>
+<td>优先在 CDN 层开启 Brotli</td>
+</tr>
+</tbody></table>
+<h2 id="9-sendfile-与文件发送优化"><a href="#9-sendfile-与文件发送优化" class="headerlink" title="9. sendfile 与文件发送优化"></a>9. sendfile 与文件发送优化</h2><h3 id="9-1-sendfile-的作用"><a href="#9-1-sendfile-的作用" class="headerlink" title="9.1 sendfile 的作用"></a>9.1 sendfile 的作用</h3><p>传统文件发送大致流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">磁盘文件</span><br><span class="line">  -&gt; 内核缓冲区</span><br><span class="line">  -&gt; 用户态 Nginx 缓冲区</span><br><span class="line">  -&gt; 内核 socket 缓冲区</span><br><span class="line">  -&gt; 网卡发送</span><br></pre></td></tr></table></figure>
+
+<p>开启 <code>sendfile</code> 后，可以减少用户态和内核态之间的数据拷贝：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">磁盘文件</span><br><span class="line">  -&gt; 内核缓冲区</span><br><span class="line">  -&gt; socket 缓冲区</span><br><span class="line">  -&gt; 网卡发送</span><br></pre></td></tr></table></figure>
+
+<p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于静态文件服务，通常建议开启。它尤其适合 CSS、JS、图片、下载文件等直接从磁盘读取并返回给客户端的场景。</p>
+<h3 id="9-2-tcp-nopush"><a href="#9-2-tcp-nopush" class="headerlink" title="9.2 tcp_nopush"></a>9.2 tcp_nopush</h3><p><code>tcp_nopush</code> 通常与 <code>sendfile</code> 一起使用，让 Nginx 尽量把响应头和文件内容组织成更合适的数据包发送。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nopush</span> <span class="literal">on</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>适合场景：</p>
+<ul>
+<li>静态文件服务。</li>
+<li>大响应体返回。</li>
+<li>下载文件。</li>
+<li>希望减少网络包数量的场景。</li>
+</ul>
+<h3 id="9-3-tcp-nodelay"><a href="#9-3-tcp-nodelay" class="headerlink" title="9.3 tcp_nodelay"></a>9.3 tcp_nodelay</h3><p><code>tcp_nodelay</code> 用于禁用 Nagle 算法，减少小包延迟，常用于 keepalive 连接：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">tcp_nodelay</span> <span class="literal">on</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生产中常见组合：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">tcp_nopush</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">tcp_nodelay</span> <span class="literal">on</span>;</span><br></pre></td></tr></table></figure>
+
+<p>不要把这三个参数理解成互相替代。它们作用在不同阶段和不同发送行为上：<code>sendfile</code> 关注文件发送路径，<code>tcp_nopush</code> 关注尽量合并包，<code>tcp_nodelay</code> 关注降低小响应延迟。</p>
+<h3 id="9-4-大文件下载配置"><a href="#9-4-大文件下载配置" class="headerlink" title="9.4 大文件下载配置"></a>9.4 大文件下载配置</h3><p>大文件下载示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /download/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/files;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nopush</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">limit_rate_after</span> <span class="number">10m</span>;</span><br><span class="line">    <span class="attribute">limit_rate</span> <span class="number">2m</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">add_header</span> Accept-Ranges bytes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>说明：</p>
+<ul>
+<li><code>Accept-Ranges bytes</code> 表示支持断点续传。</li>
+<li><code>limit_rate_after 10m</code> 表示前 10MB 不限速。</li>
+<li><code>limit_rate 2m</code> 表示之后限制每个连接约 2MB&#x2F;s。</li>
+<li>限速可以避免少量大下载连接长期占满出口带宽。</li>
+</ul>
+<h2 id="10-aio、directio-与大文件场景"><a href="#10-aio、directio-与大文件场景" class="headerlink" title="10. aio、directio 与大文件场景"></a>10. aio、directio 与大文件场景</h2><h3 id="10-1-aio-的定位"><a href="#10-1-aio-的定位" class="headerlink" title="10.1 aio 的定位"></a>10.1 aio 的定位</h3><p><code>aio</code> 用于异步文件 IO，在部分大文件或特殊文件系统场景中有价值。但对于多数普通静态资源站点，开启 <code>sendfile</code> 已经足够。</p>
+<p>Linux 下常见配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /video/ &#123;</span><br><span class="line">    <span class="attribute">root</span> /data/media;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">aio</span> threads;</span><br><span class="line">    <span class="attribute">directio</span> <span class="number">8m</span>;</span><br><span class="line">    <span class="attribute">output_buffers</span> <span class="number">1</span> <span class="number">512k</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这类配置要结合 Nginx 编译参数、内核版本、文件系统和实际压测结果决定，不建议照抄。</p>
+<h3 id="10-2-directio-的作用"><a href="#10-2-directio-的作用" class="headerlink" title="10.2 directio 的作用"></a>10.2 directio 的作用</h3><p><code>directio</code> 可以让大文件读取绕过系统页缓存，避免大文件下载把页缓存冲掉，影响小文件访问。</p>
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">directio</span> <span class="number">8m</span>;</span><br></pre></td></tr></table></figure>
+
+<p>含义：大于等于 8MB 的文件使用 directio。</p>
+<p>适合：</p>
+<ul>
+<li>视频文件。</li>
+<li>大安装包。</li>
+<li>大压缩包。</li>
+<li>大下载站点。</li>
+</ul>
+<p>不适合：</p>
+<ul>
+<li>小文件很多的静态站点。</li>
+<li>前端 CSS&#x2F;JS&#x2F;图片资源。</li>
+<li>没有压测验证的普通业务入口。</li>
+</ul>
+<h2 id="11-open-file-cache-文件缓存"><a href="#11-open-file-cache-文件缓存" class="headerlink" title="11. open_file_cache 文件缓存"></a>11. open_file_cache 文件缓存</h2><h3 id="11-1-open-file-cache-解决什么问题"><a href="#11-1-open-file-cache-解决什么问题" class="headerlink" title="11.1 open_file_cache 解决什么问题"></a>11.1 open_file_cache 解决什么问题</h3><p>Nginx 服务静态文件时，需要频繁检查文件是否存在、文件元数据、权限等信息。这会产生系统调用，例如 <code>stat()</code>、<code>open()</code>。</p>
+<p><code>open_file_cache</code> 可以缓存：</p>
+<ul>
+<li>打开的文件描述符。</li>
+<li>文件大小和修改时间。</li>
+<li>目录是否存在。</li>
+<li>文件查找错误，例如 404。</li>
+</ul>
+<p>这可以减少高频访问静态资源时的系统调用开销。</p>
+<h3 id="11-2-配置示例"><a href="#11-2-配置示例" class="headerlink" title="11.2 配置示例"></a>11.2 配置示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">open_file_cache</span> max=<span class="number">10000</span> inactive=<span class="number">60s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_valid</span> <span class="number">120s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_min_uses</span> <span class="number">2</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_errors</span> <span class="literal">on</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>open_file_cache max=10000 inactive=60s</code></td>
+<td>最多缓存 10000 个条目，60 秒未访问则移除</td>
+</tr>
+<tr>
+<td><code>open_file_cache_valid 120s</code></td>
+<td>每 120 秒检查一次缓存条目有效性</td>
+</tr>
+<tr>
+<td><code>open_file_cache_min_uses 2</code></td>
+<td>inactive 时间内访问至少 2 次才缓存</td>
+</tr>
+<tr>
+<td><code>open_file_cache_errors on</code></td>
+<td>缓存文件不存在、权限错误等结果</td>
+</tr>
+</tbody></table>
+<h3 id="11-3-注意事项"><a href="#11-3-注意事项" class="headerlink" title="11.3 注意事项"></a>11.3 注意事项</h3><p><code>open_file_cache_errors on</code> 会缓存 404 等错误结果。如果刚发布了新文件，但之前请求过并缓存了不存在状态，短时间内可能仍返回 404，直到缓存有效性检查更新。</p>
+<p>如果发布频繁，配置不要过于激进：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">open_file_cache</span> max=<span class="number">5000</span> inactive=<span class="number">30s</span>;</span><br><span class="line"><span class="attribute">open_file_cache_valid</span> <span class="number">30s</span>;</span><br><span class="line"><span class="attribute">open_file_cache_min_uses</span> <span class="number">2</span>;</span><br><span class="line"><span class="attribute">open_file_cache_errors</span> <span class="literal">off</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="12-代理缓存-proxy-cache"><a href="#12-代理缓存-proxy-cache" class="headerlink" title="12. 代理缓存 proxy_cache"></a>12. 代理缓存 proxy_cache</h2><h3 id="12-1-proxy-cache-是什么"><a href="#12-1-proxy-cache-是什么" class="headerlink" title="12.1 proxy_cache 是什么"></a>12.1 proxy_cache 是什么</h3><p><code>proxy_cache</code> 是 Nginx 作为反向代理时，把上游响应缓存到本地磁盘。后续相同请求可以直接由 Nginx 返回，减少 upstream 压力。</p>
+<p>请求链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">第一次请求：</span><br><span class="line">client -&gt; Nginx -&gt; upstream -&gt; Nginx 写缓存 -&gt; client</span><br><span class="line"></span><br><span class="line">后续命中：</span><br><span class="line">client -&gt; Nginx -&gt; Nginx 读缓存 -&gt; client</span><br></pre></td></tr></table></figure>
+
+<p>适合缓存：公开页面、新闻文章页、商品详情页的非登录态版本、配置类接口、热点榜单、查询成本高但短时间可接受旧数据的接口、图片缩略图处理结果。</p>
+<p>不适合缓存：登录后的用户首页、购物车、订单、支付、用户资料、权限相关接口、带 Cookie 的个性化响应、返回私密数据的接口。</p>
+<h3 id="12-2-proxy-cache-path"><a href="#12-2-proxy-cache-path" class="headerlink" title="12.2 proxy_cache_path"></a>12.2 proxy_cache_path</h3><p>代理缓存首先要定义缓存区：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">proxy_cache_path</span> /data/nginx/cache/api</span><br><span class="line">        levels=<span class="number">1</span>:<span class="number">2</span></span><br><span class="line">        keys_zone=api_cache:<span class="number">100m</span></span><br><span class="line">        max_size=<span class="number">10g</span></span><br><span class="line">        inactive=<span class="number">60m</span></span><br><span class="line">        use_temp_path=<span class="literal">off</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/data/nginx/cache/api</code></td>
+<td>缓存文件存储目录</td>
+</tr>
+<tr>
+<td><code>levels=1:2</code></td>
+<td>缓存文件目录层级，避免单目录文件过多</td>
+</tr>
+<tr>
+<td><code>keys_zone=api_cache:100m</code></td>
+<td>共享内存区名称和大小，用于存储缓存 key 元数据</td>
+</tr>
+<tr>
+<td><code>max_size=10g</code></td>
+<td>缓存目录最大体积</td>
+</tr>
+<tr>
+<td><code>inactive=60m</code></td>
+<td>60 分钟未被访问的缓存可被清理</td>
+</tr>
+<tr>
+<td><code>use_temp_path=off</code></td>
+<td>临时文件直接放缓存目录，减少跨文件系统 rename 成本</td>
+</tr>
+</tbody></table>
+<p>缓存目录要确保 Nginx worker 用户有读写权限：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /data/nginx/cache/api</span><br><span class="line"><span class="built_in">chown</span> -R nginx:nginx /data/nginx/cache</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-3-基础-proxy-cache-配置"><a href="#12-3-基础-proxy-cache-配置" class="headerlink" title="12.3 基础 proxy_cache 配置"></a>12.3 基础 proxy_cache 配置</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend_api &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:8080</span>;</span><br><span class="line">    <span class="attribute">keepalive</span> <span class="number">32</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> api.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /public/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_api;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">proxy_cache</span> api_cache;</span><br><span class="line">        <span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span>&quot;</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">200</span> <span class="number">10m</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">1m</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">500</span> <span class="number">502</span> <span class="number">503</span> <span class="number">504</span> <span class="number">0s</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">add_header</span> X-Cache-Status <span class="variable">$upstream_cache_status</span> always;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>$upstream_cache_status</code> 常见值：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MISS</code></td>
+<td>未命中缓存，请求了上游</td>
+</tr>
+<tr>
+<td><code>HIT</code></td>
+<td>命中缓存，直接返回</td>
+</tr>
+<tr>
+<td><code>EXPIRED</code></td>
+<td>缓存过期，请求上游刷新</td>
+</tr>
+<tr>
+<td><code>STALE</code></td>
+<td>使用了过期缓存</td>
+</tr>
+<tr>
+<td><code>UPDATING</code></td>
+<td>正在更新缓存，其他请求使用旧缓存</td>
+</tr>
+<tr>
+<td><code>BYPASS</code></td>
+<td>绕过缓存</td>
+</tr>
+<tr>
+<td><code>REVALIDATED</code></td>
+<td>重新验证后继续使用缓存</td>
+</tr>
+</tbody></table>
+<h3 id="12-4-缓存-key-设计"><a href="#12-4-缓存-key-设计" class="headerlink" title="12.4 缓存 key 设计"></a>12.4 缓存 key 设计</h3><p>缓存 key 决定“什么样的请求算同一个缓存”。常见 key：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>包括协议、请求方法、Host、路径和查询参数。如果接口响应与语言有关，需要加入语言：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span><span class="variable">$http_accept_language</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>错误示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$uri</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>问题：忽略查询参数，<code>/search?q=a</code> 和 <code>/search?q=b</code> 可能命中同一份缓存；忽略 Host，不同域名可能串缓存；忽略协议和方法，缓存边界不清晰。</p>
+<h3 id="12-5-缓存方法"><a href="#12-5-缓存方法" class="headerlink" title="12.5 缓存方法"></a>12.5 缓存方法</h3><p>默认只缓存 <code>GET</code> 和 <code>HEAD</code>。通常不要缓存 <code>POST</code>。</p>
+<p>如果确实要缓存某些 POST 查询接口，必须非常谨慎：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_methods</span> GET HEAD POST;</span><br><span class="line"><span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span><span class="variable">$request_body</span>&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>但这会带来风险：请求体过大导致 key 设计困难，请求体包含敏感数据，请求体顺序不同但语义相同，Nginx 变量读取请求体也存在额外条件。生产中更推荐把可缓存查询设计成 GET 接口，并把参数体现在 URL 中。</p>
+<h3 id="12-6-缓存-TTL-设计"><a href="#12-6-缓存-TTL-设计" class="headerlink" title="12.6 缓存 TTL 设计"></a>12.6 缓存 TTL 设计</h3><p>不同接口 TTL 应根据业务接受的数据新鲜度决定：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>建议 TTL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新闻详情页</td>
+<td>1-10 分钟</td>
+</tr>
+<tr>
+<td>商品详情基础信息</td>
+<td>10 秒-5 分钟</td>
+</tr>
+<tr>
+<td>商品价格库存</td>
+<td>谨慎，通常短 TTL 或不缓存</td>
+</tr>
+<tr>
+<td>首页推荐</td>
+<td>10 秒-1 分钟</td>
+</tr>
+<tr>
+<td>热点榜单</td>
+<td>10 秒-5 分钟</td>
+</tr>
+<tr>
+<td>配置字典</td>
+<td>5-60 分钟</td>
+</tr>
+<tr>
+<td>公开图片处理结果</td>
+<td>数小时到数天</td>
+</tr>
+<tr>
+<td>404 结果</td>
+<td>10 秒-1 分钟</td>
+</tr>
+<tr>
+<td>5xx 错误</td>
+<td>通常不缓存</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /news/ &#123;</span><br><span class="line">    <span class="attribute">proxy_cache</span> api_cache;</span><br><span class="line">    <span class="attribute">proxy_cache_valid</span> <span class="number">200</span> <span class="number">5m</span>;</span><br><span class="line">    <span class="attribute">proxy_cache_valid</span> <span class="number">301</span> <span class="number">302</span> <span class="number">10m</span>;</span><br><span class="line">    <span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">proxy_cache_valid</span> <span class="number">500</span> <span class="number">502</span> <span class="number">503</span> <span class="number">504</span> <span class="number">0s</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-7-绕过缓存"><a href="#12-7-绕过缓存" class="headerlink" title="12.7 绕过缓存"></a>12.7 绕过缓存</h3><p>常见绕过条件：请求带登录 Cookie、请求带 Authorization、请求参数包含刷新标记、后台预览请求、非 GET&#x2F;HEAD 请求。</p>
+<p>可以使用 <code>map</code> 定义变量：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">map</span> <span class="variable">$http_authorization</span> <span class="variable">$skip_cache_by_auth</span> &#123;</span><br><span class="line">        <span class="attribute">default</span> <span class="number">1</span>;</span><br><span class="line">        &quot;&quot; 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">map</span> <span class="variable">$http_cookie</span> <span class="variable">$skip_cache_by_cookie</span> &#123;</span><br><span class="line">        <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">        ~*&quot;session|token|jwt|auth&quot; 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">map</span> <span class="variable">$arg_nocache</span> <span class="variable">$skip_cache_by_arg</span> &#123;</span><br><span class="line">        <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">        1 1;</span><br><span class="line">        <span class="attribute">true</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">map</span> <span class="string">&quot;<span class="variable">$skip_cache_by_auth</span><span class="variable">$skip_cache_by_cookie</span><span class="variable">$skip_cache_by_arg</span>&quot;</span> <span class="variable">$skip_cache</span> &#123;</span><br><span class="line">        <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">        ~1 1;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>location 中使用：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /public/ &#123;</span><br><span class="line">    <span class="attribute">proxy_cache</span> api_cache;</span><br><span class="line">    <span class="attribute">proxy_cache_bypass</span> <span class="variable">$skip_cache</span>;</span><br><span class="line">    <span class="attribute">proxy_no_cache</span> <span class="variable">$skip_cache</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">add_header</span> X-Cache-Status <span class="variable">$upstream_cache_status</span> always;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>区别：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>proxy_cache_bypass</code></td>
+<td>本次请求不读缓存，直接请求上游</td>
+</tr>
+<tr>
+<td><code>proxy_no_cache</code></td>
+<td>本次响应不写入缓存</td>
+</tr>
+</tbody></table>
+<p>通常二者会配合使用。</p>
+<h3 id="12-8-不缓存-Set-Cookie-响应"><a href="#12-8-不缓存-Set-Cookie-响应" class="headerlink" title="12.8 不缓存 Set-Cookie 响应"></a>12.8 不缓存 Set-Cookie 响应</h3><p>上游如果返回 <code>Set-Cookie</code>，往往意味着响应与用户状态有关。一般不应该缓存：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_no_cache</span> <span class="variable">$upstream_http_set_cookie</span>;</span><br></pre></td></tr></table></figure>
+
+<p>也可以忽略某些上游头，但要谨慎：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_ignore_headers</span> Cache-Control Expires Set-Cookie;</span><br></pre></td></tr></table></figure>
+
+<p>这会无视上游的缓存控制，风险很高。只有在你非常确定响应是公共内容，并且上游缓存头不可信时才考虑使用。</p>
+<h3 id="12-9-缓存锁-proxy-cache-lock"><a href="#12-9-缓存锁-proxy-cache-lock" class="headerlink" title="12.9 缓存锁 proxy_cache_lock"></a>12.9 缓存锁 proxy_cache_lock</h3><p>热点缓存过期时，如果大量请求同时进入，可能同时打到 upstream，形成缓存击穿。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_lock</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">proxy_cache_lock_timeout</span> <span class="number">5s</span>;</span><br><span class="line"><span class="attribute">proxy_cache_lock_age</span> <span class="number">10s</span>;</span><br></pre></td></tr></table></figure>
+
+<p>含义：第一个请求负责回源刷新缓存，其他相同 key 的请求等待或使用旧缓存，从而减少同一热点资源过期瞬间对后端的冲击。</p>
+<h3 id="12-10-使用过期缓存"><a href="#12-10-使用过期缓存" class="headerlink" title="12.10 使用过期缓存"></a>12.10 使用过期缓存</h3><p>当 upstream 出错时，可以返回过期缓存提升可用性：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_use_stale</span> <span class="literal">error</span> timeout invalid_header updating http_500 http_502 http_503 http_504;</span><br><span class="line"><span class="attribute">proxy_cache_background_update</span> <span class="literal">on</span>;</span><br></pre></td></tr></table></figure>
+
+<p>适合新闻详情、商品基础信息、配置类接口、首页公共模块。不适合价格强一致、库存强一致、权限判断、支付订单等场景。</p>
+<h3 id="12-11-完整代理缓存示例"><a href="#12-11-完整代理缓存示例" class="headerlink" title="12.11 完整代理缓存示例"></a>12.11 完整代理缓存示例</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_path</span> /data/nginx/cache/public</span><br><span class="line">    levels=<span class="number">1</span>:<span class="number">2</span></span><br><span class="line">    keys_zone=public_cache:<span class="number">200m</span></span><br><span class="line">    max_size=<span class="number">20g</span></span><br><span class="line">    inactive=<span class="number">2h</span></span><br><span class="line">    use_temp_path=<span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line"><span class="attribute">map</span> <span class="variable">$http_authorization</span> <span class="variable">$skip_cache_by_auth</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">1</span>;</span><br><span class="line">    &quot;&quot; 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">map</span> <span class="variable">$http_cookie</span> <span class="variable">$skip_cache_by_cookie</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">    ~*&quot;session|token|jwt|auth&quot; 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">map</span> <span class="variable">$arg_nocache</span> <span class="variable">$skip_cache_by_arg</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">    1 1;</span><br><span class="line">    <span class="attribute">true</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">map</span> <span class="string">&quot;<span class="variable">$skip_cache_by_auth</span><span class="variable">$skip_cache_by_cookie</span><span class="variable">$skip_cache_by_arg</span>&quot;</span> <span class="variable">$skip_cache</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">    ~1 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">upstream</span> backend_public &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:8080</span>;</span><br><span class="line">    <span class="attribute">keepalive</span> <span class="number">64</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /public/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_public;</span><br><span class="line">        <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-Proto <span class="variable">$scheme</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">proxy_cache</span> public_cache;</span><br><span class="line">        <span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span>&quot;</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">200</span> <span class="number">5m</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">301</span> <span class="number">302</span> <span class="number">10m</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">30s</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_valid</span> <span class="number">500</span> <span class="number">502</span> <span class="number">503</span> <span class="number">504</span> <span class="number">0s</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">proxy_cache_bypass</span> <span class="variable">$skip_cache</span>;</span><br><span class="line">        <span class="attribute">proxy_no_cache</span> <span class="variable">$skip_cache</span>;</span><br><span class="line">        <span class="attribute">proxy_no_cache</span> <span class="variable">$upstream_http_set_cookie</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">proxy_cache_lock</span> <span class="literal">on</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_lock_timeout</span> <span class="number">5s</span>;</span><br><span class="line">        <span class="attribute">proxy_cache_use_stale</span> <span class="literal">error</span> timeout invalid_header updating http_500 http_502 http_503 http_504;</span><br><span class="line">        <span class="attribute">proxy_cache_background_update</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">add_header</span> X-Cache-Status <span class="variable">$upstream_cache_status</span> always;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="13-缓存清理与刷新"><a href="#13-缓存清理与刷新" class="headerlink" title="13. 缓存清理与刷新"></a>13. 缓存清理与刷新</h2><h3 id="13-1-为什么需要缓存清理"><a href="#13-1-为什么需要缓存清理" class="headerlink" title="13.1 为什么需要缓存清理"></a>13.1 为什么需要缓存清理</h3><p>缓存带来性能收益，也带来一致性问题。常见需求包括内容发布后立即刷新、商品下架后立即清理详情页、错误内容被缓存后立即删除、用户投诉看到旧内容、运营后台更新后需要生效。</p>
+<h3 id="13-2-开源-Nginx-的清理限制"><a href="#13-2-开源-Nginx-的清理限制" class="headerlink" title="13.2 开源 Nginx 的清理限制"></a>13.2 开源 Nginx 的清理限制</h3><p>开源 Nginx 默认没有内置按 URL 主动清理 <code>proxy_cache</code> 的官方指令。常见方案：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>短 TTL</td>
+<td>最简单，依赖自然过期</td>
+</tr>
+<tr>
+<td>版本化 URL</td>
+<td>内容变化时 URL 变化</td>
+</tr>
+<tr>
+<td>删除缓存目录</td>
+<td>粗暴，只适合低风险场景</td>
+</tr>
+<tr>
+<td>第三方 purge 模块</td>
+<td>需要额外编译维护</td>
+</tr>
+<tr>
+<td>Nginx Plus API</td>
+<td>商业版本能力</td>
+</tr>
+<tr>
+<td>CDN 刷新接口</td>
+<td>如果使用 CDN，优先使用 CDN purge</td>
+</tr>
+</tbody></table>
+<h3 id="13-3-推荐策略"><a href="#13-3-推荐策略" class="headerlink" title="13.3 推荐策略"></a>13.3 推荐策略</h3><p>多数业务推荐组合：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">静态资源：文件名 hash + 长缓存</span><br><span class="line">HTML：短缓存或 no-cache</span><br><span class="line">公共 API：短 TTL + 缓存锁 + stale</span><br><span class="line">强一致接口：不缓存</span><br><span class="line">热点页面：短 TTL + 后台预热</span><br><span class="line">重大更新：版本化 URL 或 CDN purge</span><br></pre></td></tr></table></figure>
+
+<p>不要依赖“手工删除 Nginx 缓存文件”作为常规发布流程。缓存文件路径是根据 key hash 后生成的，手工定位和删除容易出错。</p>
+<h2 id="14-防缓存穿透、击穿、雪崩"><a href="#14-防缓存穿透、击穿、雪崩" class="headerlink" title="14. 防缓存穿透、击穿、雪崩"></a>14. 防缓存穿透、击穿、雪崩</h2><h3 id="14-1-缓存穿透"><a href="#14-1-缓存穿透" class="headerlink" title="14.1 缓存穿透"></a>14.1 缓存穿透</h3><p>缓存穿透是指大量请求查询不存在的数据，每次都无法命中缓存，持续打到 upstream。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/article/999999999 不存在</span><br><span class="line">/product/invalid-id 不存在</span><br><span class="line">/user/random-id 不存在</span><br></pre></td></tr></table></figure>
+
+<p>治理方法：对 404 设置很短 TTL，在应用层校验 ID 格式，对异常请求限流，使用 WAF 或网关规则拦截明显扫描。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">30s</span>;</span><br></pre></td></tr></table></figure>
+
+<p>注意：404 缓存时间不能太长，否则新内容发布后可能仍返回旧 404。</p>
+<h3 id="14-2-缓存击穿"><a href="#14-2-缓存击穿" class="headerlink" title="14.2 缓存击穿"></a>14.2 缓存击穿</h3><p>缓存击穿是指一个热点 key 过期瞬间，大量请求同时回源。治理方法包括 <code>proxy_cache_lock on</code>、<code>proxy_cache_use_stale updating</code>、热点资源预热、TTL 增加随机抖动。</p>
+<p>Nginx 能做缓存锁和 stale，但 TTL 随机抖动通常需要应用层或发布系统配合。</p>
+<h3 id="14-3-缓存雪崩"><a href="#14-3-缓存雪崩" class="headerlink" title="14.3 缓存雪崩"></a>14.3 缓存雪崩</h3><p>缓存雪崩是指大量缓存同一时间过期，导致 upstream 压力暴增。常见原因包括批量预热时设置了相同 TTL、发布后大量缓存同时生成、缓存目录被清空、Nginx 重启后缓存元数据恢复期间大量 MISS。</p>
+<p>治理方法：不同资源使用不同 TTL，应用层增加随机过期时间，热点资源提前预热，保留 stale 能力，后端限流和降级，避免高峰期清空缓存。</p>
+<h2 id="15-日志与缓存观测"><a href="#15-日志与缓存观测" class="headerlink" title="15. 日志与缓存观测"></a>15. 日志与缓存观测</h2><h3 id="15-1-增加缓存状态日志"><a href="#15-1-增加缓存状态日志" class="headerlink" title="15.1 增加缓存状态日志"></a>15.1 增加缓存状态日志</h3><p>建议在 access log 中加入缓存状态、upstream 时间和请求时间：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> main_ext <span class="string">&#x27;<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> [<span class="variable">$time_local</span>] &quot;<span class="variable">$request</span>&quot; &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> &quot;<span class="variable">$http_referer</span>&quot; &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;&quot;<span class="variable">$http_user_agent</span>&quot; &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;rt=<span class="variable">$request_time</span> &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;uct=<span class="variable">$upstream_connect_time</span> &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;uht=<span class="variable">$upstream_header_time</span> &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;urt=<span class="variable">$upstream_response_time</span> &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;cache=<span class="variable">$upstream_cache_status</span> &#x27;</span></span><br><span class="line">                    <span class="string">&#x27;host=<span class="variable">$host</span> upstream=<span class="variable">$upstream_addr</span>&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="attribute">access_log</span> /var/log/nginx/access.log main_ext;</span><br></pre></td></tr></table></figure>
+
+<p>字段含义：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$request_time</code></td>
+<td>从收到请求到响应完成的总耗时</td>
+</tr>
+<tr>
+<td><code>$upstream_connect_time</code></td>
+<td>与 upstream 建立连接耗时</td>
+</tr>
+<tr>
+<td><code>$upstream_header_time</code></td>
+<td>upstream 返回响应头耗时</td>
+</tr>
+<tr>
+<td><code>$upstream_response_time</code></td>
+<td>upstream 完整响应耗时</td>
+</tr>
+<tr>
+<td><code>$upstream_cache_status</code></td>
+<td>缓存状态</td>
+</tr>
+<tr>
+<td><code>$upstream_addr</code></td>
+<td>实际 upstream 地址</td>
+</tr>
+</tbody></table>
+<h3 id="15-2-计算命中率"><a href="#15-2-计算命中率" class="headerlink" title="15.2 计算命中率"></a>15.2 计算命中率</h3><p>简单统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk <span class="string">&#x27;&#123;for(i=1;i&lt;=NF;i++) if($i ~ /^cache=/) print $i&#125;&#x27;</span> /var/log/nginx/access.log | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c</span><br></pre></td></tr></table></figure>
+
+<p>如果日志格式中有 <code>cache=HIT</code>、<code>cache=MISS</code>，可得到类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">12000 cache=HIT</span><br><span class="line"> 3000 cache=MISS</span><br><span class="line">  200 cache=BYPASS</span><br></pre></td></tr></table></figure>
+
+<p>命中率可粗略按下面方式计算：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HIT / (HIT + MISS + EXPIRED + BYPASS)</span><br></pre></td></tr></table></figure>
+
+<p>但要注意：BYPASS 是否计入分母取决于分析目标；登录用户本来就不应该命中公共缓存；命中率高不代表一定正确，可能缓存了不该缓存的内容；命中率低也不代表一定不好，可能接口本身不适合缓存。</p>
+<h3 id="15-3-常见日志分析目标"><a href="#15-3-常见日志分析目标" class="headerlink" title="15.3 常见日志分析目标"></a>15.3 常见日志分析目标</h3><table>
+<thead>
+<tr>
+<th>目标</th>
+<th>分析方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>看缓存是否生效</td>
+<td>统计 <code>$upstream_cache_status</code></td>
+</tr>
+<tr>
+<td>找慢请求</td>
+<td>按 <code>$request_time</code> 排序</td>
+</tr>
+<tr>
+<td>判断后端慢还是客户端慢</td>
+<td>对比 <code>$request_time</code> 与 <code>$upstream_response_time</code></td>
+</tr>
+<tr>
+<td>找 upstream 连接慢</td>
+<td>看 <code>$upstream_connect_time</code></td>
+</tr>
+<tr>
+<td>找大响应</td>
+<td>看 <code>$body_bytes_sent</code></td>
+</tr>
+<tr>
+<td>找异常状态码</td>
+<td>统计 4xx、5xx</td>
+</tr>
+<tr>
+<td>找热点 URL</td>
+<td>按 <code>$request_uri</code> 聚合</td>
+</tr>
+<tr>
+<td>找缓存污染</td>
+<td>检查 Cookie、Authorization 与 HIT 是否同时出现</td>
+</tr>
+</tbody></table>
+<h2 id="16-worker-与连接数调优"><a href="#16-worker-与连接数调优" class="headerlink" title="16. worker 与连接数调优"></a>16. worker 与连接数调优</h2><h3 id="16-1-worker-processes"><a href="#16-1-worker-processes" class="headerlink" title="16.1 worker_processes"></a>16.1 worker_processes</h3><p>推荐：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_processes</span> auto;</span><br></pre></td></tr></table></figure>
+
+<p><code>auto</code> 会根据 CPU 核数设置 worker 数量。对于大多数场景，这是合理默认值。</p>
+<p>不建议盲目设置成远大于 CPU 核数。过多 worker 可能增加上下文切换，并不能提升性能。</p>
+<h3 id="16-2-worker-connections"><a href="#16-2-worker-connections" class="headerlink" title="16.2 worker_connections"></a>16.2 worker_connections</h3><p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">4096</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>理论最大连接数大致为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">worker_processes * worker_connections</span><br></pre></td></tr></table></figure>
+
+<p>但实际还受系统文件描述符限制、<code>worker_rlimit_nofile</code>、upstream 连接、keepalive 长连接等因素影响。反向代理场景中，一个客户端请求可能同时占用客户端连接和 upstream 连接，所以实际可承载客户端并发可能明显低于理论值。</p>
+<h3 id="16-3-worker-rlimit-nofile"><a href="#16-3-worker-rlimit-nofile" class="headerlink" title="16.3 worker_rlimit_nofile"></a>16.3 worker_rlimit_nofile</h3><p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_rlimit_nofile</span> <span class="number">65535</span>;</span><br></pre></td></tr></table></figure>
+
+<p>同时需要系统层配合：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ulimit</span> -n</span><br></pre></td></tr></table></figure>
+
+<p>systemd 管理的 Nginx 还要关注 service 配置：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">LimitNOFILE</span>=<span class="number">65535</span></span><br></pre></td></tr></table></figure>
+
+<p>如果只改 Nginx，不改系统限制，可能仍然出现 <code>too many open files</code>。</p>
+<h3 id="16-4-accept-mutex"><a href="#16-4-accept-mutex" class="headerlink" title="16.4 accept_mutex"></a>16.4 accept_mutex</h3><p>新版本 Nginx 在支持 <code>EPOLLEXCLUSIVE</code> 的系统上，惊群问题已经缓解。<code>accept_mutex</code> 是否需要开启要结合版本和系统。常见默认即可，不建议作为初学阶段重点调优项。</p>
+<h3 id="16-5-keepalive-timeout"><a href="#16-5-keepalive-timeout" class="headerlink" title="16.5 keepalive_timeout"></a>16.5 keepalive_timeout</h3><p>客户端 keepalive：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">keepalive_timeout</span> <span class="number">65</span>;</span><br><span class="line"><span class="attribute">keepalive_requests</span> <span class="number">1000</span>;</span><br></pre></td></tr></table></figure>
+
+<p>含义：</p>
+<ul>
+<li><code>keepalive_timeout</code>：客户端长连接空闲保留时间。</li>
+<li><code>keepalive_requests</code>：单个 keepalive 连接最多处理请求数。</li>
+</ul>
+<p>设置过短会导致连接复用效果差，TLS 握手和 TCP 建连更多；设置过长会导致空闲连接占用 worker 连接数，高并发场景可能挤占资源。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通 Web 站点</td>
+<td>30-75 秒</td>
+</tr>
+<tr>
+<td>API 高频调用</td>
+<td>30-60 秒</td>
+</tr>
+<tr>
+<td>连接资源紧张</td>
+<td>10-30 秒</td>
+</tr>
+<tr>
+<td>长连接业务</td>
+<td>单独 location 或服务治理</td>
+</tr>
+</tbody></table>
+<h2 id="17-upstream-keepalive-优化"><a href="#17-upstream-keepalive-优化" class="headerlink" title="17. upstream keepalive 优化"></a>17. upstream keepalive 优化</h2><p>反向代理到后端时，如果每次请求都重新建立 TCP 连接，会增加延迟和后端压力。</p>
+<p>配置 upstream keepalive：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend_api &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.12:8080</span>;</span><br><span class="line">    <span class="attribute">keepalive</span> <span class="number">64</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="section">location</span> /api/ &#123;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_api;</span><br><span class="line">        <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">        <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键点：</p>
+<ul>
+<li><code>keepalive 64</code> 是每个 worker 保留的空闲 upstream 连接数，不是总连接数。</li>
+<li>必须使用 <code>proxy_http_version 1.1</code>。</li>
+<li>通常要清空 <code>Connection</code> 头，避免发送 <code>close</code>。</li>
+<li>后端也要支持 keepalive，并配置合理的空闲超时。</li>
+</ul>
+<p>常见错误是只在 upstream 中写了 <code>keepalive</code>，但 location 里缺少 <code>proxy_http_version 1.1</code> 和 <code>proxy_set_header Connection &quot;&quot;</code>，导致 upstream keepalive 没有真正生效。</p>
+<h2 id="18-缓冲区与临时文件"><a href="#18-缓冲区与临时文件" class="headerlink" title="18. 缓冲区与临时文件"></a>18. 缓冲区与临时文件</h2><h3 id="18-1-proxy-buffering"><a href="#18-1-proxy-buffering" class="headerlink" title="18.1 proxy_buffering"></a>18.1 proxy_buffering</h3><p><code>proxy_buffering</code> 控制 Nginx 是否缓冲 upstream 响应。默认通常是开启：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_buffering</span> <span class="literal">on</span>;</span><br></pre></td></tr></table></figure>
+
+<p>开启后链路是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">upstream -&gt; Nginx 缓冲 -&gt; client</span><br></pre></td></tr></table></figure>
+
+<p>好处是后端可以更快释放连接，慢客户端不会长期占用 upstream 连接，也有利于代理缓存。缺点是大响应可能写入临时文件，实时流式响应会被缓冲影响实时性。</p>
+<h3 id="18-2-适合关闭缓冲的场景"><a href="#18-2-适合关闭缓冲的场景" class="headerlink" title="18.2 适合关闭缓冲的场景"></a>18.2 适合关闭缓冲的场景</h3><p>下面场景可能需要关闭：SSE、流式接口、大模型流式输出、实时日志推送、长轮询。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /stream/ &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://stream_backend;</span><br><span class="line">    <span class="attribute">proxy_buffering</span> <span class="literal">off</span>;</span><br><span class="line">    <span class="attribute">proxy_cache</span> <span class="literal">off</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="18-3-proxy-buffers"><a href="#18-3-proxy-buffers" class="headerlink" title="18.3 proxy_buffers"></a>18.3 proxy_buffers</h3><p>常见配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_buffer_size</span> <span class="number">16k</span>;</span><br><span class="line"><span class="attribute">proxy_buffers</span> <span class="number">8</span> <span class="number">16k</span>;</span><br><span class="line"><span class="attribute">proxy_busy_buffers_size</span> <span class="number">32k</span>;</span><br></pre></td></tr></table></figure>
+
+<p>不要无脑调大。缓冲区按连接占用内存，高并发下会放大内存压力。估算方式是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">每连接缓冲占用 * 并发连接数 = 潜在内存占用</span><br></pre></td></tr></table></figure>
+
+<p>如果每连接缓冲 128KB，1 万并发理论上可能占用 1.28GB，还不包括其他连接、请求、缓存和系统开销。</p>
+<h3 id="18-4-临时文件目录"><a href="#18-4-临时文件目录" class="headerlink" title="18.4 临时文件目录"></a>18.4 临时文件目录</h3><p>当响应大于内存缓冲区时，Nginx 可能写临时文件：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_temp_path</span> /data/nginx/proxy_temp <span class="number">1</span> <span class="number">2</span>;</span><br><span class="line"><span class="attribute">proxy_max_temp_file_size</span> <span class="number">1024m</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果磁盘 IO 慢，可能拖慢响应。需要关注临时目录所在磁盘性能、是否与缓存目录和日志目录共用磁盘、是否有足够空间、是否存在大量大响应。</p>
+<h2 id="19-Linux-内核参数基础"><a href="#19-Linux-内核参数基础" class="headerlink" title="19. Linux 内核参数基础"></a>19. Linux 内核参数基础</h2><h3 id="19-1-参数不是越大越好"><a href="#19-1-参数不是越大越好" class="headerlink" title="19.1 参数不是越大越好"></a>19.1 参数不是越大越好</h3><p>内核参数调优要与机器规格、流量模型、Nginx 配置和后端能力匹配。下面参数是常见方向，不是无脑模板。</p>
+<p>查看参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sysctl net.core.somaxconn</span><br><span class="line">sysctl net.ipv4.ip_local_port_range</span><br><span class="line">sysctl net.ipv4.tcp_tw_reuse</span><br></pre></td></tr></table></figure>
+
+<p>临时设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl -w net.core.somaxconn=65535</span><br></pre></td></tr></table></figure>
+
+<p>永久设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/sysctl.conf</span><br><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
+
+<h3 id="19-2-常见参数"><a href="#19-2-常见参数" class="headerlink" title="19.2 常见参数"></a>19.2 常见参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>关注点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>net.core.somaxconn</code></td>
+<td>listen 队列上限</td>
+<td>高并发建连场景</td>
+</tr>
+<tr>
+<td><code>net.ipv4.tcp_max_syn_backlog</code></td>
+<td>SYN 队列长度</td>
+<td>突发连接、SYN 半连接</td>
+</tr>
+<tr>
+<td><code>net.ipv4.ip_local_port_range</code></td>
+<td>本地临时端口范围</td>
+<td>Nginx 主动连接 upstream 时重要</td>
+</tr>
+<tr>
+<td><code>net.ipv4.tcp_tw_reuse</code></td>
+<td>TIME_WAIT 连接复用</td>
+<td>新内核行为需核实</td>
+</tr>
+<tr>
+<td><code>net.ipv4.tcp_fin_timeout</code></td>
+<td>FIN_WAIT 超时</td>
+<td>连接释放速度</td>
+</tr>
+<tr>
+<td><code>net.core.netdev_max_backlog</code></td>
+<td>网卡收包队列</td>
+<td>高包量场景</td>
+</tr>
+<tr>
+<td><code>fs.file-max</code></td>
+<td>系统级文件句柄上限</td>
+<td>大量连接和文件访问</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">net.core.somaxconn = 65535</span><br><span class="line">net.ipv4.tcp_max_syn_backlog = 65535</span><br><span class="line">net.ipv4.ip_local_port_range = 10240 65535</span><br><span class="line">net.core.netdev_max_backlog = 250000</span><br><span class="line">fs.file-max = 2097152</span><br></pre></td></tr></table></figure>
+
+<h3 id="19-3-临时端口耗尽"><a href="#19-3-临时端口耗尽" class="headerlink" title="19.3 临时端口耗尽"></a>19.3 临时端口耗尽</h3><p>Nginx 作为反向代理主动连接 upstream 时，会使用本地临时端口。如果 upstream keepalive 不生效、短连接很多，可能出现端口压力。</p>
+<p>检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -ant | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span> | <span class="built_in">sort</span> | <span class="built_in">uniq</span> -c</span><br></pre></td></tr></table></figure>
+
+<p>大量 <code>TIME-WAIT</code> 可能表示短连接很多。</p>
+<p>优化方向：</p>
+<ul>
+<li>开启 upstream keepalive。</li>
+<li>扩大 <code>ip_local_port_range</code>。</li>
+<li>后端连接池治理。</li>
+<li>避免过短 keepalive。</li>
+<li>检查是否频繁 reload 或连接被上游关闭。</li>
+</ul>
+<h2 id="20-压测工具与方法"><a href="#20-压测工具与方法" class="headerlink" title="20. 压测工具与方法"></a>20. 压测工具与方法</h2><h3 id="20-1-压测前准备"><a href="#20-1-压测前准备" class="headerlink" title="20.1 压测前准备"></a>20.1 压测前准备</h3><p>压测不是只跑一个命令。压测前要明确：</p>
+<ul>
+<li>压测目标是什么：QPS、延迟、吞吐、带宽、缓存命中率还是连接承载。</li>
+<li>压测对象是什么：静态资源、代理接口、缓存接口、HTTPS 入口还是大文件下载。</li>
+<li>压测环境是否接近生产。</li>
+<li>压测客户端是否足够强，是否成为瓶颈。</li>
+<li>是否区分冷缓存和热缓存。</li>
+<li>是否会影响生产环境。</li>
+<li>是否有监控和日志记录。</li>
+</ul>
+<h3 id="20-2-wrk-示例"><a href="#20-2-wrk-示例" class="headerlink" title="20.2 wrk 示例"></a>20.2 wrk 示例</h3><p>安装后执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -t4 -c200 -d60s http://static.example.com/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-t4</code></td>
+<td>4 个压测线程</td>
+</tr>
+<tr>
+<td><code>-c200</code></td>
+<td>200 个并发连接</td>
+</tr>
+<tr>
+<td><code>-d60s</code></td>
+<td>持续 60 秒</td>
+</tr>
+</tbody></table>
+<p>关注输出：Requests&#x2F;sec、Latency avg、Latency max、Transfer&#x2F;sec、Socket errors、Non-2xx responses。</p>
+<h3 id="20-3-hey-示例"><a href="#20-3-hey-示例" class="headerlink" title="20.3 hey 示例"></a>20.3 hey 示例</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hey -n 100000 -c 200 http://api.example.com/public/news/1</span><br></pre></td></tr></table></figure>
+
+<p><code>hey</code> 适合快速 HTTP 压测，输出延迟分位数比较直观。</p>
+<h3 id="20-4-ab-示例"><a href="#20-4-ab-示例" class="headerlink" title="20.4 ab 示例"></a>20.4 ab 示例</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ab -n 10000 -c 100 http://static.example.com/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p><code>ab</code> 简单易用，但能力较弱。学习阶段可以使用，生产压测建议结合 <code>wrk</code>、<code>hey</code> 或专业压测平台。</p>
+<h3 id="20-5-curl-单点验证"><a href="#20-5-curl-单点验证" class="headerlink" title="20.5 curl 单点验证"></a>20.5 curl 单点验证</h3><p>缓存验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -I http://api.example.com/public/news/1</span><br><span class="line">curl -I http://api.example.com/public/news/1</span><br></pre></td></tr></table></figure>
+
+<p>重点看：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-Cache-Status</span><span class="punctuation">: </span>MISS</span><br><span class="line"><span class="attribute">X-Cache-Status</span><span class="punctuation">: </span>HIT</span><br></pre></td></tr></table></figure>
+
+<p>压缩验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I -H <span class="string">&#x27;Accept-Encoding: gzip&#x27;</span> http://static.example.com/assets/app.js</span><br></pre></td></tr></table></figure>
+
+<p>缓存头验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -I http://static.example.com/assets/app.js</span><br><span class="line">curl -I http://static.example.com/index.html</span><br></pre></td></tr></table></figure>
+
+<p>Range 验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -I -H <span class="string">&#x27;Range: bytes=0-1023&#x27;</span> http://static.example.com/download/big.zip</span><br></pre></td></tr></table></figure>
+
+<p>期望看到 <code>206 Partial Content</code>、<code>Accept-Ranges: bytes</code>、<code>Content-Range</code>。</p>
+<h2 id="21-指标解读"><a href="#21-指标解读" class="headerlink" title="21. 指标解读"></a>21. 指标解读</h2><h3 id="21-1-请求指标"><a href="#21-1-请求指标" class="headerlink" title="21.1 请求指标"></a>21.1 请求指标</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+<th>优化方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>QPS</td>
+<td>每秒请求数</td>
+<td>增加缓存、减少后端等待、优化连接</td>
+</tr>
+<tr>
+<td>平均延迟</td>
+<td>请求平均耗时</td>
+<td>排查慢 upstream、网络、磁盘</td>
+</tr>
+<tr>
+<td>P95&#x2F;P99</td>
+<td>高分位延迟</td>
+<td>更能反映用户体验和抖动</td>
+</tr>
+<tr>
+<td>错误率</td>
+<td>4xx&#x2F;5xx 占比</td>
+<td>区分客户端错误和服务端错误</td>
+</tr>
+<tr>
+<td>吞吐</td>
+<td>每秒传输数据量</td>
+<td>带宽、压缩、大文件治理</td>
+</tr>
+<tr>
+<td>命中率</td>
+<td>缓存命中比例</td>
+<td>key、TTL、绕过规则、资源热度</td>
+</tr>
+</tbody></table>
+<p>平均延迟容易掩盖问题。生产中更应关注 P90、P95、P99 和最大延迟。</p>
+<h3 id="21-2-系统指标"><a href="#21-2-系统指标" class="headerlink" title="21.2 系统指标"></a>21.2 系统指标</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>命令</th>
+<th>关注点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td><code>top</code>、<code>mpstat</code></td>
+<td>gzip、TLS、日志、正则</td>
+</tr>
+<tr>
+<td>内存</td>
+<td><code>free -m</code>、<code>vmstat</code></td>
+<td>缓冲区、连接数、页缓存</td>
+</tr>
+<tr>
+<td>磁盘 IO</td>
+<td><code>iostat -x 1</code></td>
+<td>缓存目录、临时文件、日志</td>
+</tr>
+<tr>
+<td>网络</td>
+<td><code>sar -n DEV 1</code></td>
+<td>带宽、包量、丢包</td>
+</tr>
+<tr>
+<td>连接</td>
+<td><code>ss -ant</code></td>
+<td>ESTAB、TIME-WAIT、SYN-SENT</td>
+</tr>
+<tr>
+<td>文件句柄</td>
+<td><code>lsof</code>、<code>ulimit -n</code></td>
+<td>open files 上限</td>
+</tr>
+</tbody></table>
+<h3 id="21-3-Nginx-日志指标"><a href="#21-3-Nginx-日志指标" class="headerlink" title="21.3 Nginx 日志指标"></a>21.3 Nginx 日志指标</h3><p>推荐同时观察：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$request_time</span><br><span class="line">$upstream_connect_time</span><br><span class="line">$upstream_header_time</span><br><span class="line">$upstream_response_time</span><br><span class="line">$upstream_cache_status</span><br><span class="line">$status</span><br><span class="line">$body_bytes_sent</span><br><span class="line">$request_length</span><br></pre></td></tr></table></figure>
+
+<p>判断示例：</p>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>可能原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$request_time</code> 高，<code>$upstream_response_time</code> 低</td>
+<td>客户端慢、下载大文件、网络慢</td>
+</tr>
+<tr>
+<td><code>$upstream_connect_time</code> 高</td>
+<td>upstream 建连慢、端口压力、网络问题</td>
+</tr>
+<tr>
+<td><code>$upstream_header_time</code> 高</td>
+<td>后端处理慢</td>
+</tr>
+<tr>
+<td><code>$upstream_cache_status</code> 一直 MISS</td>
+<td>key 不稳定、绕过规则命中、TTL 太短</td>
+</tr>
+<tr>
+<td>HIT 仍然慢</td>
+<td>磁盘 IO 慢、响应体太大、客户端慢</td>
+</tr>
+<tr>
+<td>499 增多</td>
+<td>客户端主动断开，可能服务慢或用户取消</td>
+</tr>
+<tr>
+<td>502&#x2F;504 增多</td>
+<td>后端异常、超时、连接失败</td>
+</tr>
+</tbody></table>
+<h2 id="22-性能优化配置模板"><a href="#22-性能优化配置模板" class="headerlink" title="22. 性能优化配置模板"></a>22. 性能优化配置模板</h2><p>下面模板适合作为学习和实验起点，不是直接复制到所有生产环境的万能配置。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">user</span> nginx;</span><br><span class="line"><span class="attribute">worker_processes</span> auto;</span><br><span class="line"><span class="attribute">worker_rlimit_nofile</span> <span class="number">65535</span>;</span><br><span class="line"></span><br><span class="line"><span class="attribute">error_log</span> /var/log/nginx/<span class="literal">error</span>.log <span class="literal">warn</span>;</span><br><span class="line"><span class="attribute">pid</span> /run/nginx.pid;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">8192</span>;</span><br><span class="line">    <span class="attribute">multi_accept</span> <span class="literal">on</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">include</span>       mime.types;</span><br><span class="line">    <span class="attribute">default_type</span>  application/octet-stream;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">log_format</span> main_ext <span class="string">&#x27;<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> [<span class="variable">$time_local</span>] &quot;<span class="variable">$request</span>&quot; &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> &quot;<span class="variable">$http_referer</span>&quot; &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;&quot;<span class="variable">$http_user_agent</span>&quot; &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;rt=<span class="variable">$request_time</span> &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;uct=<span class="variable">$upstream_connect_time</span> &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;uht=<span class="variable">$upstream_header_time</span> &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;urt=<span class="variable">$upstream_response_time</span> &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;cache=<span class="variable">$upstream_cache_status</span> &#x27;</span></span><br><span class="line">                        <span class="string">&#x27;host=<span class="variable">$host</span> upstream=<span class="variable">$upstream_addr</span>&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log main_ext;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nopush</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nodelay</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">keepalive_timeout</span> <span class="number">60</span>;</span><br><span class="line">    <span class="attribute">keepalive_requests</span> <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">gzip</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_comp_level</span> <span class="number">5</span>;</span><br><span class="line">    <span class="attribute">gzip_min_length</span> <span class="number">1024</span>;</span><br><span class="line">    <span class="attribute">gzip_vary</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_proxied</span> any;</span><br><span class="line">    <span class="attribute">gzip_types</span> text/plain text/css text/xml application/javascript application/json application/xml image/svg+xml;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">open_file_cache</span> max=<span class="number">10000</span> inactive=<span class="number">60s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_valid</span> <span class="number">60s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_min_uses</span> <span class="number">2</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_errors</span> <span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">proxy_cache_path</span> /data/nginx/cache/public levels=<span class="number">1</span>:<span class="number">2</span> keys_zone=public_cache:<span class="number">200m</span> max_size=<span class="number">20g</span> inactive=<span class="number">2h</span> use_temp_path=<span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">upstream</span> backend_api &#123;</span><br><span class="line">        <span class="attribute">server</span> <span class="number">127.0.0.1:8080</span>;</span><br><span class="line">        <span class="attribute">keepalive</span> <span class="number">64</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> example.com;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">root</span> /data/www/app;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /api/public/ &#123;</span><br><span class="line">            <span class="attribute">proxy_pass</span> http://backend_api;</span><br><span class="line">            <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-Proto <span class="variable">$scheme</span>;</span><br><span class="line"></span><br><span class="line">            <span class="attribute">proxy_cache</span> public_cache;</span><br><span class="line">            <span class="attribute">proxy_cache_key</span> <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span>&quot;</span>;</span><br><span class="line">            <span class="attribute">proxy_cache_valid</span> <span class="number">200</span> <span class="number">1m</span>;</span><br><span class="line">            <span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">30s</span>;</span><br><span class="line">            <span class="attribute">proxy_cache_valid</span> <span class="number">500</span> <span class="number">502</span> <span class="number">503</span> <span class="number">504</span> <span class="number">0s</span>;</span><br><span class="line">            <span class="attribute">proxy_cache_lock</span> <span class="literal">on</span>;</span><br><span class="line">            <span class="attribute">proxy_cache_use_stale</span> <span class="literal">error</span> timeout invalid_header updating http_500 http_502 http_503 http_504;</span><br><span class="line"></span><br><span class="line">            <span class="attribute">add_header</span> X-Cache-Status <span class="variable">$upstream_cache_status</span> always;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /api/ &#123;</span><br><span class="line">            <span class="attribute">proxy_pass</span> http://backend_api;</span><br><span class="line">            <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-Proto <span class="variable">$scheme</span>;</span><br><span class="line">            <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-store&quot;</span> always;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /assets/ &#123;</span><br><span class="line">            <span class="attribute">try_files</span> <span class="variable">$uri</span> =<span class="number">404</span>;</span><br><span class="line">            <span class="attribute">expires</span> <span class="number">1y</span>;</span><br><span class="line">            <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;public, max-age=31536000, immutable&quot;</span> always;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> = /index.html &#123;</span><br><span class="line">            <span class="attribute">add_header</span> Cache-Control <span class="string">&quot;no-cache, no-store, must-revalidate&quot;</span> always;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.html;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="23-常见错误与排查"><a href="#23-常见错误与排查" class="headerlink" title="23. 常见错误与排查"></a>23. 常见错误与排查</h2><h3 id="23-1-静态资源-404"><a href="#23-1-静态资源-404" class="headerlink" title="23.1 静态资源 404"></a>23.1 静态资源 404</h3><p>排查方向：</p>
+<ul>
+<li><code>root</code> 和 <code>alias</code> 是否拼接正确。</li>
+<li>文件是否真实存在。</li>
+<li>Nginx 用户是否有权限读取。</li>
+<li>前端发布路径是否正确。</li>
+<li><code>try_files</code> 是否把请求转到错误位置。</li>
+<li>是否被 <code>open_file_cache_errors</code> 短时间缓存了 404。</li>
+</ul>
+<p>命令示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -l /data/www/app/assets/app.js</span><br><span class="line"><span class="built_in">sudo</span> -u nginx <span class="built_in">test</span> -r /data/www/app/assets/app.js &amp;&amp; <span class="built_in">echo</span> ok</span><br></pre></td></tr></table></figure>
+
+<h3 id="23-2-gzip-不生效"><a href="#23-2-gzip-不生效" class="headerlink" title="23.2 gzip 不生效"></a>23.2 gzip 不生效</h3><p>排查方向：</p>
+<ul>
+<li>请求是否带 <code>Accept-Encoding: gzip</code>。</li>
+<li>MIME 类型是否在 <code>gzip_types</code> 中。</li>
+<li>响应大小是否超过 <code>gzip_min_length</code>。</li>
+<li>是否已经是压缩格式。</li>
+<li>是否命中正确 location。</li>
+</ul>
+<h3 id="23-3-缓存一直-MISS"><a href="#23-3-缓存一直-MISS" class="headerlink" title="23.3 缓存一直 MISS"></a>23.3 缓存一直 MISS</h3><p>排查方向：</p>
+<ul>
+<li><code>proxy_cache</code> 是否配置在当前 location。</li>
+<li><code>proxy_cache_path</code> 的 <code>keys_zone</code> 名称是否一致。</li>
+<li>缓存目录权限是否正确。</li>
+<li>是否命中 <code>proxy_cache_bypass</code>。</li>
+<li>是否命中 <code>proxy_no_cache</code>。</li>
+<li>上游是否返回 <code>Cache-Control: no-store</code>、<code>private</code> 或 <code>Set-Cookie</code>。</li>
+<li>请求 URL 是否每次都带随机参数。</li>
+<li>缓存 key 是否包含不稳定头。</li>
+</ul>
+<h3 id="23-4-缓存了不该缓存的内容"><a href="#23-4-缓存了不该缓存的内容" class="headerlink" title="23.4 缓存了不该缓存的内容"></a>23.4 缓存了不该缓存的内容</h3><p>这是严重问题。排查方向：</p>
+<ul>
+<li>登录态 Cookie 请求是否被缓存。</li>
+<li><code>Authorization</code> 请求头是否被缓存。</li>
+<li><code>Set-Cookie</code> 响应是否被写入缓存。</li>
+<li>缓存 key 是否缺少用户、语言、租户、地区等维度。</li>
+<li>是否错误使用 <code>proxy_ignore_headers</code>。</li>
+<li>是否把 <code>/api/</code> 全部纳入缓存。</li>
+</ul>
+<p>紧急处理流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">立即关闭相关 location 缓存</span><br><span class="line">  -&gt; 清理缓存目录或切换新 keys_zone/path</span><br><span class="line">  -&gt; 排查缓存 key 和绕过规则</span><br><span class="line">  -&gt; 检查是否有数据泄露</span><br><span class="line">  -&gt; 重新灰度开启</span><br></pre></td></tr></table></figure>
+
+<h3 id="23-5-worker-connections-调大后仍然报错"><a href="#23-5-worker-connections-调大后仍然报错" class="headerlink" title="23.5 worker_connections 调大后仍然报错"></a>23.5 worker_connections 调大后仍然报错</h3><p>排查方向：</p>
+<ul>
+<li><code>ulimit -n</code> 是否足够。</li>
+<li>systemd <code>LimitNOFILE</code> 是否足够。</li>
+<li><code>worker_rlimit_nofile</code> 是否配置。</li>
+<li>是否有大量 upstream 连接。</li>
+<li>是否存在连接泄漏或慢客户端。</li>
+<li>是否端口耗尽。</li>
+</ul>
+<h3 id="23-6-压测-QPS-上不去"><a href="#23-6-压测-QPS-上不去" class="headerlink" title="23.6 压测 QPS 上不去"></a>23.6 压测 QPS 上不去</h3><p>排查方向：</p>
+<ul>
+<li>压测客户端是否成为瓶颈。</li>
+<li>CPU 是否打满。</li>
+<li>网络带宽是否打满。</li>
+<li>磁盘 IO 是否高。</li>
+<li>access log 是否同步写入过多。</li>
+<li>后端 upstream 是否慢。</li>
+<li>缓存是否命中。</li>
+<li>TLS 握手是否成为瓶颈。</li>
+<li>gzip 压缩是否消耗 CPU。</li>
+</ul>
+<h2 id="24-实验清单"><a href="#24-实验清单" class="headerlink" title="24. 实验清单"></a>24. 实验清单</h2><h3 id="24-1-静态资源缓存实验"><a href="#24-1-静态资源缓存实验" class="headerlink" title="24.1 静态资源缓存实验"></a>24.1 静态资源缓存实验</h3><p>目标：理解不同资源的缓存头。</p>
+<p>步骤：</p>
+<ol>
+<li>准备 <code>index.html</code>、<code>assets/app.hash.js</code>、<code>assets/style.hash.css</code>。</li>
+<li>配置 <code>/assets/</code> 长缓存。</li>
+<li>配置 <code>index.html</code> 不缓存。</li>
+<li>使用 <code>curl -I</code> 查看响应头。</li>
+<li>修改 JS 文件名，模拟前端发布。</li>
+<li>验证旧资源保留和新资源访问。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li><code>/assets/</code> 返回长缓存头。</li>
+<li><code>/index.html</code> 不被强缓存。</li>
+<li>前端路由刷新能回到 <code>index.html</code>。</li>
+<li>API 请求不会被 SPA 兜底错误处理。</li>
+</ul>
+<h3 id="24-2-gzip-实验"><a href="#24-2-gzip-实验" class="headerlink" title="24.2 gzip 实验"></a>24.2 gzip 实验</h3><p>目标：理解 gzip 压缩收益和 CPU 成本。</p>
+<p>步骤：</p>
+<ol>
+<li>准备一个较大的 JS 或 JSON 文件。</li>
+<li>开启 gzip。</li>
+<li>使用 curl 分别请求压缩和非压缩版本。</li>
+<li>对比文件大小。</li>
+<li>使用 wrk 压测不同 <code>gzip_comp_level</code>。</li>
+<li>观察 CPU 和吞吐变化。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li>文本资源返回 <code>Content-Encoding: gzip</code>。</li>
+<li>图片资源不被 gzip。</li>
+<li>压缩等级提高后 CPU 上升。</li>
+<li>能说明压缩收益与 CPU 成本的关系。</li>
+</ul>
+<h3 id="24-3-proxy-cache-实验"><a href="#24-3-proxy-cache-实验" class="headerlink" title="24.3 proxy_cache 实验"></a>24.3 proxy_cache 实验</h3><p>目标：掌握代理缓存命中、过期、绕过和日志观测。</p>
+<p>步骤：</p>
+<ol>
+<li>准备一个后端接口，例如 <code>/public/time</code>。</li>
+<li>配置 <code>proxy_cache_path</code>。</li>
+<li>在 <code>/public/</code> location 开启 <code>proxy_cache</code>。</li>
+<li>增加 <code>X-Cache-Status</code> 响应头。</li>
+<li>第一次请求观察 <code>MISS</code>。</li>
+<li>第二次请求观察 <code>HIT</code>。</li>
+<li>等待 TTL 过期观察 <code>EXPIRED</code>。</li>
+<li>增加 <code>?nocache=1</code> 绕过缓存。</li>
+<li>带 <code>Authorization</code> 请求验证不缓存。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li>能稳定观察 <code>MISS -&gt; HIT -&gt; EXPIRED</code>。</li>
+<li>能通过参数和请求头绕过缓存。</li>
+<li>能解释 <code>proxy_cache_bypass</code> 与 <code>proxy_no_cache</code> 区别。</li>
+<li>能说明哪些接口不能缓存。</li>
+</ul>
+<h3 id="24-4-缓存锁实验"><a href="#24-4-缓存锁实验" class="headerlink" title="24.4 缓存锁实验"></a>24.4 缓存锁实验</h3><p>目标：理解热点缓存击穿。</p>
+<p>步骤：</p>
+<ol>
+<li>设置一个短 TTL 热点接口。</li>
+<li>使用压测工具在缓存过期瞬间并发请求。</li>
+<li>先关闭 <code>proxy_cache_lock</code> 观察 upstream 请求数量。</li>
+<li>再开启 <code>proxy_cache_lock</code> 对比 upstream 压力。</li>
+<li>观察 access log 中 cache 状态变化。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li>开启缓存锁后，上游并发回源明显减少。</li>
+<li>能解释缓存击穿和缓存锁的关系。</li>
+</ul>
+<h3 id="24-5-sendfile-与大文件实验"><a href="#24-5-sendfile-与大文件实验" class="headerlink" title="24.5 sendfile 与大文件实验"></a>24.5 sendfile 与大文件实验</h3><p>目标：理解静态文件发送和 Range。</p>
+<p>步骤：</p>
+<ol>
+<li>准备一个 500MB 以上大文件。</li>
+<li>开启 <code>sendfile on</code>。</li>
+<li>使用 curl 下载并观察速度。</li>
+<li>使用 <code>Range</code> 请求验证断点续传。</li>
+<li>配置 <code>limit_rate_after</code> 和 <code>limit_rate</code>。</li>
+<li>对比限速前后效果。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li>大文件可以正常下载。</li>
+<li>Range 请求返回 <code>206 Partial Content</code>。</li>
+<li>限速配置生效。</li>
+<li>能解释大文件下载对带宽和连接数的影响。</li>
+</ul>
+<h3 id="24-6-worker-与文件描述符实验"><a href="#24-6-worker-与文件描述符实验" class="headerlink" title="24.6 worker 与文件描述符实验"></a>24.6 worker 与文件描述符实验</h3><p>目标：理解连接数与系统限制。</p>
+<p>步骤：</p>
+<ol>
+<li>查看 <code>worker_processes</code> 和 <code>worker_connections</code>。</li>
+<li>查看 <code>ulimit -n</code>。</li>
+<li>查看 systemd <code>LimitNOFILE</code>。</li>
+<li>使用压测工具逐步增加并发。</li>
+<li>观察是否出现 <code>too many open files</code>。</li>
+<li>调整系统和 Nginx 限制后再次压测。</li>
+</ol>
+<p>验收：</p>
+<ul>
+<li>能计算理论连接上限。</li>
+<li>能说明系统文件描述符与 Nginx 配置的关系。</li>
+<li>能定位 <code>too many open files</code>。</li>
+</ul>
+<h2 id="25-生产实践建议"><a href="#25-生产实践建议" class="headerlink" title="25. 生产实践建议"></a>25. 生产实践建议</h2><h3 id="25-1-静态资源实践"><a href="#25-1-静态资源实践" class="headerlink" title="25.1 静态资源实践"></a>25.1 静态资源实践</h3><ul>
+<li>带 hash 的静态资源使用长缓存。</li>
+<li>HTML 入口文件不要长缓存。</li>
+<li>发布时先上传静态资源，再切换入口文件引用。</li>
+<li>保留旧版本静态资源一段时间。</li>
+<li>不要让 API 请求落到前端 SPA 兜底。</li>
+<li>字体跨域只对必要资源开放。</li>
+<li>大文件下载要评估带宽和限速策略。</li>
+</ul>
+<h3 id="25-2-代理缓存实践"><a href="#25-2-代理缓存实践" class="headerlink" title="25.2 代理缓存实践"></a>25.2 代理缓存实践</h3><ul>
+<li>默认不缓存动态接口。</li>
+<li>只缓存明确的公共数据。</li>
+<li>登录态、Cookie、Authorization 默认绕过缓存。</li>
+<li><code>Set-Cookie</code> 响应默认不写缓存。</li>
+<li>5xx 默认不缓存，必要时使用 stale 兜底。</li>
+<li>缓存 key 必须包含影响响应的关键维度。</li>
+<li>添加 <code>X-Cache-Status</code> 便于调试，但生产对外暴露需评估。</li>
+<li>缓存 TTL 从短开始，验证稳定后再增加。</li>
+<li>重要业务上线缓存前必须做灰度。</li>
+</ul>
+<h3 id="25-3-性能调优实践"><a href="#25-3-性能调优实践" class="headerlink" title="25.3 性能调优实践"></a>25.3 性能调优实践</h3><ul>
+<li>每次只改一个关键参数，并记录结果。</li>
+<li>压测要区分冷缓存和热缓存。</li>
+<li>不要只看平均延迟，要看 P95&#x2F;P99。</li>
+<li>access log 中保留 upstream 时间和缓存状态。</li>
+<li>高并发前先检查文件描述符限制。</li>
+<li>gzip 压缩等级不要盲目设置到 9。</li>
+<li><code>proxy_buffers</code> 不要无脑调大。</li>
+<li>内核参数调整要保留回滚方案。</li>
+<li>生产压测要避开真实用户高峰，避免影响业务。</li>
+</ul>
+<h2 id="26-学习检查清单"><a href="#26-学习检查清单" class="headerlink" title="26. 学习检查清单"></a>26. 学习检查清单</h2><p>完成本阶段后，你应该能回答下面问题：</p>
+<ul>
+<li>Nginx 静态资源服务中 <code>root</code> 和 <code>alias</code> 的路径拼接差异是什么？</li>
+<li>为什么前端 <code>index.html</code> 不适合长缓存？</li>
+<li>为什么带 hash 的 JS&#x2F;CSS 适合一年长缓存？</li>
+<li><code>Cache-Control: no-cache</code> 和 <code>no-store</code> 有什么区别？</li>
+<li>强缓存和协商缓存分别发生在什么阶段？</li>
+<li>304 表示什么？它是不是错误？</li>
+<li>gzip 适合压缩哪些资源，不适合压缩哪些资源？</li>
+<li><code>gzip_comp_level</code> 为什么不是越高越好？</li>
+<li>Brotli 为什么通常建议在 CDN 层优先开启？</li>
+<li><code>sendfile</code> 解决了什么问题？</li>
+<li><code>tcp_nopush</code> 和 <code>tcp_nodelay</code> 分别适合什么场景？</li>
+<li><code>open_file_cache</code> 会缓存哪些内容？有什么副作用？</li>
+<li><code>proxy_cache_path</code> 中 <code>keys_zone</code> 和 <code>max_size</code> 分别表示什么？</li>
+<li><code>proxy_cache_key</code> 设计错误会导致什么问题？</li>
+<li><code>proxy_cache_bypass</code> 和 <code>proxy_no_cache</code> 有什么区别？</li>
+<li>为什么带 Cookie 或 Authorization 的请求默认不应该缓存？</li>
+<li><code>proxy_cache_lock</code> 解决什么问题？</li>
+<li><code>proxy_cache_use_stale</code> 的收益和风险是什么？</li>
+<li>缓存穿透、缓存击穿、缓存雪崩分别是什么？</li>
+<li>如何通过日志统计缓存命中率？</li>
+<li><code>$request_time</code> 和 <code>$upstream_response_time</code> 如何帮助定位慢请求？</li>
+<li><code>worker_processes</code>、<code>worker_connections</code>、<code>worker_rlimit_nofile</code> 有什么关系？</li>
+<li>为什么调大 <code>worker_connections</code> 后仍可能出现连接问题？</li>
+<li>upstream keepalive 要如何配置才真正生效？</li>
+<li><code>proxy_buffering off</code> 适合哪些场景？</li>
+<li>如何设计一次可靠的 Nginx 性能压测？</li>
+</ul>
+<h2 id="27-过关标准"><a href="#27-过关标准" class="headerlink" title="27. 过关标准"></a>27. 过关标准</h2><p>达到下面标准，可以认为第五阶段合格：</p>
+<ul>
+<li>能为前端静态站点设计合理的缓存策略，避免发布后白屏和旧资源问题。</li>
+<li>能为图片、字体、下载文件、HTML、JS、CSS 分别配置合适缓存头。</li>
+<li>能正确开启和验证 gzip，并解释压缩收益与 CPU 成本。</li>
+<li>能说明 Brotli 的价值、限制和部署方式。</li>
+<li>能配置 <code>sendfile</code>、<code>tcp_nopush</code>、<code>tcp_nodelay</code>、<code>open_file_cache</code> 并知道各自适用场景。</li>
+<li>能设计一个安全的 <code>proxy_cache</code> 方案，包含 key、TTL、绕过规则、缓存锁、stale 和观测头。</li>
+<li>能避免缓存用户态、登录态、权限态、支付态等敏感响应。</li>
+<li>能通过日志判断缓存命中、后端耗时、客户端耗时和慢请求来源。</li>
+<li>能使用 <code>wrk</code>、<code>hey</code>、<code>ab</code>、<code>curl</code> 做基础压测和验证。</li>
+<li>能根据 CPU、内存、磁盘、网络、连接状态和文件描述符判断性能瓶颈。</li>
+<li>能解释 Nginx 参数调优与系统参数之间的关系。</li>
+<li>能形成“基线 -&gt; 调整 -&gt; 压测 -&gt; 观测 -&gt; 回滚或保留”的优化闭环。</li>
+</ul>
+<h2 id="28-常见误区"><a href="#28-常见误区" class="headerlink" title="28. 常见误区"></a>28. 常见误区</h2><ul>
+<li>认为 Nginx 性能优化就是复制一份高并发配置模板。</li>
+<li>把所有资源都设置成长缓存，导致前端发布后用户无法更新。</li>
+<li>不使用文件名 hash，却给 JS&#x2F;CSS 配置一年缓存。</li>
+<li>把登录态接口、用户信息接口、订单接口缓存到共享代理缓存。</li>
+<li>缓存 key 只使用 <code>$uri</code>，忽略查询参数、Host、语言、租户等维度。</li>
+<li>看到 304 就认为是异常。</li>
+<li>gzip 压缩图片、视频、zip 等已压缩资源。</li>
+<li>把 gzip 压缩等级设置为 9，却不观察 CPU。</li>
+<li>以为开启 <code>keepalive</code> 后 upstream 连接复用就一定生效，忘记配置 HTTP&#x2F;1.1 和 <code>Connection</code>。</li>
+<li>无脑调大 <code>proxy_buffers</code>，导致高并发时内存压力变大。</li>
+<li>调大 <code>worker_connections</code>，但忘记系统文件描述符限制。</li>
+<li>只看 Nginx QPS，不看后端、磁盘、网络和客户端瓶颈。</li>
+<li>在生产高峰期清空缓存，导致大量请求同时回源。</li>
+<li>把缓存命中率作为唯一目标，忽略数据正确性和安全性。</li>
+</ul>
+<h2 id="29-下一阶段衔接"><a href="#29-下一阶段衔接" class="headerlink" title="29. 下一阶段衔接"></a>29. 下一阶段衔接</h2><p>完成第五阶段后，你已经具备 Nginx 高级应用能力，能够设计高性能静态资源服务、基础代理缓存和连接调优方案。下一阶段将进入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06 生产排障、高可用与运维体系</span><br></pre></td></tr></table></figure>
+
+<p>下一阶段重点不再只是“如何配置得快”，而是解决生产环境中更复杂的问题：</p>
+<ul>
+<li>4xx、5xx、超时和连接异常如何系统排查。</li>
+<li>access log、error log、stub_status、指标和告警如何建设。</li>
+<li>reload、发布、回滚、灰度如何规范化。</li>
+<li>多节点 Nginx 如何做高可用。</li>
+<li>Keepalived、LVS、云负载均衡和 DNS 如何配合。</li>
+<li>生产事故如何复盘和沉淀。</li>
+</ul>
+<p>第五阶段关注性能和资源效率，第六阶段关注生产稳定性和运维治理。两者结合后，才算真正具备守住生产 Nginx 的能力。</p>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

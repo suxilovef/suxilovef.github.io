@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M220 220 Q430 90 650 190" stroke="#34D399" stroke-width="5" opacity="0.24"/>
+    <path d="M1240 250 Q1380 180 1480 280" stroke="#F97316" stroke-width="4" opacity="0.18"/>
+    <path d="M250 680 Q520 800 800 700 Q1080 600 1350 730" stroke="#DC382D" stroke-width="4" opacity="0.12"/>
+    <circle cx="300" cy="250" r="5" fill="#DC382D" opacity="0.18"/>
+    <circle cx="480" cy="180" r="4" fill="#F97316" opacity="0.18"/>
+    <circle cx="1120" cy="170" r="5" fill="#DC382D" opacity="0.18"/>
+    <circle cx="1320" cy="310" r="4" fill="#34D399" opacity="0.16"/>
+    <circle cx="1180" cy="700" r="5" fill="#F97316" opacity="0.16"/>
+    <circle cx="800" cy="430" r="210" stroke="#DC382D" stroke-width="8" opacity="0.18"/>
+    <circle cx="800" cy="430" r="130" stroke="#F97316" stroke-width="5" opacity="0.22"/>
+    <circle cx="800" cy="220" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <circle cx="980" cy="325" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <circle cx="980" cy="535" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <circle cx="800" cy="640" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <circle cx="620" cy="535" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <circle cx="620" cy="325" r="42" stroke="#DC382D" stroke-width="6" fill="#FFF7ED"/>
+    <path d="M800 220 L980 325 L980 535 L800 640 L620 535 L620 325 Z" stroke="#DC382D" stroke-width="6" opacity="0.58"/>
+    <path d="M620 325 L980 535" stroke="#F97316" stroke-width="4" opacity="0.34"/>
+    <path d="M980 325 L620 535" stroke="#F97316" stroke-width="4" opacity="0.34"/>
+  </g>
+</svg>

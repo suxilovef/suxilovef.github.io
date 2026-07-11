@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Client (left) -->
+    <rect x="80" y="370" width="90" height="70" rx="12" stroke="#6B7280" stroke-width="3" fill="#F9FAFB"/>
+    <circle cx="125" cy="390" r="9" fill="#6B7280" opacity="0.3"/>
+    <line x1="95" y1="420" x2="155" y2="420" stroke="#6B7280" stroke-width="2" opacity="0.3"/>
+
+    <!-- Nginx proxy (center) - larger, prominent -->
+    <rect x="680" y="300" width="240" height="210" rx="16" stroke="#009639" stroke-width="5" fill="#F0FDF4"/>
+    <text x="800" y="380" text-anchor="middle" font-size="28" fill="#009639" font-weight="800">Nginx</text>
+    <text x="800" y="420" text-anchor="middle" font-size="16" fill="#009639" font-weight="600" opacity="0.8">反向代理</text>
+    <text x="800" y="450" text-anchor="middle" font-size="14" fill="#009639" font-weight="600" opacity="0.6">负载均衡</text>
+
+    <!-- Upstream backend servers (right) -->
+    <rect x="1200" y="240" width="110" height="80" rx="10" stroke="#6B7280" stroke-width="3" fill="#F9FAFB"/>
+    <text x="1255" y="285" text-anchor="middle" font-size="14" fill="#6B7280" font-weight="600">后端 1</text>
+
+    <rect x="1200" y="360" width="110" height="80" rx="10" stroke="#6B7280" stroke-width="3" fill="#F9FAFB"/>
+    <text x="1255" y="405" text-anchor="middle" font-size="14" fill="#6B7280" font-weight="600">后端 2</text>
+
+    <rect x="1200" y="480" width="110" height="80" rx="10" stroke="#EF4444" stroke-width="2" stroke-dasharray="8,4" fill="#FEF2F2"/>
+    <text x="1255" y="525" text-anchor="middle" font-size="14" fill="#EF4444" font-weight="600">后端 3 ↓</text>
+
+    <!-- Arrows: client -> nginx -->
+    <path d="M175 405 L660 390" stroke="#009639" stroke-width="4" opacity="0.6" marker-end="url(#arrowNG)"/>
+    <path d="M660 430 L175 415" stroke="#34D399" stroke-width="3" opacity="0.4" marker-end="url(#arrowNT)"/>
+
+    <!-- Arrows: nginx -> backends (load balancing) -->
+    <path d="M920 340 L1190 270" stroke="#009639" stroke-width="3" opacity="0.6" marker-end="url(#arrowNG)"/>
+    <path d="M920 405 L1190 400" stroke="#009639" stroke-width="4" opacity="0.7" marker-end="url(#arrowNG)"/>
+    <path d="M920 470 L1190 520" stroke="#EF4444" stroke-width="3" opacity="0.4" stroke-dasharray="6,4"/>
+
+    <!-- Load balancing distribution arcs -->
+    <path d="M800 240 C780 180 880 160 940 200" stroke="#F59E0B" stroke-width="4" opacity="0.5" stroke-dasharray="8,3"/>
+    <path d="M800 240 C820 160 920 140 980 180" stroke="#F59E0B" stroke-width="4" opacity="0.3" stroke-dasharray="8,3"/>
+
+    <!-- Decorative network connection lines -->
+    <path d="M200 250 C400 150 600 200 800 180" stroke="#009639" stroke-width="3" opacity="0.15"/>
+    <path d="M900 550 C1050 600 1150 620 1400 580" stroke="#34D399" stroke-width="3" opacity="0.2"/>
+
+    <!-- Decorative dots -->
+    <circle cx="400" cy="310" r="4" fill="#009639" opacity="0.25"/>
+    <circle cx="550" cy="280" r="3" fill="#009639" opacity="0.2"/>
+    <circle cx="1050" cy="250" r="4" fill="#009639" opacity="0.25"/>
+    <circle cx="1350" cy="210" r="3" fill="#6B7280" opacity="0.2"/>
+
+    <!-- Round-robin indicator arcs -->
+    <path d="M1255 600 C1230 640 1280 640 1255 600" stroke="#009639" stroke-width="3" opacity="0.4"/>
+
+    <!-- Health check indicator -->
+    <circle cx="1150" cy="520" r="5" fill="#EF4444" opacity="0.5"/>
+    <text x="1165" y="525" font-size="12" fill="#EF4444" font-weight="500" opacity="0.7">health check fail</text>
+  </g>
+
+  <defs>
+    <marker id="arrowNG" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#009639"/>
+    </marker>
+    <marker id="arrowNT" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="62" text-anchor="middle" font-weight="800">反向代理与负载均衡</text>
+    <text x="800" y="845" font-size="26" text-anchor="middle" font-weight="600" fill="#6B7280">proxy_pass · upstream · 超时重试 · Header 传递 · WebSocket/gRPC</text>
+  </g>
+</svg>

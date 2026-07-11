@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main roadmap curve -->
+    <path d="M120 480 C300 200 500 300 640 380 C780 460 880 380 1040 300 C1160 240 1320 320 1480 480" stroke="#009639" stroke-width="6" opacity="0.3"/>
+    <path d="M120 480 C300 200 500 300 640 380" stroke="#009639" stroke-width="14" opacity="0.9"/>
+
+    <!-- Decorative arcs -->
+    <path d="M200 520 Q400 680 600 580 Q800 480 1000 600 Q1200 720 1400 560" stroke="#F59E0B" stroke-width="5" opacity="0.5"/>
+    <path d="M250 500 Q450 340 650 440 Q850 540 1050 400 Q1250 260 1450 460" stroke="#34D399" stroke-width="4" opacity="0.35"/>
+
+    <!-- Small node connections -->
+    <path d="M300 350 Q380 280 420 330" stroke="#009639" stroke-width="3" opacity="0.5"/>
+    <path d="M500 290 Q580 230 620 260" stroke="#009639" stroke-width="3" opacity="0.5"/>
+    <path d="M700 340 Q780 280 820 310" stroke="#009639" stroke-width="3" opacity="0.5"/>
+    <path d="M900 290 Q980 240 1020 260" stroke="#009639" stroke-width="3" opacity="0.5"/>
+    <path d="M1100 320 Q1180 280 1220 290" stroke="#009639" stroke-width="3" opacity="0.5"/>
+    <path d="M1300 380 Q1360 340 1400 350" stroke="#009639" stroke-width="3" opacity="0.5"/>
+  </g>
+
+  <!-- 7 stage nodes -->
+  <g>
+    <circle cx="220" cy="420" r="18" fill="#009639"/>
+    <text x="220" y="425" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">1</text>
+
+    <circle cx="400" cy="300" r="18" fill="#009639"/>
+    <text x="400" y="305" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">2</text>
+
+    <circle cx="580" cy="340" r="18" fill="#009639"/>
+    <text x="580" y="345" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">3</text>
+
+    <circle cx="750" cy="300" r="18" fill="#009639"/>
+    <text x="750" y="305" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">4</text>
+
+    <circle cx="920" cy="330" r="18" fill="#009639"/>
+    <text x="920" y="335" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">5</text>
+
+    <circle cx="1090" cy="300" r="18" fill="#009639"/>
+    <text x="1090" y="305" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">6</text>
+
+    <circle cx="1260" cy="350" r="18" fill="#009639"/>
+    <text x="1260" y="355" text-anchor="middle" font-size="16" fill="#fff" font-weight="700">7</text>
+  </g>
+
+  <!-- Start / Finish markers -->
+  <circle cx="120" cy="480" r="10" fill="#34D399"/>
+  <circle cx="1480" cy="480" r="14" fill="#F59E0B"/>
+  <circle cx="1480" cy="480" r="6" fill="#fff"/>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="82" text-anchor="middle" font-weight="800">Nginx 七阶段学习路线</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">从单机部署到源码机制 · 渐进式掌握</text>
+  </g>
+</svg>

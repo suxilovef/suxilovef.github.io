@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Source code brackets (large decorative) -->
+    <path d="M180 160 L120 160 L120 780 L180 780" stroke="#009639" stroke-width="5" opacity="0.2"/>
+    <path d="M1420 160 L1480 160 L1480 780 L1420 780" stroke="#009639" stroke-width="5" opacity="0.2"/>
+
+    <!-- Code editor window -->
+    <rect x="240" y="120" width="1120" height="520" rx="12" stroke="#009639" stroke-width="3" fill="#F9FAFB" opacity="0.5"/>
+
+    <!-- Editor top bar -->
+    <rect x="240" y="120" width="1120" height="40" rx="12" fill="#009639" opacity="0.08"/>
+    <circle cx="268" cy="140" r="6" fill="#EF4444" opacity="0.5"/>
+    <circle cx="290" cy="140" r="6" fill="#F59E0B" opacity="0.5"/>
+    <circle cx="312" cy="140" r="6" fill="#34D399" opacity="0.5"/>
+    <text x="800" y="145" text-anchor="middle" font-size="14" fill="#6B7280" font-family="'Courier New',monospace">ngx_http_core_module.c</text>
+
+    <!-- Code lines -->
+    <g font-family="'Courier New','Consolas',monospace" font-size="14">
+      <text x="260" y="185" fill="#6B7280">1</text>
+      <text x="290" y="185" fill="#6B7280">#include &lt;ngx_config.h&gt;</text>
+
+      <text x="260" y="210" fill="#6B7280">2</text>
+      <text x="290" y="210" fill="#6B7280">#include &lt;ngx_core.h&gt;</text>
+
+      <text x="260" y="245" fill="#6B7280">4</text>
+      <text x="290" y="245" fill="#009639" opacity="0.7">static ngx_int_t</text>
+
+      <text x="260" y="270" fill="#6B7280">5</text>
+      <text x="290" y="270" fill="#009639" opacity="0.8">ngx_http_core_handler</text>
+
+      <text x="260" y="295" fill="#6B7280">6</text>
+      <text x="290" y="295" fill="#6B7280">{</text>
+
+      <text x="260" y="320" fill="#6B7280">7</text>
+      <text x="290" y="320" fill="#6B7280">    ngx_http_request_t  *r;</text>
+
+      <text x="260" y="345" fill="#6B7280">8</text>
+      <text x="290" y="345" fill="#009639" opacity="0.6">    r = ngx_http_get_request(c);</text>
+
+      <text x="260" y="380" fill="#6B7280">10</text>
+      <text x="290" y="380" fill="#F59E0B" opacity="0.8">    /* phase handler: NGX_HTTP_ACCESS_PHASE */</text>
+
+      <text x="260" y="410" fill="#6B7280">12</text>
+      <text x="290" y="410" fill="#009639" opacity="0.7">    rc = ngx_http_core_run_phases(r);</text>
+
+      <text x="260" y="450" fill="#6B7280">14</text>
+      <text x="290" y="450" fill="#6B7280">    ngx_http_finalize_request(r, rc);</text>
+
+      <text x="260" y="485" fill="#6B7280">16</text>
+      <text x="290" y="485" fill="#6B7280">}</text>
+    </g>
+
+    <!-- Architecture diagram overlay (right-bottom) -->
+    <g transform="translate(920, 440)">
+      <text x="20" y="15" font-size="14" font-weight="700" fill="#009639">Event Loop</text>
+
+      <!-- Event loop cycle -->
+      <circle cx="120" cy="60" r="50" fill="none" stroke="#009639" stroke-width="3" opacity="0.4"/>
+      <path d="M120 10 Q170 20 160 60 Q150 100 120 110" stroke="#34D399" stroke-width="3" opacity="0.5"/>
+      <circle cx="120" cy="60" r="5" fill="#009639"/>
+
+      <!-- Module boxes -->
+      <rect x="10" y="130" width="90" height="35" rx="6" stroke="#009639" stroke-width="2" fill="#F0FDF4"/>
+      <text x="55" y="152" text-anchor="middle" font-size="12" fill="#009639">HTTP Module</text>
+
+      <rect x="120" y="130" width="90" height="35" rx="6" stroke="#009639" stroke-width="2" fill="#F0FDF4"/>
+      <text x="165" y="152" text-anchor="middle" font-size="12" fill="#009639">Event Module</text>
+
+      <rect x="70" y="180" width="90" height="35" rx="6" stroke="#009639" stroke-width="2" fill="#F0FDF4"/>
+      <text x="115" y="202" text-anchor="middle" font-size="12" fill="#009639">Upstream</text>
+    </g>
+
+    <!-- Memory pool visualization -->
+    <g transform="translate(250, 520)">
+      <rect x="0" y="0" width="500" height="50" rx="8" stroke="#009639" stroke-width="2.5" fill="#F0FDF4" opacity="0.5"/>
+      <rect x="5" y="5" width="80" height="40" rx="4" fill="#009639" opacity="0.2"/>
+      <text x="45" y="29" text-anchor="middle" font-size="11" fill="#009639">pool-&gt;small</text>
+      <rect x="95" y="5" width="120" height="40" rx="4" fill="#009639" opacity="0.15"/>
+      <text x="155" y="29" text-anchor="middle" font-size="11" fill="#009639">pool-&gt;large</text>
+      <rect x="225" y="5" width="100" height="40" rx="4" fill="#009639" opacity="0.1"/>
+      <rect x="340" y="5" width="150" height="40" rx="4" fill="#009639" opacity="0.08"/>
+      <text x="510" y="29" font-size="12" fill="#6B7280">ngx_pool_t</text>
+    </g>
+
+    <!-- Phase handler pipeline -->
+    <g transform="translate(250, 600)">
+      <rect x="0" y="0" width="70" height="28" rx="6" fill="#009639" opacity="0.15"/>
+      <text x="35" y="19" text-anchor="middle" font-size="11" fill="#009639">PREACCESS</text>
+      <path d="M70 14 L85 14" stroke="#009639" stroke-width="2"/>
+      <rect x="85" y="0" width="70" height="28" rx="6" fill="#009639" opacity="0.2"/>
+      <text x="120" y="19" text-anchor="middle" font-size="11" fill="#009639">ACCESS</text>
+      <path d="M155 14 L170 14" stroke="#009639" stroke-width="2"/>
+      <rect x="170" y="0" width="70" height="28" rx="6" fill="#009639" opacity="0.25"/>
+      <text x="205" y="19" text-anchor="middle" font-size="11" fill="#009639">CONTENT</text>
+      <path d="M240 14 L255 14" stroke="#009639" stroke-width="2"/>
+      <rect x="255" y="0" width="60" height="28" rx="6" fill="#009639" opacity="0.15"/>
+      <text x="285" y="19" text-anchor="middle" font-size="11" fill="#009639">LOG</text>
+    </g>
+
+    <!-- Decorative network arcs -->
+    <path d="M100 100 C300 50 500 100 700 60" stroke="#009639" stroke-width="2" opacity="0.12"/>
+    <path d="M900 750 C1100 800 1300 750 1500 780" stroke="#009639" stroke-width="2" opacity="0.12"/>
+
+    <!-- Decorative dots -->
+    <circle cx="400" cy="80" r="3" fill="#009639" opacity="0.15"/>
+    <circle cx="1200" cy="100" r="4" fill="#009639" opacity="0.15"/>
+    <circle cx="1350" cy="650" r="3" fill="#009639" opacity="0.12"/>
+  </g>
+
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="62" text-anchor="middle" font-weight="800">源码 · 模块 · 底层机制</text>
+    <text x="800" y="845" font-size="26" text-anchor="middle" font-weight="600" fill="#6B7280">事件驱动 · worker 模型 · phase handler · 内存池 · upstream</text>
+  </g>
+</svg>

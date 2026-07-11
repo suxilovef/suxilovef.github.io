@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M220 220 Q430 90 650 190" stroke="#F59E0B" stroke-width="5" opacity="0.24"/>
+    <path d="M1240 250 Q1380 180 1480 280" stroke="#34D399" stroke-width="4" opacity="0.18"/>
+    <path d="M250 680 Q520 800 800 700 Q1080 600 1350 730" stroke="#009639" stroke-width="4" opacity="0.12"/>
+    <circle cx="300" cy="250" r="5" fill="#009639" opacity="0.18"/>
+    <circle cx="480" cy="180" r="4" fill="#34D399" opacity="0.18"/>
+    <circle cx="1120" cy="170" r="5" fill="#009639" opacity="0.18"/>
+    <circle cx="1320" cy="310" r="4" fill="#F59E0B" opacity="0.16"/>
+    <circle cx="1180" cy="700" r="5" fill="#34D399" opacity="0.16"/>
+    <rect x="560" y="210" width="480" height="480" rx="32" stroke="#009639" stroke-width="6" fill="#ffffff"/>
+    <rect x="690" y="340" width="220" height="220" rx="18" stroke="#009639" stroke-width="8" fill="#F0FDF4"/>
+    <path d="M640 390 L690 390" stroke="#009639" stroke-width="6"/>
+    <path d="M640 450 L690 450" stroke="#009639" stroke-width="6"/>
+    <path d="M640 510 L690 510" stroke="#009639" stroke-width="6"/>
+    <path d="M910 390 L960 390" stroke="#009639" stroke-width="6"/>
+    <path d="M910 450 L960 450" stroke="#009639" stroke-width="6"/>
+    <path d="M910 510 L960 510" stroke="#009639" stroke-width="6"/>
+    <path d="M740 290 L740 340" stroke="#009639" stroke-width="6"/>
+    <path d="M800 290 L800 340" stroke="#009639" stroke-width="6"/>
+    <path d="M860 290 L860 340" stroke="#009639" stroke-width="6"/>
+    <path d="M740 560 L740 610" stroke="#009639" stroke-width="6"/>
+    <path d="M800 560 L800 610" stroke="#009639" stroke-width="6"/>
+    <path d="M860 560 L860 610" stroke="#009639" stroke-width="6"/>
+    <path d="M730 450 L800 380 L870 450 L800 520 Z" stroke="#F59E0B" stroke-width="6" opacity="0.64"/>
+  </g>
+</svg>

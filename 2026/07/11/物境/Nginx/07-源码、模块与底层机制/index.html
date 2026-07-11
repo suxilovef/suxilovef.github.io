@@ -1,0 +1,2178 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>07-源码、模块与底层机制 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Nginx 第七阶段学习文档：源码、模块与底层机制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07-源码、模块与底层机制">
+<meta property="og:url" content="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/07-%E6%BA%90%E7%A0%81%E3%80%81%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%BA%95%E5%B1%82%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Nginx 第七阶段学习文档：源码、模块与底层机制">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-source.svg">
+<meta property="article:published_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T13:51:07.467Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxilovef.github.io/image/post_cover/wujing-nginx-source.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "07-源码、模块与底层机制",
+  "url": "https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/07-%E6%BA%90%E7%A0%81%E3%80%81%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%BA%95%E5%B1%82%E6%9C%BA%E5%88%B6/",
+  "image": "https://suxilovef.github.io/image/post_cover/wujing-nginx-source.svg",
+  "datePublished": "2026-07-10T16:00:00.000Z",
+  "dateModified": "2026-07-11T13:51:07.467Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxilovef.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxilovef.github.io/2026/07/11/%E7%89%A9%E5%A2%83/Nginx/07-%E6%BA%90%E7%A0%81%E3%80%81%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%BA%95%E5%B1%82%E6%9C%BA%E5%88%B6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '07-源码、模块与底层机制',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">28</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">07-源码、模块与底层机制</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">07-源码、模块与底层机制</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-11T13:51:07.467Z" title="更新于 2026-07-11 21:51:07">2026-07-11</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">14.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>54分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="07-源码、模块与底层机制"><a href="#07-源码、模块与底层机制" class="headerlink" title="07-源码、模块与底层机制"></a>07-源码、模块与底层机制</h1><h2 id="1-阶段定位"><a href="#1-阶段定位" class="headerlink" title="1. 阶段定位"></a>1. 阶段定位</h2><p>第七阶段的目标，是从“会部署、会配置、会排障 Nginx”，进一步进入“能从源码层面理解 Nginx 为什么这样工作”。前六个阶段已经覆盖了部署、配置、请求匹配、反向代理、负载均衡、HTTPS、安全治理、缓存、性能优化、生产排障、高可用和运维体系；本阶段要把这些能力向下沉一层，理解它们在 Nginx 内部是如何被组织和执行的。</p>
+<p>很多人在学习 Nginx 源码时容易陷入两个极端：一开始就想完整读完所有源码，结果很快被目录、宏、回调、结构体和平台差异淹没；或者只阅读几篇源码分析文章，知道一些名词，但无法把配置、请求、事件、upstream、filter、内存池和模块机制串成完整链路。</p>
+<p>本阶段不追求逐行背源码，而是围绕核心主线建立可验证的源码理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Nginx 如何启动</span><br><span class="line">  -&gt; 配置如何解析成模块配置</span><br><span class="line">  -&gt; worker 如何进入事件循环</span><br><span class="line">  -&gt; 连接如何被 accept</span><br><span class="line">  -&gt; HTTP 请求如何解析</span><br><span class="line">  -&gt; 请求如何进入 phase handler</span><br><span class="line">  -&gt; proxy_pass 如何进入 upstream</span><br><span class="line">  -&gt; 响应如何经过 header/body filter</span><br><span class="line">  -&gt; 日志如何写入</span><br><span class="line">  -&gt; 内存、buffer、timer、shared memory 如何支撑高并发</span><br><span class="line">  -&gt; reload、热升级、模块加载如何保持生产可用</span><br></pre></td></tr></table></figure>
+
+<p>完成本阶段后，你应该能回答：</p>
+<ul>
+<li>Nginx 为什么能用较少 worker 承载大量并发连接。</li>
+<li>master 和 worker 的职责边界是什么。</li>
+<li>reload 为什么通常不会中断正在处理的请求。</li>
+<li>配置文件是如何被解析、合并并交给模块使用的。</li>
+<li>一次 HTTP 请求从连接建立到 access log 写入经历哪些内部阶段。</li>
+<li><code>location</code>、<code>rewrite</code>、<code>access</code>、<code>content</code>、<code>proxy_pass</code>、<code>log</code> 在源码中分别对应哪些处理阶段。</li>
+<li>upstream 是如何创建连接、发送请求、接收响应、处理失败重试和超时的。</li>
+<li>header filter 与 body filter 为什么可以组成过滤链。</li>
+<li><code>ngx_pool_t</code>、<code>ngx_buf_t</code>、<code>ngx_chain_t</code> 分别解决什么问题。</li>
+<li><code>limit_req</code>、<code>proxy_cache</code> 等能力为什么需要 shared memory zone。</li>
+<li>如何编写一个最小 HTTP content handler 模块或 header filter 模块。</li>
+</ul>
+<p>本阶段学完后，不一定意味着你要成为 Nginx 内核开发者，但你应该具备资深 Nginx 工程师的源码定位能力：遇到复杂线上问题时，知道该看哪个模块、哪个结构、哪个阶段，而不是只靠猜测和搜索配置模板。</p>
+<h2 id="2-学习边界"><a href="#2-学习边界" class="headerlink" title="2. 学习边界"></a>2. 学习边界</h2><h3 id="2-1-本阶段重点"><a href="#2-1-本阶段重点" class="headerlink" title="2.1 本阶段重点"></a>2.1 本阶段重点</h3><p>本阶段重点关注 Nginx 开源版本核心机制，主要包括：</p>
+<ul>
+<li>源码目录结构和编译参数。</li>
+<li>debug 编译、调试符号和源码阅读环境。</li>
+<li>master&#x2F;worker 启动流程。</li>
+<li>配置解析、配置上下文和模块配置合并。</li>
+<li>模块体系：core module、event module、http module、mail module、stream module。</li>
+<li>cycle、conf、module、connection、request、upstream 等核心结构。</li>
+<li>事件驱动模型：epoll&#x2F;kqueue&#x2F;select、非阻塞 IO、accept、事件循环。</li>
+<li>HTTP 请求解析流程。</li>
+<li>phase handler：rewrite、access、content、log 等阶段。</li>
+<li>upstream 反向代理流程。</li>
+<li>header filter、body filter 响应过滤链。</li>
+<li>内存池 <code>ngx_pool_t</code>。</li>
+<li>buffer、chain 和输出链路。</li>
+<li>timer、红黑树、超时事件。</li>
+<li>slab、shared memory、zone。</li>
+<li>reload、平滑退出、二进制热升级。</li>
+<li>静态模块、动态模块和第三方模块开发基础。</li>
+<li>最小 HTTP content handler 模块开发。</li>
+<li>最小 header filter 或 log 阶段模块开发。</li>
+</ul>
+<h3 id="2-2-本阶段暂不深入"><a href="#2-2-本阶段暂不深入" class="headerlink" title="2.2 本阶段暂不深入"></a>2.2 本阶段暂不深入</h3><p>下面内容与源码有关，但不是本阶段主线：</p>
+<ul>
+<li>Nginx Plus 商业版私有能力源码。</li>
+<li>OpenResty Lua VM、cosocket、ngx_lua 的完整实现。</li>
+<li>Tengine、APISIX、Kong、Ingress Controller 的源码体系。</li>
+<li>HTTP&#x2F;3、QUIC、BoringSSL、OpenSSL 内部源码细节。</li>
+<li>自研高性能网络库与 Nginx 的完整性能对比。</li>
+<li>操作系统内核网络协议栈源码。</li>
+<li>复杂第三方模块的完整工业级实现。</li>
+<li>Nginx 所有指令的源码逐项分析。</li>
+</ul>
+<p>本阶段的学习目标不是把 Nginx 所有源码读完，而是把“启动、配置、事件、请求、upstream、filter、内存、模块”这几条核心链路读通。</p>
+<h2 id="3-学习准备"><a href="#3-学习准备" class="headerlink" title="3. 学习准备"></a>3. 学习准备</h2><h3 id="3-1-建议环境"><a href="#3-1-建议环境" class="headerlink" title="3.1 建议环境"></a>3.1 建议环境</h3><p>建议使用 Linux 环境阅读和调试 Nginx 源码。可以使用物理机、虚拟机、云服务器或 WSL，但最好具备完整编译和调试能力。</p>
+<table>
+<thead>
+<tr>
+<th>环境项</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>操作系统</td>
+<td>Ubuntu、Debian、CentOS、Rocky Linux、AlmaLinux 均可</td>
+</tr>
+<tr>
+<td>Nginx 版本</td>
+<td>建议选择稳定版，例如 1.24.x 或较新的 mainline 版本</td>
+</tr>
+<tr>
+<td>编译器</td>
+<td>GCC 或 Clang</td>
+</tr>
+<tr>
+<td>调试工具</td>
+<td>gdb、strace、ltrace、perf、addr2line</td>
+</tr>
+<tr>
+<td>阅读工具</td>
+<td>VS Code、CLion、vim、ctags、cscope、ripgrep</td>
+</tr>
+<tr>
+<td>压测工具</td>
+<td>wrk、ab、hey、curl</td>
+</tr>
+<tr>
+<td>抓包工具</td>
+<td>tcpdump、Wireshark</td>
+</tr>
+</tbody></table>
+<p>建议先使用一个固定源码版本学习，不要频繁切换版本。不同版本内部结构会有差异，但核心思想长期稳定。</p>
+<h3 id="3-2-依赖安装示例"><a href="#3-2-依赖安装示例" class="headerlink" title="3.2 依赖安装示例"></a>3.2 依赖安装示例</h3><p>Ubuntu&#x2F;Debian：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install -y build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev \</span><br><span class="line">  openssl libssl-dev gdb strace lsof curl wget git cscope exuberant-ctags</span><br></pre></td></tr></table></figure>
+
+<p>CentOS&#x2F;Rocky&#x2F;AlmaLinux：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> yum groupinstall -y <span class="string">&quot;Development Tools&quot;</span></span><br><span class="line"><span class="built_in">sudo</span> yum install -y pcre pcre-devel zlib zlib-devel openssl openssl-devel \</span><br><span class="line">  gdb strace lsof curl wget git cscope ctags</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-下载源码与-debug-编译"><a href="#3-3-下载源码与-debug-编译" class="headerlink" title="3.3 下载源码与 debug 编译"></a>3.3 下载源码与 debug 编译</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">wget https://nginx.org/download/nginx-1.24.0.tar.gz</span><br><span class="line">tar -zxvf nginx-1.24.0.tar.gz</span><br><span class="line"><span class="built_in">cd</span> nginx-1.24.0</span><br><span class="line"></span><br><span class="line">./configure \</span><br><span class="line">  --prefix=/opt/nginx-debug \</span><br><span class="line">  --with-debug \</span><br><span class="line">  --with-http_ssl_module \</span><br><span class="line">  --with-http_stub_status_module \</span><br><span class="line">  --with-http_realip_module \</span><br><span class="line">  --with-http_v2_module</span><br><span class="line"></span><br><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br><span class="line"><span class="built_in">sudo</span> make install</span><br><span class="line">/opt/nginx-debug/sbin/nginx -V</span><br></pre></td></tr></table></figure>
+
+<p>重点关注：</p>
+<ul>
+<li><code>--prefix</code>：安装目录。</li>
+<li><code>--with-debug</code>：是否开启 debug 日志能力。</li>
+<li><code>--with-http_ssl_module</code>：是否编译 SSL 模块。</li>
+<li><code>--with-http_stub_status_module</code>：是否编译状态模块。</li>
+<li><code>--add-module</code>：是否添加静态第三方模块。</li>
+<li><code>--add-dynamic-module</code>：是否添加动态第三方模块。</li>
+</ul>
+<h3 id="3-4-开启-debug-日志"><a href="#3-4-开启-debug-日志" class="headerlink" title="3.4 开启 debug 日志"></a>3.4 开启 debug 日志</h3><p><code>--with-debug</code> 只是编译支持 debug，还需要在配置中开启 debug 级别日志：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">error_log</span> logs/<span class="literal">error</span>.log <span class="literal">debug</span>;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">debug_connection</span> <span class="number">127.0.0.1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>debug_connection</code> 可以避免所有客户端都输出 debug 日志，适合实验或小范围定位。</p>
+<h2 id="4-源码目录结构"><a href="#4-源码目录结构" class="headerlink" title="4. 源码目录结构"></a>4. 源码目录结构</h2><p>Nginx 源码目录非常清晰，先理解目录职责，比直接打开某个 <code>.c</code> 文件更重要。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">nginx-1.24.0/</span><br><span class="line">├── auto/          # configure 脚本使用的自动探测、编译配置脚本</span><br><span class="line">├── conf/          # 默认配置文件模板</span><br><span class="line">├── contrib/       # 辅助工具，例如 vim 语法文件</span><br><span class="line">├── docs/          # 部分文档</span><br><span class="line">├── misc/          # 杂项脚本</span><br><span class="line">├── src/           # 核心源码</span><br><span class="line">└── objs/          # configure 和 make 生成的中间文件、模块列表、目标文件</span><br></pre></td></tr></table></figure>
+
+<p><code>src/</code> 是源码阅读重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">src/</span><br><span class="line">├── core/          # 核心框架、内存池、字符串、数组、日志、cycle、配置等</span><br><span class="line">├── event/         # 事件模块、连接、定时器、epoll/kqueue/select 等</span><br><span class="line">├── http/          # HTTP 核心、请求解析、phase、upstream、filter、各 HTTP 模块</span><br><span class="line">├── mail/          # 邮件代理模块</span><br><span class="line">├── os/            # 操作系统相关封装，例如 unix、win32</span><br><span class="line">└── stream/        # TCP/UDP 四层代理模块</span><br></pre></td></tr></table></figure>
+
+<p>重点文件速查：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>重点内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/core/nginx.c</code></td>
+<td><code>main</code> 入口、启动参数解析、cycle 初始化、进程模型入口</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_cycle.c</code></td>
+<td>cycle 初始化、打开日志、监听端口、模块初始化</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_conf_file.c</code></td>
+<td>配置文件解析框架</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_module.c</code></td>
+<td>模块编号、模块签名、动态模块支持</td>
+</tr>
+<tr>
+<td><code>src/os/unix/ngx_process_cycle.c</code></td>
+<td>master&#x2F;worker 进程循环</td>
+</tr>
+<tr>
+<td><code>src/event/ngx_event.c</code></td>
+<td>事件模块初始化</td>
+</tr>
+<tr>
+<td><code>src/event/modules/ngx_epoll_module.c</code></td>
+<td>Linux epoll 事件模块</td>
+</tr>
+<tr>
+<td><code>src/event/ngx_event_accept.c</code></td>
+<td>accept 新连接</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http.c</code></td>
+<td>HTTP 模块初始化、server&#x2F;location 合并</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http_request.c</code></td>
+<td>HTTP 请求创建、读取、处理、结束</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http_core_module.c</code></td>
+<td>HTTP 核心模块、phase engine、location</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http_upstream.c</code></td>
+<td>upstream 通用框架</td>
+</tr>
+<tr>
+<td><code>src/http/modules/ngx_http_proxy_module.c</code></td>
+<td>proxy_pass 模块实现</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http_header_filter_module.c</code></td>
+<td>默认 header filter</td>
+</tr>
+<tr>
+<td><code>src/http/ngx_http_write_filter_module.c</code></td>
+<td>输出 write filter</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_palloc.c</code></td>
+<td>内存池实现</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_buf.c</code></td>
+<td>buffer 和 chain 工具函数</td>
+</tr>
+<tr>
+<td><code>src/core/ngx_slab.c</code></td>
+<td>slab 分配器</td>
+</tr>
+<tr>
+<td><code>src/event/ngx_event_timer.c</code></td>
+<td>定时器红黑树</td>
+</tr>
+</tbody></table>
+<h2 id="5-Nginx-核心设计思想"><a href="#5-Nginx-核心设计思想" class="headerlink" title="5. Nginx 核心设计思想"></a>5. Nginx 核心设计思想</h2><h3 id="5-1-事件驱动"><a href="#5-1-事件驱动" class="headerlink" title="5.1 事件驱动"></a>5.1 事件驱动</h3><p>Nginx 不是为每个连接创建一个线程，而是使用事件驱动模型处理大量连接。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">大量连接 fd</span><br><span class="line">  -&gt; 注册到 epoll/kqueue/select</span><br><span class="line">  -&gt; worker 阻塞等待事件</span><br><span class="line">  -&gt; 连接可读/可写时触发回调</span><br><span class="line">  -&gt; 回调中只处理当前能处理的部分</span><br><span class="line">  -&gt; 没处理完继续挂回事件循环</span><br></pre></td></tr></table></figure>
+
+<p>事件驱动的优势是避免大量线程上下文切换，可以用少量 worker 处理大量空闲 keepalive 连接，网络 IO 不阻塞整个 worker，请求处理过程也能拆成多个事件回调。</p>
+<h3 id="5-2-非阻塞-IO"><a href="#5-2-非阻塞-IO" class="headerlink" title="5.2 非阻塞 IO"></a>5.2 非阻塞 IO</h3><p>Nginx 的连接通常被设置为非阻塞。读不到数据时不会一直卡在 <code>read</code>，写不出去时不会一直卡在 <code>write</code>，当前操作暂时无法完成就返回 <code>NGX_AGAIN</code>，等待下一次事件通知。</p>
+<table>
+<thead>
+<tr>
+<th>返回值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>NGX_OK</code></td>
+<td>当前步骤成功完成</td>
+</tr>
+<tr>
+<td><code>NGX_ERROR</code></td>
+<td>当前步骤失败</td>
+</tr>
+<tr>
+<td><code>NGX_AGAIN</code></td>
+<td>暂时无法完成，需要等待后续事件</td>
+</tr>
+<tr>
+<td><code>NGX_DONE</code></td>
+<td>当前流程已被接管或异步完成</td>
+</tr>
+<tr>
+<td><code>NGX_DECLINED</code></td>
+<td>当前模块不处理，交给后续模块</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-多进程-worker"><a href="#5-3-多进程-worker" class="headerlink" title="5.3 多进程 worker"></a>5.3 多进程 worker</h3><p>Nginx 默认采用 master&#x2F;worker 多进程模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">master process</span><br><span class="line">  -&gt; 读取配置</span><br><span class="line">  -&gt; 打开监听端口</span><br><span class="line">  -&gt; 创建 worker</span><br><span class="line">  -&gt; 管理 reload、quit、reopen、upgrade 信号</span><br><span class="line"></span><br><span class="line">worker process</span><br><span class="line">  -&gt; 继承监听 fd</span><br><span class="line">  -&gt; 进入事件循环</span><br><span class="line">  -&gt; accept 连接</span><br><span class="line">  -&gt; 处理请求和响应</span><br></pre></td></tr></table></figure>
+
+<p>多进程模型让 worker 之间相对隔离，可以利用多核 CPU，配合 reload 可以实现较平滑的配置切换，也避免了多线程共享复杂状态带来的锁竞争和内存安全问题。</p>
+<h3 id="5-4-模块化-pipeline"><a href="#5-4-模块化-pipeline" class="headerlink" title="5.4 模块化 pipeline"></a>5.4 模块化 pipeline</h3><p>Nginx 的绝大多数能力都是模块实现的。配置指令属于模块，请求阶段由模块挂载 handler，响应输出由 filter 模块串成链。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">配置指令</span><br><span class="line">  -&gt; 模块解析配置</span><br><span class="line">  -&gt; 初始化阶段注册 handler/filter</span><br><span class="line">  -&gt; 请求到来时进入 phase engine</span><br><span class="line">  -&gt; 不同模块在不同阶段处理请求</span><br><span class="line">  -&gt; 响应经过 filter chain 输出</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-5-内存池"><a href="#5-5-内存池" class="headerlink" title="5.5 内存池"></a>5.5 内存池</h3><p>Nginx 高频使用内存池，而不是每次请求都频繁 <code>malloc/free</code>。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">为连接或请求创建 pool</span><br><span class="line">  -&gt; 请求处理过程中从 pool 分配小块内存</span><br><span class="line">  -&gt; 请求结束时统一释放整个 pool</span><br></pre></td></tr></table></figure>
+
+<p>内存池能减少频繁内存分配释放开销，降低内存碎片，简化错误路径清理逻辑，适合请求生命周期明确的场景。</p>
+<h2 id="6-启动流程总览"><a href="#6-启动流程总览" class="headerlink" title="6. 启动流程总览"></a>6. 启动流程总览</h2><p>Nginx 的入口在 <code>src/core/nginx.c</code> 的 <code>main</code> 函数。启动流程可以先按主干理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">main</span><br><span class="line">  -&gt; ngx_debug_init</span><br><span class="line">  -&gt; ngx_strerror_init</span><br><span class="line">  -&gt; ngx_get_options</span><br><span class="line">  -&gt; ngx_time_init</span><br><span class="line">  -&gt; ngx_regex_init</span><br><span class="line">  -&gt; ngx_log_init</span><br><span class="line">  -&gt; ngx_os_init</span><br><span class="line">  -&gt; ngx_crc32_table_init</span><br><span class="line">  -&gt; ngx_preinit_modules</span><br><span class="line">  -&gt; ngx_init_cycle</span><br><span class="line">  -&gt; ngx_signal_process 或 ngx_process_cycle</span><br></pre></td></tr></table></figure>
+
+<p>不要一开始纠结每个初始化函数的细节，先理解几个关键点：</p>
+<ul>
+<li><code>ngx_get_options</code> 解析 <code>-c</code>、<code>-p</code>、<code>-s</code>、<code>-t</code>、<code>-V</code> 等命令行参数。</li>
+<li><code>ngx_preinit_modules</code> 给模块分配 index。</li>
+<li><code>ngx_init_cycle</code> 是非常关键的初始化函数，会读取配置、初始化模块、打开监听端口、创建共享内存等。</li>
+<li><code>ngx_process_cycle</code> 根据进程模式进入 master 或 single process 逻辑。</li>
+</ul>
+<h3 id="6-1-nginx-t-做了什么"><a href="#6-1-nginx-t-做了什么" class="headerlink" title="6.1 nginx -t 做了什么"></a>6.1 <code>nginx -t</code> 做了什么</h3><p><code>nginx -t</code> 并不是简单检查文件是否存在，而是会走一遍较完整的配置解析和初始化流程，只是不真正进入正式服务循环。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">解析命令行参数</span><br><span class="line">  -&gt; 初始化 cycle</span><br><span class="line">  -&gt; 解析 nginx.conf</span><br><span class="line">  -&gt; 加载 include 文件</span><br><span class="line">  -&gt; 检查指令上下文是否合法</span><br><span class="line">  -&gt; 创建和合并模块配置</span><br><span class="line">  -&gt; 尝试打开必要资源</span><br><span class="line">  -&gt; 输出 syntax is ok / test is successful</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>nginx -t</code> 能发现很多问题：指令拼写错误、指令放错上下文、include 文件不存在、server&#x2F;location 配置不合法、监听端口配置冲突、日志路径权限问题、证书文件读取失败等。但它不能替代完整联调，因为它不能证明 upstream 一定可用，也不能证明业务请求一定正确。</p>
+<h3 id="6-2-ngx-cycle-t-的意义"><a href="#6-2-ngx-cycle-t-的意义" class="headerlink" title="6.2 ngx_cycle_t 的意义"></a>6.2 <code>ngx_cycle_t</code> 的意义</h3><p><code>ngx_cycle_t</code> 可以理解为 Nginx 当前运行周期的全局上下文，它包含配置上下文、监听端口、打开的文件、共享内存 zone、连接数组、日志对象、模块信息、路径和前缀。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">一次启动或 reload</span><br><span class="line">  -&gt; 创建一个新的 cycle</span><br><span class="line">  -&gt; 解析配置并初始化资源</span><br><span class="line">  -&gt; 如果成功，用新 cycle 替换旧 cycle</span><br><span class="line">  -&gt; 如果失败，继续保留旧 cycle</span><br></pre></td></tr></table></figure>
+
+<p>这也是 reload 相对安全的重要原因之一：新配置初始化失败时，旧 worker 可以继续工作。</p>
+<h2 id="7-master-worker-进程模型"><a href="#7-master-worker-进程模型" class="headerlink" title="7. master&#x2F;worker 进程模型"></a>7. master&#x2F;worker 进程模型</h2><h3 id="7-1-master-进程职责"><a href="#7-1-master-进程职责" class="headerlink" title="7.1 master 进程职责"></a>7.1 master 进程职责</h3><p>master 进程不直接处理普通 HTTP 请求，它主要负责管理生命周期：</p>
+<ul>
+<li>读取和验证配置。</li>
+<li>打开监听端口。</li>
+<li>创建 worker 进程。</li>
+<li>处理信号。</li>
+<li>reload 时启动新 worker 并通知旧 worker 退出。</li>
+<li>worker 异常退出时按需拉起。</li>
+<li>日志 reopen。</li>
+<li>二进制热升级。</li>
+</ul>
+<p>源码重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/os/unix/ngx_process_cycle.c</span><br></pre></td></tr></table></figure>
+
+<p>重点函数：</p>
+<ul>
+<li><code>ngx_master_process_cycle</code></li>
+<li><code>ngx_start_worker_processes</code></li>
+<li><code>ngx_spawn_process</code></li>
+<li><code>ngx_signal_worker_processes</code></li>
+<li><code>ngx_reap_children</code></li>
+</ul>
+<h3 id="7-2-worker-进程职责"><a href="#7-2-worker-进程职责" class="headerlink" title="7.2 worker 进程职责"></a>7.2 worker 进程职责</h3><p>worker 进程负责真正处理连接和请求：初始化 worker 级别模块、进入事件循环、accept 新连接、读取请求、执行 HTTP phase、访问 upstream、写响应、写日志、处理 keepalive 和优雅退出。</p>
+<p>重点函数：</p>
+<ul>
+<li><code>ngx_worker_process_cycle</code></li>
+<li><code>ngx_worker_process_init</code></li>
+<li><code>ngx_process_events_and_timers</code></li>
+</ul>
+<p>worker 主循环可以简化为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> ( ;; ) &#123;</span><br><span class="line">    <span class="keyword">if</span> (ngx_exiting) &#123;</span><br><span class="line">        <span class="comment">/* 处理优雅退出 */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_process_events_and_timers(cycle);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_terminate) &#123;</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_quit) &#123;</span><br><span class="line">        <span class="comment">/* 关闭监听 socket，不再接收新连接 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3-reload-内部机制"><a href="#7-3-reload-内部机制" class="headerlink" title="7.3 reload 内部机制"></a>7.3 reload 内部机制</h3><p>执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -s reload</span><br></pre></td></tr></table></figure>
+
+<p>本质是向 master 发送 HUP 信号。典型流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">master 收到 HUP</span><br><span class="line">  -&gt; 重新读取配置</span><br><span class="line">  -&gt; 创建新的 cycle</span><br><span class="line">  -&gt; 如果新配置失败，保留旧 worker</span><br><span class="line">  -&gt; 如果新配置成功，启动新 worker</span><br><span class="line">  -&gt; 通知旧 worker 优雅退出</span><br><span class="line">  -&gt; 旧 worker 关闭监听 fd，不再接收新连接</span><br><span class="line">  -&gt; 旧 worker 处理完已有请求后退出</span><br></pre></td></tr></table></figure>
+
+<p>注意事项：</p>
+<ul>
+<li>reload 不是 restart，通常不会直接杀掉正在处理的请求。</li>
+<li>长连接、慢下载、WebSocket 可能导致旧 worker 长时间存在。</li>
+<li>如果配置错误，新 worker 不会成功接管，旧 worker 继续服务。</li>
+<li>如果修改了影响共享内存 zone 大小或名称的配置，要特别关注兼容性。</li>
+<li>reload 不能解决所有问题，例如二进制文件升级需要走热升级或重启流程。</li>
+</ul>
+<h3 id="7-4-worker-为什么不是越多越好"><a href="#7-4-worker-为什么不是越多越好" class="headerlink" title="7.4 worker 为什么不是越多越好"></a>7.4 worker 为什么不是越多越好</h3><p>常见建议是：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_processes</span> auto;</span><br></pre></td></tr></table></figure>
+
+<p>worker 数通常接近 CPU 核数即可。过多 worker 可能导致进程调度开销增加、CPU cache 命中率下降、accept 竞争加重、上游连接数放大、日志和磁盘 IO 压力增加。源码层面理解 worker 模型后，就不会简单认为“并发高就把 worker 调到很大”。</p>
+<h2 id="8-配置解析与模块初始化"><a href="#8-配置解析与模块初始化" class="headerlink" title="8. 配置解析与模块初始化"></a>8. 配置解析与模块初始化</h2><h3 id="8-1-配置不是普通文本"><a href="#8-1-配置不是普通文本" class="headerlink" title="8.1 配置不是普通文本"></a>8.1 配置不是普通文本</h3><p>Nginx 配置文件最终会被解析成各个模块自己的配置结构。每个模块可以定义支持哪些指令、指令能出现在哪些上下文、指令参数数量和格式、指令解析函数、创建配置结构的函数、合并配置结构的函数以及初始化阶段回调。</p>
+<p>一个指令是否合法，不仅看语法，还看它所属模块声明的上下文。</p>
+<h3 id="8-2-ngx-command-t"><a href="#8-2-ngx-command-t" class="headerlink" title="8.2 ngx_command_t"></a>8.2 <code>ngx_command_t</code></h3><p>模块通过 <code>ngx_command_t</code> 声明配置指令。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">ngx_command_s</span> <span class="title">ngx_command_t</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ngx_command_s</span> &#123;</span></span><br><span class="line">    <span class="type">ngx_str_t</span>             name;</span><br><span class="line">    <span class="type">ngx_uint_t</span>            type;</span><br><span class="line">    <span class="type">char</span>               *(*<span class="built_in">set</span>)(<span class="type">ngx_conf_t</span> *cf, <span class="type">ngx_command_t</span> *cmd, <span class="type">void</span> *conf);</span><br><span class="line">    <span class="type">ngx_uint_t</span>            conf;</span><br><span class="line">    <span class="type">ngx_uint_t</span>            offset;</span><br><span class="line">    <span class="type">void</span>                 *post;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>关键字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>指令名称，例如 <code>proxy_pass</code>、<code>root</code>、<code>limit_req</code></td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>指令上下文、参数数量、类型限制</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>指令解析函数</td>
+</tr>
+<tr>
+<td><code>conf</code></td>
+<td>指令属于 main&#x2F;server&#x2F;location 哪类配置</td>
+</tr>
+<tr>
+<td><code>offset</code></td>
+<td>写入模块配置结构的位置</td>
+</tr>
+<tr>
+<td><code>post</code></td>
+<td>附加处理或校验</td>
+</tr>
+</tbody></table>
+<p>例如一个指令只能出现在 <code>location</code> 中，通常会通过 <code>type</code> 标记限制上下文。</p>
+<h3 id="8-3-配置上下文"><a href="#8-3-配置上下文" class="headerlink" title="8.3 配置上下文"></a>8.3 配置上下文</h3><p>HTTP 模块常见三层配置：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">main conf      http 级别</span><br><span class="line">server conf    server 级别</span><br><span class="line">location conf  location 级别</span><br></pre></td></tr></table></figure>
+
+<p>对应模块回调通常包括：</p>
+<ul>
+<li><code>create_main_conf</code></li>
+<li><code>init_main_conf</code></li>
+<li><code>create_srv_conf</code></li>
+<li><code>merge_srv_conf</code></li>
+<li><code>create_loc_conf</code></li>
+<li><code>merge_loc_conf</code></li>
+</ul>
+<p>配置继承和覆盖的本质，是父级配置和子级配置在 merge 阶段被合并。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="attribute">proxy_connect_timeout</span> <span class="number">3s</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">proxy_connect_timeout</span> <span class="number">5s</span>;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> /api/ &#123;</span><br><span class="line">            <span class="attribute">proxy_pass</span> http://backend;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码层面会让 <code>location /api/</code> 最终拿到合并后的配置。如果 location 没显式设置，就继承 server 或 http 的值。</p>
+<h3 id="8-4-HTTP-模块初始化"><a href="#8-4-HTTP-模块初始化" class="headerlink" title="8.4 HTTP 模块初始化"></a>8.4 HTTP 模块初始化</h3><p>HTTP 模块初始化大致做几类事情：</p>
+<ul>
+<li>创建 HTTP main&#x2F;server&#x2F;location 配置。</li>
+<li>解析 <code>http {}</code> 内部指令。</li>
+<li>收集 server 块。</li>
+<li>处理 listen 和 server_name。</li>
+<li>构建 location 树。</li>
+<li>合并 server&#x2F;location 配置。</li>
+<li>初始化 phase engine。</li>
+<li>初始化 header&#x2F;body filter 链。</li>
+</ul>
+<p>重点文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">src/http/ngx_http.c</span><br><span class="line">src/http/ngx_http_core_module.c</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-5-学配置解析时的重点问题"><a href="#8-5-学配置解析时的重点问题" class="headerlink" title="8.5 学配置解析时的重点问题"></a>8.5 学配置解析时的重点问题</h3><p>阅读配置解析源码时，建议带着下面问题：</p>
+<ul>
+<li><code>http</code>、<code>server</code>、<code>location</code> 是如何嵌套解析的。</li>
+<li>一个模块如何声明自己的配置指令。</li>
+<li>指令为什么只能放在特定上下文。</li>
+<li>server&#x2F;location 配置如何继承和合并。</li>
+<li><code>include</code> 是如何展开的。</li>
+<li><code>nginx -t</code> 为什么能发现上下文错误。</li>
+<li>动态模块为什么也能提供新指令。</li>
+</ul>
+<h2 id="9-模块体系"><a href="#9-模块体系" class="headerlink" title="9. 模块体系"></a>9. 模块体系</h2><h3 id="9-1-模块分类"><a href="#9-1-模块分类" class="headerlink" title="9.1 模块分类"></a>9.1 模块分类</h3><p>Nginx 模块可以按层级分为：</p>
+<table>
+<thead>
+<tr>
+<th>模块类型</th>
+<th>作用</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>core module</td>
+<td>核心框架和基础能力</td>
+<td><code>ngx_core_module</code></td>
+</tr>
+<tr>
+<td>event module</td>
+<td>事件机制</td>
+<td><code>ngx_epoll_module</code>、<code>ngx_kqueue_module</code></td>
+</tr>
+<tr>
+<td>http module</td>
+<td>HTTP 请求处理</td>
+<td><code>ngx_http_core_module</code>、<code>ngx_http_proxy_module</code></td>
+</tr>
+<tr>
+<td>mail module</td>
+<td>邮件代理</td>
+<td>POP3&#x2F;IMAP&#x2F;SMTP 相关模块</td>
+</tr>
+<tr>
+<td>stream module</td>
+<td>TCP&#x2F;UDP 四层代理</td>
+<td><code>ngx_stream_proxy_module</code></td>
+</tr>
+</tbody></table>
+<p>HTTP 模块还可以按职责分为：</p>
+<table>
+<thead>
+<tr>
+<th>HTTP 模块类别</th>
+<th>作用</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>handler 模块</td>
+<td>生成或处理响应</td>
+<td>static、proxy、fastcgi、stub_status</td>
+</tr>
+<tr>
+<td>filter 模块</td>
+<td>修改响应头或响应体</td>
+<td>gzip、headers、chunked、write</td>
+</tr>
+<tr>
+<td>upstream 模块</td>
+<td>与后端通信</td>
+<td>proxy、fastcgi、uwsgi、scgi</td>
+</tr>
+<tr>
+<td>phase 模块</td>
+<td>挂载到请求处理阶段</td>
+<td>rewrite、access、limit_req、auth_basic</td>
+</tr>
+<tr>
+<td>variable 模块</td>
+<td>提供变量</td>
+<td>geo、map、realip</td>
+</tr>
+</tbody></table>
+<h3 id="9-2-ngx-module-t"><a href="#9-2-ngx-module-t" class="headerlink" title="9.2 ngx_module_t"></a>9.2 <code>ngx_module_t</code></h3><p>每个模块都会有一个 <code>ngx_module_t</code> 结构。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ngx_module_t</span> ngx_http_xxx_module = &#123;</span><br><span class="line">    NGX_MODULE_V1,</span><br><span class="line">    &amp;ngx_http_xxx_module_ctx,</span><br><span class="line">    ngx_http_xxx_commands,</span><br><span class="line">    NGX_HTTP_MODULE,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    NGX_MODULE_V1_PADDING</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>其中：</p>
+<ul>
+<li><code>ctx</code>：模块上下文，定义模块初始化和配置创建&#x2F;合并回调。</li>
+<li><code>commands</code>：模块支持的配置指令。</li>
+<li><code>type</code>：模块类型，例如 <code>NGX_HTTP_MODULE</code>。</li>
+<li>其他回调用于 master&#x2F;init process&#x2F;init thread&#x2F;exit 等生命周期。</li>
+</ul>
+<h3 id="9-3-静态模块与动态模块"><a href="#9-3-静态模块与动态模块" class="headerlink" title="9.3 静态模块与动态模块"></a>9.3 静态模块与动态模块</h3><p>静态模块：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --add-module=/path/to/module</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>特点是模块编译进 Nginx 二进制，启动时天然存在，部署简单，但升级模块通常需要重新编译 Nginx。</p>
+<p>动态模块：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./configure --add-dynamic-module=/path/to/module</span><br><span class="line">make modules</span><br></pre></td></tr></table></figure>
+
+<p>配置加载：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">load_module</span> modules/ngx_http_xxx_module.so;</span><br></pre></td></tr></table></figure>
+
+<p>特点是模块以 <code>.so</code> 文件加载，更灵活，但需要 ABI、编译参数和版本兼容，且 <code>load_module</code> 必须放在 main 上下文。</p>
+<h3 id="9-4-模块学习顺序"><a href="#9-4-模块学习顺序" class="headerlink" title="9.4 模块学习顺序"></a>9.4 模块学习顺序</h3><p>建议按下面顺序读模块：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ngx_http_static_module</span><br><span class="line">  -&gt; ngx_http_stub_status_module</span><br><span class="line">  -&gt; ngx_http_access_module</span><br><span class="line">  -&gt; ngx_http_rewrite_module</span><br><span class="line">  -&gt; ngx_http_proxy_module</span><br><span class="line">  -&gt; ngx_http_headers_filter_module</span><br><span class="line">  -&gt; ngx_http_gzip_filter_module</span><br><span class="line">  -&gt; ngx_http_limit_req_module</span><br></pre></td></tr></table></figure>
+
+<p>原因是 static 模块能帮助理解 content handler；stub_status 模块代码相对短，适合理解最小模块形态；access&#x2F;rewrite 能帮助理解 phase handler；proxy 能帮助理解 upstream；headers&#x2F;gzip 能帮助理解 filter；limit_req 能帮助理解 shared memory 和 slab。</p>
+<h2 id="10-事件模型"><a href="#10-事件模型" class="headerlink" title="10. 事件模型"></a>10. 事件模型</h2><h3 id="10-1-事件模块做什么"><a href="#10-1-事件模块做什么" class="headerlink" title="10.1 事件模块做什么"></a>10.1 事件模块做什么</h3><p>事件模块负责告诉 Nginx：哪些连接现在可读、哪些连接现在可写、哪些定时器超时。在 Linux 上，核心通常是 epoll：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">socket fd</span><br><span class="line">  -&gt; 设置非阻塞</span><br><span class="line">  -&gt; 注册到 epoll</span><br><span class="line">  -&gt; epoll_wait 等待事件</span><br><span class="line">  -&gt; 触发 read/write handler</span><br></pre></td></tr></table></figure>
+
+<p>重点源码：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">src/event/ngx_event.c</span><br><span class="line">src/event/ngx_event_accept.c</span><br><span class="line">src/event/ngx_event_timer.c</span><br><span class="line">src/event/modules/ngx_epoll_module.c</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-2-ngx-event-t"><a href="#10-2-ngx-event-t" class="headerlink" title="10.2 ngx_event_t"></a>10.2 <code>ngx_event_t</code></h3><p>事件通常用 <code>ngx_event_t</code> 表示，连接读写各有一个事件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ngx_connection_t</span><br><span class="line">  -&gt; read:  ngx_event_t</span><br><span class="line">  -&gt; write: ngx_event_t</span><br></pre></td></tr></table></figure>
+
+<p>事件里最重要的是 handler：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ev-&gt;handler(ev);</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，当某个 fd 可读或可写时，Nginx 会调用对应事件上挂载的 handler。不同阶段会不断替换 handler，从而推进请求状态机。</p>
+<h3 id="10-3-连接接受流程"><a href="#10-3-连接接受流程" class="headerlink" title="10.3 连接接受流程"></a>10.3 连接接受流程</h3><p>新连接接受大致流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">监听 socket 可读</span><br><span class="line">  -&gt; ngx_event_accept</span><br><span class="line">  -&gt; accept4/accept</span><br><span class="line">  -&gt; 从 connection 池获取 ngx_connection_t</span><br><span class="line">  -&gt; 设置非阻塞</span><br><span class="line">  -&gt; 创建连接 pool</span><br><span class="line">  -&gt; 初始化 read/write event</span><br><span class="line">  -&gt; 调用监听端口对应 handler</span><br><span class="line">  -&gt; HTTP 场景进入 ngx_http_init_connection</span><br></pre></td></tr></table></figure>
+
+<p>重点函数：</p>
+<ul>
+<li><code>ngx_event_accept</code></li>
+<li><code>ngx_get_connection</code></li>
+<li><code>ngx_http_init_connection</code></li>
+</ul>
+<h3 id="10-4-accept-mutex-与-reuseport"><a href="#10-4-accept-mutex-与-reuseport" class="headerlink" title="10.4 accept mutex 与 reuseport"></a>10.4 accept mutex 与 reuseport</h3><p>多 worker 同时监听同一个端口时，可能出现惊群问题。Nginx 历史上使用 accept mutex 降低多个 worker 同时竞争 accept 的问题。新版本 Linux epoll 与内核能力已经缓解很多惊群问题，<code>accept_mutex</code> 与 <code>reuseport</code> 又是两个不同方向的机制：<code>reuseport</code> 会让多个 worker 拥有独立监听 socket，由内核分发连接。</p>
+<p>生产中是否开启相关参数，要结合系统版本、Nginx 版本和压测结果判断。</p>
+<h3 id="10-5-定时器"><a href="#10-5-定时器" class="headerlink" title="10.5 定时器"></a>10.5 定时器</h3><p>Nginx 使用红黑树管理事件定时器。典型超时包括：</p>
+<ul>
+<li><code>client_header_timeout</code></li>
+<li><code>client_body_timeout</code></li>
+<li><code>send_timeout</code></li>
+<li><code>proxy_connect_timeout</code></li>
+<li><code>proxy_read_timeout</code></li>
+<li><code>proxy_send_timeout</code></li>
+<li>keepalive 超时</li>
+</ul>
+<p>源码重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/event/ngx_event_timer.c</span><br></pre></td></tr></table></figure>
+
+<p>定时器逻辑简化：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">添加事件定时器</span><br><span class="line">  -&gt; 插入红黑树</span><br><span class="line">  -&gt; 事件循环计算最近超时时间</span><br><span class="line">  -&gt; epoll_wait 最多等待该时间</span><br><span class="line">  -&gt; 返回后处理已超时事件</span><br></pre></td></tr></table></figure>
+
+<p>这解释了为什么 Nginx 的 timeout 不是单独线程逐个扫描，而是与事件循环统一管理。</p>
+<h2 id="11-HTTP-请求生命周期"><a href="#11-HTTP-请求生命周期" class="headerlink" title="11. HTTP 请求生命周期"></a>11. HTTP 请求生命周期</h2><h3 id="11-1-从连接到请求"><a href="#11-1-从连接到请求" class="headerlink" title="11.1 从连接到请求"></a>11.1 从连接到请求</h3><p>HTTP 请求处理入口大致是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ngx_event_accept</span><br><span class="line">  -&gt; ngx_http_init_connection</span><br><span class="line">  -&gt; ngx_http_wait_request_handler</span><br><span class="line">  -&gt; ngx_http_create_request</span><br><span class="line">  -&gt; ngx_http_process_request_line</span><br><span class="line">  -&gt; ngx_http_process_request_headers</span><br><span class="line">  -&gt; ngx_http_process_request</span><br><span class="line">  -&gt; ngx_http_handler</span><br><span class="line">  -&gt; phase engine</span><br></pre></td></tr></table></figure>
+
+<p>重点文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">src/http/ngx_http_request.c</span><br><span class="line">src/http/ngx_http_parse.c</span><br><span class="line">src/http/ngx_http_core_module.c</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-2-请求行解析"><a href="#11-2-请求行解析" class="headerlink" title="11.2 请求行解析"></a>11.2 请求行解析</h3><p>请求行示例：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/api/user?id=1</span> <span class="meta">HTTP/1.1</span></span><br></pre></td></tr></table></figure>
+
+<p>Nginx 要解析出 method、URI、args、HTTP version 和 request line 原始内容。常见变量来源如下：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>来源理解</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>$request</code></td>
+<td>原始请求行</td>
+</tr>
+<tr>
+<td><code>$request_method</code></td>
+<td>请求方法</td>
+</tr>
+<tr>
+<td><code>$request_uri</code></td>
+<td>原始 URI，通常包含 query string</td>
+</tr>
+<tr>
+<td><code>$uri</code></td>
+<td>规范化后的 URI，可能被 rewrite 改写</td>
+</tr>
+<tr>
+<td><code>$args</code></td>
+<td>query string</td>
+</tr>
+<tr>
+<td><code>$is_args</code></td>
+<td>有参数时为 <code>?</code>，无参数时为空</td>
+</tr>
+</tbody></table>
+<h3 id="11-3-请求头解析"><a href="#11-3-请求头解析" class="headerlink" title="11.3 请求头解析"></a>11.3 请求头解析</h3><p>Nginx 会解析 HTTP header，并把常用头放到结构体中。</p>
+<table>
+<thead>
+<tr>
+<th>请求头</th>
+<th>源码学习关注点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Host</code></td>
+<td>决定虚拟主机匹配</td>
+</tr>
+<tr>
+<td><code>Connection</code></td>
+<td>影响 keepalive</td>
+</tr>
+<tr>
+<td><code>Content-Length</code></td>
+<td>影响请求体读取</td>
+</tr>
+<tr>
+<td><code>Transfer-Encoding</code></td>
+<td>影响 chunked 请求体</td>
+</tr>
+<tr>
+<td><code>Expect</code></td>
+<td>可能触发 100 Continue</td>
+</tr>
+<tr>
+<td><code>X-Forwarded-For</code></td>
+<td>需要配合 realip 模块处理</td>
+</tr>
+</tbody></table>
+<p>请求头过大时，可能出现 <code>400 Bad Request</code>、<code>414 Request-URI Too Large</code>、<code>494 Request Header Too Large</code>。对应配置包括：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">client_header_buffer_size</span> <span class="number">1k</span>;</span><br><span class="line"><span class="attribute">large_client_header_buffers</span> <span class="number">4</span> <span class="number">8k</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-4-请求体读取"><a href="#11-4-请求体读取" class="headerlink" title="11.4 请求体读取"></a>11.4 请求体读取</h3><p>不是所有请求都会立即读取 body。不同模块有不同策略：静态文件 GET 请求通常不需要请求体；proxy 模块需要根据配置决定是否把请求体转发给 upstream；access 阶段通常只依赖 header 和变量。</p>
+<p>请求体相关配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">client_max_body_size</span> <span class="number">100m</span>;</span><br><span class="line"><span class="attribute">client_body_buffer_size</span> <span class="number">128k</span>;</span><br><span class="line"><span class="attribute">client_body_temp_path</span> logs/client_body_temp;</span><br><span class="line"><span class="attribute">client_body_timeout</span> <span class="number">60s</span>;</span><br></pre></td></tr></table></figure>
+
+<p>理解源码时要注意：请求体读取可能是异步的，读不完整时会返回，等待下一次可读事件。</p>
+<h3 id="11-5-请求结束"><a href="#11-5-请求结束" class="headerlink" title="11.5 请求结束"></a>11.5 请求结束</h3><p>请求结束并不只是返回状态码，还包括释放请求资源、写 access log、处理 lingering close、判断连接是否 keepalive、复用连接等待下一个请求，或关闭连接并释放 connection。</p>
+<p>重点函数：</p>
+<ul>
+<li><code>ngx_http_finalize_request</code></li>
+<li><code>ngx_http_free_request</code></li>
+<li><code>ngx_http_close_request</code></li>
+<li><code>ngx_http_set_keepalive</code></li>
+<li><code>ngx_http_close_connection</code></li>
+</ul>
+<h2 id="12-phase-handler-请求阶段"><a href="#12-phase-handler-请求阶段" class="headerlink" title="12. phase handler 请求阶段"></a>12. phase handler 请求阶段</h2><h3 id="12-1-phase-engine-的意义"><a href="#12-1-phase-engine-的意义" class="headerlink" title="12.1 phase engine 的意义"></a>12.1 phase engine 的意义</h3><p>Nginx HTTP 请求不是进入一个大函数从头执行到尾，而是被拆成多个阶段。每个阶段可以挂载多个 handler。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">post read</span><br><span class="line">  -&gt; server rewrite</span><br><span class="line">  -&gt; find config</span><br><span class="line">  -&gt; rewrite</span><br><span class="line">  -&gt; post rewrite</span><br><span class="line">  -&gt; preaccess</span><br><span class="line">  -&gt; access</span><br><span class="line">  -&gt; post access</span><br><span class="line">  -&gt; precontent</span><br><span class="line">  -&gt; content</span><br><span class="line">  -&gt; log</span><br></pre></td></tr></table></figure>
+
+<p>这就是很多配置指令“看起来顺序相近，但执行阶段不同”的根本原因。</p>
+<h3 id="12-2-主要阶段说明"><a href="#12-2-主要阶段说明" class="headerlink" title="12.2 主要阶段说明"></a>12.2 主要阶段说明</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>作用</th>
+<th>常见模块</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>post read</td>
+<td>读取请求头后早期处理</td>
+<td>realip</td>
+</tr>
+<tr>
+<td>server rewrite</td>
+<td>server 级 rewrite</td>
+<td>rewrite</td>
+</tr>
+<tr>
+<td>find config</td>
+<td>查找 location</td>
+<td>core</td>
+</tr>
+<tr>
+<td>rewrite</td>
+<td>location 级 rewrite</td>
+<td>rewrite</td>
+</tr>
+<tr>
+<td>post rewrite</td>
+<td>处理 URI 改写后的跳转</td>
+<td>core</td>
+</tr>
+<tr>
+<td>preaccess</td>
+<td>访问控制前置处理</td>
+<td>limit_req、limit_conn</td>
+</tr>
+<tr>
+<td>access</td>
+<td>权限控制</td>
+<td>access、auth_basic、auth_request</td>
+</tr>
+<tr>
+<td>post access</td>
+<td>access 结果统一处理</td>
+<td>core</td>
+</tr>
+<tr>
+<td>precontent</td>
+<td>content 前处理</td>
+<td>try_files、mirror 等</td>
+</tr>
+<tr>
+<td>content</td>
+<td>生成响应或发起 upstream</td>
+<td>static、proxy、fastcgi、stub_status</td>
+</tr>
+<tr>
+<td>log</td>
+<td>请求结束后写日志</td>
+<td>log</td>
+</tr>
+</tbody></table>
+<h3 id="12-3-rewrite-阶段"><a href="#12-3-rewrite-阶段" class="headerlink" title="12.3 rewrite 阶段"></a>12.3 rewrite 阶段</h3><p><code>rewrite</code> 模块运行在 rewrite 阶段，可能触发 URI 重新查找 location。典型风险包括：<code>last</code> 会触发新的 location 匹配；<code>break</code> 停止当前 rewrite，但不一定重新匹配 location；复杂正则会增加 CPU 开销和维护成本；多次内部跳转可能触发循环保护。</p>
+<p>源码学习重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_rewrite_module.c</span><br><span class="line">src/http/ngx_http_script.c</span><br></pre></td></tr></table></figure>
+
+<h3 id="12-4-access-阶段"><a href="#12-4-access-阶段" class="headerlink" title="12.4 access 阶段"></a>12.4 access 阶段</h3><p>access 阶段常见模块包括 <code>ngx_http_access_module</code>、<code>ngx_http_auth_basic_module</code>、<code>ngx_http_auth_request_module</code>。<code>allow/deny</code> 是非常典型的 access 阶段处理。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /admin/ &#123;</span><br><span class="line">    <span class="attribute">allow</span> <span class="number">10.0.0.0</span>/<span class="number">8</span>;</span><br><span class="line">    <span class="attribute">deny</span> all;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码阅读时关注：模块如何注册 access handler；多个 access handler 之间如何组合；<code>satisfy any</code> 和 <code>satisfy all</code> 如何影响结果；access 拒绝如何变成 403。</p>
+<h3 id="12-5-content-阶段"><a href="#12-5-content-阶段" class="headerlink" title="12.5 content 阶段"></a>12.5 content 阶段</h3><p>content 阶段负责真正生成响应或把请求交给 upstream。典型 content handler 包括 static、proxy、fastcgi、return、stub_status。一个 location 通常最终只有一个主要 content handler，否则会发生覆盖或冲突。</p>
+<h3 id="12-6-log-阶段"><a href="#12-6-log-阶段" class="headerlink" title="12.6 log 阶段"></a>12.6 log 阶段</h3><p>log 阶段在请求结束后执行，典型模块是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_log_module.c</span><br></pre></td></tr></table></figure>
+
+<p>access log 中很多变量是在请求生命周期中逐步填充的，例如 <code>$status</code>、<code>$body_bytes_sent</code>、<code>$request_time</code>、<code>$upstream_status</code>、<code>$upstream_response_time</code>。理解 log 阶段有助于解释为什么某些请求虽然失败，也仍然能写 access log。</p>
+<h2 id="13-location-匹配的源码理解"><a href="#13-location-匹配的源码理解" class="headerlink" title="13. location 匹配的源码理解"></a>13. location 匹配的源码理解</h2><h3 id="13-1-配置阶段构建-location"><a href="#13-1-配置阶段构建-location" class="headerlink" title="13.1 配置阶段构建 location"></a>13.1 配置阶段构建 location</h3><p>Nginx 在配置解析阶段会收集 location，并构建适合查找的数据结构。运行时请求进来后，不是简单按配置文件行号逐行匹配。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> = /exact &#123; &#125;</span><br><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /static/ &#123; &#125;</span><br><span class="line"><span class="section">location</span> /api/ &#123; &#125;</span><br><span class="line"><span class="section">location</span> <span class="regexp">~ \.php$</span> &#123; &#125;</span><br><span class="line"><span class="section">location</span> <span class="regexp">~* \.jpg$</span> &#123; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行时查找要结合精确匹配、最长前缀匹配、<code>^~</code> 前缀短路正则、正则匹配、命名 location 和内部跳转。</p>
+<h3 id="13-2-为什么-URI-改写会重新匹配"><a href="#13-2-为什么-URI-改写会重新匹配" class="headerlink" title="13.2 为什么 URI 改写会重新匹配"></a>13.2 为什么 URI 改写会重新匹配</h3><p>当 rewrite 使用 <code>last</code> 或 <code>try_files</code> 内部跳转时，Nginx 可能重新进入 location 查找。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">原始 URI /a</span><br><span class="line">  -&gt; 匹配 location /a</span><br><span class="line">  -&gt; rewrite 到 /b</span><br><span class="line">  -&gt; 重新查找 location</span><br><span class="line">  -&gt; 匹配 location /b</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 对内部跳转次数有限制，避免配置错误导致无限循环。</p>
+<h3 id="13-3-学习-location-源码时关注什么"><a href="#13-3-学习-location-源码时关注什么" class="headerlink" title="13.3 学习 location 源码时关注什么"></a>13.3 学习 location 源码时关注什么</h3><p>不要只背匹配优先级，要从源码角度理解 location 在配置阶段如何分类、普通前缀 location 如何组织、正则 location 为什么在前缀匹配后处理、命名 location 为什么只能内部跳转、rewrite&#x2F;try_files&#x2F;error_page 如何触发内部跳转，以及 <code>alias</code> 为什么需要特别处理路径拼接。</p>
+<p>重点文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/http/ngx_http_core_module.c</span><br></pre></td></tr></table></figure>
+
+<h2 id="14-upstream-机制"><a href="#14-upstream-机制" class="headerlink" title="14. upstream 机制"></a>14. upstream 机制</h2><h3 id="14-1-upstream-是什么"><a href="#14-1-upstream-是什么" class="headerlink" title="14.1 upstream 是什么"></a>14.1 upstream 是什么</h3><p>upstream 是 Nginx 与后端服务通信的通用框架。<code>proxy_pass</code>、<code>fastcgi_pass</code>、<code>uwsgi_pass</code>、<code>scgi_pass</code> 等都基于 upstream 思想。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">client</span><br><span class="line">  -&gt; Nginx 接收请求</span><br><span class="line">  -&gt; content 阶段进入 proxy 模块</span><br><span class="line">  -&gt; 创建 upstream</span><br><span class="line">  -&gt; 连接后端</span><br><span class="line">  -&gt; 发送请求头和请求体</span><br><span class="line">  -&gt; 接收响应头</span><br><span class="line">  -&gt; 接收响应体</span><br><span class="line">  -&gt; 响应经过 filter 返回客户端</span><br></pre></td></tr></table></figure>
+
+<p>重点文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">src/http/ngx_http_upstream.c</span><br><span class="line">src/http/modules/ngx_http_proxy_module.c</span><br></pre></td></tr></table></figure>
+
+<h3 id="14-2-proxy-模块与-upstream-框架分工"><a href="#14-2-proxy-模块与-upstream-框架分工" class="headerlink" title="14.2 proxy 模块与 upstream 框架分工"></a>14.2 proxy 模块与 upstream 框架分工</h3><p><code>ngx_http_proxy_module</code> 负责 proxy 语义：解析 <code>proxy_pass</code>、生成发往后端的请求行、设置发往后端的请求头、处理 proxy 相关配置、指定 upstream 回调。</p>
+<p><code>ngx_http_upstream.c</code> 负责通用 upstream 流程：选择 peer、建立连接、管理超时、发送请求、接收响应头、转发响应体、失败重试、finalize upstream。</p>
+<h3 id="14-3-upstream-关键结构"><a href="#14-3-upstream-关键结构" class="headerlink" title="14.3 upstream 关键结构"></a>14.3 upstream 关键结构</h3><table>
+<thead>
+<tr>
+<th>结构</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ngx_http_upstream_t</code></td>
+<td>单次请求的 upstream 状态</td>
+</tr>
+<tr>
+<td><code>ngx_http_upstream_srv_conf_t</code></td>
+<td>upstream 配置块状态</td>
+</tr>
+<tr>
+<td><code>ngx_http_upstream_peer_t</code></td>
+<td>peer 选择和连接相关回调</td>
+</tr>
+<tr>
+<td><code>ngx_peer_connection_t</code></td>
+<td>与后端连接相关的数据</td>
+</tr>
+<tr>
+<td><code>ngx_http_upstream_state_t</code></td>
+<td>upstream 状态、耗时、响应码统计</td>
+</tr>
+</tbody></table>
+<p>理解 <code>$upstream_*</code> 变量时，<code>ngx_http_upstream_state_t</code> 很重要。</p>
+<h3 id="14-4-upstream-请求流程"><a href="#14-4-upstream-请求流程" class="headerlink" title="14.4 upstream 请求流程"></a>14.4 upstream 请求流程</h3><p>典型流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ngx_http_proxy_handler</span><br><span class="line">  -&gt; ngx_http_upstream_create</span><br><span class="line">  -&gt; 设置 create_request/process_header/finalize_request 等回调</span><br><span class="line">  -&gt; ngx_http_read_client_request_body</span><br><span class="line">  -&gt; ngx_http_upstream_init</span><br><span class="line">  -&gt; ngx_http_upstream_connect</span><br><span class="line">  -&gt; ngx_http_upstream_send_request</span><br><span class="line">  -&gt; ngx_http_upstream_process_header</span><br><span class="line">  -&gt; ngx_http_upstream_process_body</span><br><span class="line">  -&gt; ngx_http_upstream_finalize_request</span><br></pre></td></tr></table></figure>
+
+<p>proxy 模块提供的关键回调包括：<code>create_request</code> 构造发给后端的 HTTP 请求；<code>reinit_request</code> 在重试时重新初始化请求；<code>process_header</code> 解析后端响应头；<code>abort_request</code> 异常中止；<code>finalize_request</code> 收尾。</p>
+<h3 id="14-5-超时源码理解"><a href="#14-5-超时源码理解" class="headerlink" title="14.5 超时源码理解"></a>14.5 超时源码理解</h3><p>常见 upstream 超时：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_connect_timeout</span> <span class="number">3s</span>;</span><br><span class="line"><span class="attribute">proxy_send_timeout</span> <span class="number">30s</span>;</span><br><span class="line"><span class="attribute">proxy_read_timeout</span> <span class="number">30s</span>;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>proxy_connect_timeout</code></td>
+<td>建立后端连接的超时时间</td>
+</tr>
+<tr>
+<td><code>proxy_send_timeout</code></td>
+<td>向后端发送请求过程中的写超时</td>
+</tr>
+<tr>
+<td><code>proxy_read_timeout</code></td>
+<td>等待后端响应过程中的读超时，不是完整接口总耗时</td>
+</tr>
+</tbody></table>
+<p><code>proxy_read_timeout</code> 通常表示两次读操作之间的最大等待时间，而不是“整个 upstream 响应必须在这个时间内完成”。</p>
+<h3 id="14-6-失败重试"><a href="#14-6-失败重试" class="headerlink" title="14.6 失败重试"></a>14.6 失败重试</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_next_upstream</span> <span class="literal">error</span> timeout http_502 http_503 http_504;</span><br><span class="line"><span class="attribute">proxy_next_upstream_tries</span> <span class="number">3</span>;</span><br><span class="line"><span class="attribute">proxy_next_upstream_timeout</span> <span class="number">10s</span>;</span><br></pre></td></tr></table></figure>
+
+<p>源码层面需要关注：哪些错误会触发 next upstream；请求体已经发送后是否还能安全重试；非幂等请求重试风险；upstream 状态如何记录到 <code>$upstream_status</code>；多个 upstream response time 为什么用逗号分隔。</p>
+<h3 id="14-7-upstream-keepalive"><a href="#14-7-upstream-keepalive" class="headerlink" title="14.7 upstream keepalive"></a>14.7 upstream keepalive</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.12:8080</span>;</span><br><span class="line">    <span class="attribute">keepalive</span> <span class="number">64</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">proxy_http_version</span> <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">    <span class="attribute">proxy_set_header</span> Connection <span class="string">&quot;&quot;</span>;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://backend;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>upstream keepalive 是 Nginx 到后端的连接复用，不是客户端到 Nginx 的 keepalive。keepalive 连接按 worker 维护，worker 数量会放大后端潜在连接数。长时间空闲连接可能被后端关闭，Nginx 需要处理 stale connection。</p>
+<h2 id="15-filter-链"><a href="#15-filter-链" class="headerlink" title="15. filter 链"></a>15. filter 链</h2><h3 id="15-1-filter-的作用"><a href="#15-1-filter-的作用" class="headerlink" title="15.1 filter 的作用"></a>15.1 filter 的作用</h3><p>响应返回客户端前，会经过一组 filter。filter 可以处理响应头，也可以处理响应体。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">upstream/static/content handler</span><br><span class="line">  -&gt; header filter chain</span><br><span class="line">  -&gt; body filter chain</span><br><span class="line">  -&gt; write filter</span><br><span class="line">  -&gt; client</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>filter</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>header filter</td>
+<td>输出响应头</td>
+</tr>
+<tr>
+<td>chunked filter</td>
+<td>HTTP&#x2F;1.1 chunked 编码</td>
+</tr>
+<tr>
+<td>gzip filter</td>
+<td>响应体压缩</td>
+</tr>
+<tr>
+<td>range filter</td>
+<td>范围请求</td>
+</tr>
+<tr>
+<td>not_modified filter</td>
+<td>304 处理</td>
+</tr>
+<tr>
+<td>headers filter</td>
+<td>添加或修改响应头</td>
+</tr>
+<tr>
+<td>write filter</td>
+<td>最终写入连接</td>
+</tr>
+</tbody></table>
+<h3 id="15-2-header-filter"><a href="#15-2-header-filter" class="headerlink" title="15.2 header filter"></a>15.2 header filter</h3><p>header filter 处理状态码、<code>Content-Type</code>、<code>Content-Length</code>、<code>Transfer-Encoding</code>、<code>Last-Modified</code>、<code>ETag</code>、<code>Cache-Control</code> 和自定义响应头。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">add_header</span> X-Request-Id <span class="variable">$request_id</span> always;</span><br></pre></td></tr></table></figure>
+
+<p><code>headers</code> 模块会通过 header filter 修改输出头。</p>
+<h3 id="15-3-body-filter"><a href="#15-3-body-filter" class="headerlink" title="15.3 body filter"></a>15.3 body filter</h3><p>body filter 处理响应体，通常以 <code>ngx_chain_t</code> 链表传递 buffer。典型场景包括 gzip 压缩响应体、chunked 编码输出、range 截取部分内容、sub_filter 替换响应体内容，以及 write filter 最终发送数据。</p>
+<h3 id="15-4-filter-链顺序"><a href="#15-4-filter-链顺序" class="headerlink" title="15.4 filter 链顺序"></a>15.4 filter 链顺序</h3><p>filter 模块初始化时会把自己插入 filter 链。常见写法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> ngx_http_output_header_filter_pt  ngx_http_next_header_filter;</span><br><span class="line"><span class="type">static</span> ngx_http_output_body_filter_pt    ngx_http_next_body_filter;</span><br><span class="line"></span><br><span class="line">ngx_http_next_header_filter = ngx_http_top_header_filter;</span><br><span class="line">ngx_http_top_header_filter = ngx_http_xxx_header_filter;</span><br><span class="line"></span><br><span class="line">ngx_http_next_body_filter = ngx_http_top_body_filter;</span><br><span class="line">ngx_http_top_body_filter = ngx_http_xxx_body_filter;</span><br></pre></td></tr></table></figure>
+
+<p>理解这个机制后，就能解释为什么 filter 顺序会影响输出、为什么某些模块必须在特定 filter 前后执行、为什么 body filter 必须正确处理链表中的多个 buffer，以及为什么 filter 不应该假设响应体一次性完整到达。</p>
+<h2 id="16-内存池、buffer-与-chain"><a href="#16-内存池、buffer-与-chain" class="headerlink" title="16. 内存池、buffer 与 chain"></a>16. 内存池、buffer 与 chain</h2><h3 id="16-1-ngx-pool-t"><a href="#16-1-ngx-pool-t" class="headerlink" title="16.1 ngx_pool_t"></a>16.1 <code>ngx_pool_t</code></h3><p>Nginx 内存池用于高效管理生命周期明确的内存。</p>
+<table>
+<thead>
+<tr>
+<th>pool</th>
+<th>生命周期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cycle pool</td>
+<td>当前 cycle 生命周期</td>
+</tr>
+<tr>
+<td>connection pool</td>
+<td>当前连接生命周期</td>
+</tr>
+<tr>
+<td>request pool</td>
+<td>当前请求生命周期</td>
+</tr>
+<tr>
+<td>upstream pool</td>
+<td>通常依附请求或 upstream 流程</td>
+</tr>
+</tbody></table>
+<p>内存池分配函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">ngx_palloc</span><span class="params">(<span class="type">ngx_pool_t</span> *pool, <span class="type">size_t</span> size)</span>;</span><br><span class="line"><span class="type">void</span> *<span class="title function_">ngx_pnalloc</span><span class="params">(<span class="type">ngx_pool_t</span> *pool, <span class="type">size_t</span> size)</span>;</span><br><span class="line"><span class="type">void</span> *<span class="title function_">ngx_pcalloc</span><span class="params">(<span class="type">ngx_pool_t</span> *pool, <span class="type">size_t</span> size)</span>;</span><br><span class="line"><span class="type">ngx_pool_cleanup_t</span> *<span class="title function_">ngx_pool_cleanup_add</span><span class="params">(<span class="type">ngx_pool_t</span> *p, <span class="type">size_t</span> size)</span>;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ngx_palloc</code></td>
+<td>按对齐方式分配</td>
+</tr>
+<tr>
+<td><code>ngx_pnalloc</code></td>
+<td>不强制按默认对齐分配</td>
+</tr>
+<tr>
+<td><code>ngx_pcalloc</code></td>
+<td>分配后清零</td>
+</tr>
+<tr>
+<td><code>ngx_pool_cleanup_add</code></td>
+<td>注册 pool 销毁时的清理回调</td>
+</tr>
+</tbody></table>
+<h3 id="16-2-大块内存与-cleanup"><a href="#16-2-大块内存与-cleanup" class="headerlink" title="16.2 大块内存与 cleanup"></a>16.2 大块内存与 cleanup</h3><p>小块内存通常从 pool 当前块中分配，大块内存会单独分配并挂到 large 链表。某些资源不是普通内存，例如打开的文件、临时文件、共享资源引用或特殊句柄，可以通过 cleanup 机制在 pool 销毁时释放。</p>
+<h3 id="16-3-ngx-buf-t"><a href="#16-3-ngx-buf-t" class="headerlink" title="16.3 ngx_buf_t"></a>16.3 <code>ngx_buf_t</code></h3><p>Nginx 使用 <code>ngx_buf_t</code> 表示一段数据。buffer 可以来自内存、文件、mmap、临时文件或 upstream 接收缓冲。</p>
+<table>
+<thead>
+<tr>
+<th>字段&#x2F;标记</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pos</code> &#x2F; <code>last</code></td>
+<td>内存 buffer 中可用数据范围</td>
+</tr>
+<tr>
+<td><code>file_pos</code> &#x2F; <code>file_last</code></td>
+<td>文件 buffer 中可用数据范围</td>
+</tr>
+<tr>
+<td><code>temporary</code></td>
+<td>可修改的临时内存</td>
+</tr>
+<tr>
+<td><code>memory</code></td>
+<td>只读内存</td>
+</tr>
+<tr>
+<td><code>in_file</code></td>
+<td>数据来自文件</td>
+</tr>
+<tr>
+<td><code>flush</code></td>
+<td>要求刷新输出</td>
+</tr>
+<tr>
+<td><code>last_buf</code></td>
+<td>整个响应最后一个 buffer</td>
+</tr>
+<tr>
+<td><code>last_in_chain</code></td>
+<td>当前 chain 最后一个 buffer</td>
+</tr>
+</tbody></table>
+<h3 id="16-4-ngx-chain-t"><a href="#16-4-ngx-chain-t" class="headerlink" title="16.4 ngx_chain_t"></a>16.4 <code>ngx_chain_t</code></h3><p><code>ngx_chain_t</code> 是 buffer 链表：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">ngx_chain_s</span> <span class="title">ngx_chain_t</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ngx_chain_s</span> &#123;</span></span><br><span class="line">    <span class="type">ngx_buf_t</span>    *buf;</span><br><span class="line">    <span class="type">ngx_chain_t</span>  *next;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>chain 的意义在于：响应体可能由多个片段组成；部分数据来自内存，部分来自文件；filter 可以逐段处理响应；非阻塞写可能一次写不完，需要保留未发送部分。学习 body filter 时必须理解 chain，否则很容易写出只处理第一个 buffer 的错误模块。</p>
+<h2 id="17-shared-memory、slab-与-zone"><a href="#17-shared-memory、slab-与-zone" class="headerlink" title="17. shared memory、slab 与 zone"></a>17. shared memory、slab 与 zone</h2><h3 id="17-1-为什么需要共享内存"><a href="#17-1-为什么需要共享内存" class="headerlink" title="17.1 为什么需要共享内存"></a>17.1 为什么需要共享内存</h3><p>Nginx worker 是多进程模型，普通内存不在 worker 之间共享。如果多个 worker 需要共享状态，就需要 shared memory。典型场景包括限流计数、连接数统计、proxy cache 元数据、upstream zone、SSL session cache。</p>
+<h3 id="17-2-shared-memory-zone"><a href="#17-2-shared-memory-zone" class="headerlink" title="17.2 shared memory zone"></a>17.2 shared memory zone</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=api_limit:<span class="number">10m</span> rate=10r/s;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>api_limit:10m</code> 就是一个共享内存 zone。源码层面关注 zone 名称、zone 大小、init 回调、worker 如何访问共享内存，以及 reload 时新旧 cycle 如何处理同名 zone。</p>
+<h3 id="17-3-slab-分配器"><a href="#17-3-slab-分配器" class="headerlink" title="17.3 slab 分配器"></a>17.3 slab 分配器</h3><p>共享内存里不能直接使用普通进程堆分配方式。Nginx 使用 slab 分配器管理 shared memory 中的小块内存。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/core/ngx_slab.c</span><br></pre></td></tr></table></figure>
+
+<p>slab 适合在共享内存中分配小对象，由多 worker 访问，并配合锁保护共享结构。</p>
+<h3 id="17-4-limit-req-的源码主线"><a href="#17-4-limit-req-的源码主线" class="headerlink" title="17.4 limit_req 的源码主线"></a>17.4 <code>limit_req</code> 的源码主线</h3><p><code>limit_req</code> 是学习 shared memory 的好例子。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=req_zone:<span class="number">10m</span> rate=5r/s;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="section">location</span> /api/ &#123;</span><br><span class="line">        <span class="attribute">limit_req</span> zone=req_zone burst=<span class="number">20</span> nodelay;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_limit_req_module.c</span><br></pre></td></tr></table></figure>
+
+<p>需要理解：<code>limit_req_zone</code> 在 http 级别定义共享状态；key 通常是客户端 IP 或业务标识；zone 中存储 key 对应的请求速率状态；红黑树和队列用于查找与淘汰；多 worker 访问共享 zone 时需要锁；burst 和 nodelay 影响排队或立即拒绝策略。</p>
+<h2 id="18-变量系统"><a href="#18-变量系统" class="headerlink" title="18. 变量系统"></a>18. 变量系统</h2><h3 id="18-1-变量不是简单字符串替换"><a href="#18-1-变量不是简单字符串替换" class="headerlink" title="18.1 变量不是简单字符串替换"></a>18.1 变量不是简单字符串替换</h3><p>Nginx 变量例如 <code>$uri</code>、<code>$host</code>、<code>$request_time</code>、<code>$upstream_addr</code>，背后通常是变量索引、取值回调和缓存标记。</p>
+<p>变量可能来自：</p>
+<ul>
+<li>请求行解析结果。</li>
+<li>请求头。</li>
+<li>连接信息。</li>
+<li>upstream 状态。</li>
+<li>map&#x2F;geo 等模块计算。</li>
+<li>rewrite 脚本引擎。</li>
+<li>第三方模块自定义。</li>
+</ul>
+<h3 id="18-2-变量求值时机"><a href="#18-2-变量求值时机" class="headerlink" title="18.2 变量求值时机"></a>18.2 变量求值时机</h3><p>变量不一定在请求一开始就全部计算。很多变量是用到时才求值。</p>
+<p>例如：</p>
+<ul>
+<li><code>$request_time</code> 通常在日志阶段才有最终意义。</li>
+<li><code>$upstream_response_time</code> 只有访问 upstream 后才有意义。</li>
+<li><code>$sent_http_*</code> 在响应头发送阶段后更有意义。</li>
+<li>map 变量可能在被引用时才执行匹配。</li>
+</ul>
+<p>这解释了为什么某些变量在不同阶段值不同，或者在没有 upstream 时为空。</p>
+<h3 id="18-3-map-模块源码理解"><a href="#18-3-map-模块源码理解" class="headerlink" title="18.3 map 模块源码理解"></a>18.3 map 模块源码理解</h3><p><code>map</code> 是理解变量系统的好入口。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">map</span> <span class="variable">$http_upgrade</span> <span class="variable">$connection_upgrade</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> upgrade;</span><br><span class="line">    &#x27;&#x27;      close;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码学习重点：map 如何注册变量；map 如何在配置阶段构建匹配结构；运行时如何根据源变量计算目标变量；正则 map 和普通 hash map 的差异。</p>
+<p>重点文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_map_module.c</span><br><span class="line">src/http/ngx_http_variables.c</span><br></pre></td></tr></table></figure>
+
+<h2 id="19-日志系统源码理解"><a href="#19-日志系统源码理解" class="headerlink" title="19. 日志系统源码理解"></a>19. 日志系统源码理解</h2><h3 id="19-1-error-log"><a href="#19-1-error-log" class="headerlink" title="19.1 error log"></a>19.1 error log</h3><p>error log 是 Nginx 内部统一日志系统，常见级别包括：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">debug, info, notice, warn, error, crit, alert, emerg</span><br></pre></td></tr></table></figure>
+
+<p>源码里常见：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ngx_log_error(NGX_LOG_ERR, <span class="built_in">log</span>, err, <span class="string">&quot;message&quot;</span>);</span><br><span class="line">ngx_log_debug0(NGX_LOG_DEBUG_HTTP, <span class="built_in">log</span>, <span class="number">0</span>, <span class="string">&quot;debug message&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>debug 日志需要编译时带 <code>--with-debug</code>，配置 <code>error_log ... debug</code>，并可选使用 <code>debug_connection</code> 限定客户端。</p>
+<h3 id="19-2-access-log"><a href="#19-2-access-log" class="headerlink" title="19.2 access log"></a>19.2 access log</h3><p>access log 属于 HTTP log 模块，发生在 log 阶段。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">log_format</span> main <span class="string">&#x27;<span class="variable">$remote_addr</span> [<span class="variable">$time_local</span>] &quot;<span class="variable">$request</span>&quot; &#x27;</span></span><br><span class="line">                <span class="string">&#x27;<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="variable">$request_time</span> &#x27;</span></span><br><span class="line">                <span class="string">&#x27;<span class="variable">$upstream_addr</span> <span class="variable">$upstream_status</span> <span class="variable">$upstream_response_time</span>&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="attribute">access_log</span> logs/access.log main;</span><br></pre></td></tr></table></figure>
+
+<p>源码重点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_log_module.c</span><br></pre></td></tr></table></figure>
+
+<p>关注点：log_format 如何在配置阶段编译成操作数组；请求结束后如何按变量生成日志行；buffer 日志与 gzip 日志如何工作；<code>open_log_file_cache</code> 如何缓存日志文件句柄。</p>
+<h3 id="19-3-为什么源码学习要重视日志"><a href="#19-3-为什么源码学习要重视日志" class="headerlink" title="19.3 为什么源码学习要重视日志"></a>19.3 为什么源码学习要重视日志</h3><p>源码阅读不只是看函数调用，还要学会把日志和源码对应起来。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">开启 debug log</span><br><span class="line">  -&gt; 发起一个最小请求</span><br><span class="line">  -&gt; 找到关键日志行</span><br><span class="line">  -&gt; 用日志内容搜索源码</span><br><span class="line">  -&gt; 定位对应函数</span><br><span class="line">  -&gt; 反推请求流转路径</span><br></pre></td></tr></table></figure>
+
+<p>这比单纯从 <code>main</code> 开始硬读效率高很多。</p>
+<h2 id="20-reload、退出与热升级"><a href="#20-reload、退出与热升级" class="headerlink" title="20. reload、退出与热升级"></a>20. reload、退出与热升级</h2><h3 id="20-1-常见信号"><a href="#20-1-常见信号" class="headerlink" title="20.1 常见信号"></a>20.1 常见信号</h3><p>Nginx 使用信号控制进程行为：</p>
+<table>
+<thead>
+<tr>
+<th>信号&#x2F;命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>nginx -s reload</code> &#x2F; HUP</td>
+<td>重新加载配置</td>
+</tr>
+<tr>
+<td><code>nginx -s quit</code> &#x2F; QUIT</td>
+<td>优雅退出</td>
+</tr>
+<tr>
+<td><code>nginx -s stop</code> &#x2F; TERM&#x2F;INT</td>
+<td>快速退出</td>
+</tr>
+<tr>
+<td><code>nginx -s reopen</code> &#x2F; USR1</td>
+<td>重新打开日志文件</td>
+</tr>
+<tr>
+<td>USR2</td>
+<td>二进制热升级</td>
+</tr>
+<tr>
+<td>WINCH</td>
+<td>优雅关闭 worker</td>
+</tr>
+</tbody></table>
+<h3 id="20-2-优雅退出"><a href="#20-2-优雅退出" class="headerlink" title="20.2 优雅退出"></a>20.2 优雅退出</h3><p>优雅退出的核心是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">worker 收到退出指令</span><br><span class="line">  -&gt; 关闭监听 socket</span><br><span class="line">  -&gt; 不再 accept 新连接</span><br><span class="line">  -&gt; 继续处理已有连接</span><br><span class="line">  -&gt; 已有请求处理完成后释放资源</span><br><span class="line">  -&gt; worker 退出</span><br></pre></td></tr></table></figure>
+
+<p>这也是为什么长连接可能拖慢 reload 后旧 worker 的退出。</p>
+<h3 id="20-3-日志-reopen"><a href="#20-3-日志-reopen" class="headerlink" title="20.3 日志 reopen"></a>20.3 日志 reopen</h3><p>日志切割常见流程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mv</span> access.log access.log.1</span><br><span class="line">nginx -s reopen</span><br></pre></td></tr></table></figure>
+
+<p>reopen 后，master 会通知 worker 重新打开日志文件。否则即使文件名被移动，worker 仍可能写入旧文件句柄。</p>
+<h3 id="20-4-二进制热升级"><a href="#20-4-二进制热升级" class="headerlink" title="20.4 二进制热升级"></a>20.4 二进制热升级</h3><p>热升级大致流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">替换 nginx 二进制文件</span><br><span class="line">  -&gt; 向旧 master 发送 USR2</span><br><span class="line">  -&gt; 旧 master 启动新 binary 的 master/worker</span><br><span class="line">  -&gt; 新旧 master/worker 短暂共存</span><br><span class="line">  -&gt; 验证新版本正常</span><br><span class="line">  -&gt; 通知旧 worker 优雅退出</span><br><span class="line">  -&gt; 必要时回滚旧 binary</span><br></pre></td></tr></table></figure>
+
+<p>热升级风险高于普通 reload，生产中必须有 SOP、备份和回滚验证。需要特别注意新旧二进制编译参数兼容、动态模块 ABI 兼容、共享内存 zone 兼容性、长连接和监听 fd 继承，以及失败后能否明确回滚到旧 master。</p>
+<h2 id="21-最小-HTTP-模块开发"><a href="#21-最小-HTTP-模块开发" class="headerlink" title="21. 最小 HTTP 模块开发"></a>21. 最小 HTTP 模块开发</h2><h3 id="21-1-模块目录结构"><a href="#21-1-模块目录结构" class="headerlink" title="21.1 模块目录结构"></a>21.1 模块目录结构</h3><p>建议创建目录：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ngx_http_hello_module/</span><br><span class="line">├── config</span><br><span class="line">└── ngx_http_hello_module.c</span><br></pre></td></tr></table></figure>
+
+<p><code>config</code> 文件示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ngx_addon_name=ngx_http_hello_module</span><br><span class="line">HTTP_MODULES=<span class="string">&quot;<span class="variable">$HTTP_MODULES</span> ngx_http_hello_module&quot;</span></span><br><span class="line">NGX_ADDON_SRCS=<span class="string">&quot;<span class="variable">$NGX_ADDON_SRCS</span> <span class="variable">$ngx_addon_dir</span>/ngx_http_hello_module.c&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="21-2-最小-content-handler-模块"><a href="#21-2-最小-content-handler-模块" class="headerlink" title="21.2 最小 content handler 模块"></a>21.2 最小 content handler 模块</h3><p>下面示例实现一个 <code>hello_nginx</code> 指令，在 location 中返回固定文本。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_config.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_core.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_http.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">char</span> *<span class="title function_">ngx_http_hello</span><span class="params">(<span class="type">ngx_conf_t</span> *cf, <span class="type">ngx_command_t</span> *cmd, <span class="type">void</span> *conf)</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span> <span class="title function_">ngx_http_hello_handler</span><span class="params">(<span class="type">ngx_http_request_t</span> *r)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_command_t</span> ngx_http_hello_commands[] = &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        ngx_string(<span class="string">&quot;hello_nginx&quot;</span>),</span><br><span class="line">        NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,</span><br><span class="line">        ngx_http_hello,</span><br><span class="line">        NGX_HTTP_LOC_CONF_OFFSET,</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        <span class="literal">NULL</span></span><br><span class="line">    &#125;,</span><br><span class="line">    ngx_null_command</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_http_module_t</span> ngx_http_hello_module_ctx = &#123;</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">ngx_module_t</span> ngx_http_hello_module = &#123;</span><br><span class="line">    NGX_MODULE_V1,</span><br><span class="line">    &amp;ngx_http_hello_module_ctx,</span><br><span class="line">    ngx_http_hello_commands,</span><br><span class="line">    NGX_HTTP_MODULE,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    NGX_MODULE_V1_PADDING</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">char</span> *</span><br><span class="line"><span class="title function_">ngx_http_hello</span><span class="params">(<span class="type">ngx_conf_t</span> *cf, <span class="type">ngx_command_t</span> *cmd, <span class="type">void</span> *conf)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">ngx_http_core_loc_conf_t</span> *clcf;</span><br><span class="line"></span><br><span class="line">    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);</span><br><span class="line">    clcf-&gt;handler = ngx_http_hello_handler;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_CONF_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span></span><br><span class="line"><span class="title function_">ngx_http_hello_handler</span><span class="params">(<span class="type">ngx_http_request_t</span> *r)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">ngx_buf_t</span>    *b;</span><br><span class="line">    <span class="type">ngx_chain_t</span>   out;</span><br><span class="line">    <span class="type">ngx_str_t</span>     type = ngx_string(<span class="string">&quot;text/plain&quot;</span>);</span><br><span class="line">    <span class="type">ngx_str_t</span>     response = ngx_string(<span class="string">&quot;hello nginx module\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!(r-&gt;method &amp; (NGX_HTTP_GET|NGX_HTTP_HEAD))) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_HTTP_NOT_ALLOWED;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    r-&gt;headers_out.status = NGX_HTTP_OK;</span><br><span class="line">    r-&gt;headers_out.content_length_n = response.len;</span><br><span class="line">    r-&gt;headers_out.content_type = type;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (r-&gt;method == NGX_HTTP_HEAD) &#123;</span><br><span class="line">        <span class="keyword">return</span> ngx_http_send_header(r);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    b = ngx_create_temp_buf(r-&gt;pool, response.len);</span><br><span class="line">    <span class="keyword">if</span> (b == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_HTTP_INTERNAL_SERVER_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_memcpy(b-&gt;pos, response.data, response.len);</span><br><span class="line">    b-&gt;last = b-&gt;pos + response.len;</span><br><span class="line">    b-&gt;last_buf = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    out.buf = b;</span><br><span class="line">    out.next = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    ngx_http_send_header(r);</span><br><span class="line">    <span class="keyword">return</span> ngx_http_output_filter(r, &amp;out);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="21-3-编译模块"><a href="#21-3-编译模块" class="headerlink" title="21.3 编译模块"></a>21.3 编译模块</h3><p>静态编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/opt/nginx-hello --with-debug --add-module=/path/to/ngx_http_hello_module</span><br><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br><span class="line"><span class="built_in">sudo</span> make install</span><br></pre></td></tr></table></figure>
+
+<p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8080</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /hello &#123;</span><br><span class="line">        hello_nginx;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -i http://127.0.0.1:8080/hello</span><br></pre></td></tr></table></figure>
+
+<p>预期：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">HTTP/1.1</span> <span class="number">200</span> OK</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>text/plain</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>19</span><br><span class="line"></span><br><span class="line"><span class="language-arduino">hello nginx <span class="keyword">module</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="21-4-content-handler-模块要点"><a href="#21-4-content-handler-模块要点" class="headerlink" title="21.4 content handler 模块要点"></a>21.4 content handler 模块要点</h3><p>必须理解：指令通过 <code>ngx_command_t</code> 注册；指令解析函数把 <code>clcf-&gt;handler</code> 设置为自己的 handler；handler 中要检查请求方法；HEAD 请求只发送响应头；响应体要通过 <code>ngx_buf_t</code> 和 <code>ngx_chain_t</code> 输出；内存从 <code>r-&gt;pool</code> 分配，请求结束后自动释放；不要在请求 handler 中执行阻塞操作。</p>
+<h2 id="22-最小-header-filter-模块开发"><a href="#22-最小-header-filter-模块开发" class="headerlink" title="22. 最小 header filter 模块开发"></a>22. 最小 header filter 模块开发</h2><h3 id="22-1-目标"><a href="#22-1-目标" class="headerlink" title="22.1 目标"></a>22.1 目标</h3><p>实现一个 header filter，为响应添加：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">X-Learn-Nginx</span><span class="punctuation">: </span>phase-7</span><br></pre></td></tr></table></figure>
+
+<h3 id="22-2-核心代码骨架"><a href="#22-2-核心代码骨架" class="headerlink" title="22.2 核心代码骨架"></a>22.2 核心代码骨架</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_config.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_core.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;ngx_http.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span> <span class="title function_">ngx_http_learn_header_filter</span><span class="params">(<span class="type">ngx_http_request_t</span> *r)</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span> <span class="title function_">ngx_http_learn_filter_init</span><span class="params">(<span class="type">ngx_conf_t</span> *cf)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> ngx_http_output_header_filter_pt ngx_http_next_header_filter;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_http_module_t</span> ngx_http_learn_filter_module_ctx = &#123;</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    ngx_http_learn_filter_init,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">ngx_module_t</span> ngx_http_learn_filter_module = &#123;</span><br><span class="line">    NGX_MODULE_V1,</span><br><span class="line">    &amp;ngx_http_learn_filter_module_ctx,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    NGX_HTTP_MODULE,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">    NGX_MODULE_V1_PADDING</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span></span><br><span class="line"><span class="title function_">ngx_http_learn_filter_init</span><span class="params">(<span class="type">ngx_conf_t</span> *cf)</span></span><br><span class="line">&#123;</span><br><span class="line">    ngx_http_next_header_filter = ngx_http_top_header_filter;</span><br><span class="line">    ngx_http_top_header_filter = ngx_http_learn_header_filter;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ngx_int_t</span></span><br><span class="line"><span class="title function_">ngx_http_learn_header_filter</span><span class="params">(<span class="type">ngx_http_request_t</span> *r)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">ngx_table_elt_t</span> *h;</span><br><span class="line"></span><br><span class="line">    h = ngx_list_push(&amp;r-&gt;headers_out.headers);</span><br><span class="line">    <span class="keyword">if</span> (h == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    h-&gt;hash = <span class="number">1</span>;</span><br><span class="line">    ngx_str_set(&amp;h-&gt;key, <span class="string">&quot;X-Learn-Nginx&quot;</span>);</span><br><span class="line">    ngx_str_set(&amp;h-&gt;value, <span class="string">&quot;phase-7&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ngx_http_next_header_filter(r);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="22-3-filter-模块要点"><a href="#22-3-filter-模块要点" class="headerlink" title="22.3 filter 模块要点"></a>22.3 filter 模块要点</h3><ul>
+<li>filter 模块通常在 postconfiguration 阶段挂入 filter 链。</li>
+<li>需要保存原来的 top filter，然后把自己设置为新的 top filter。</li>
+<li>执行完成后通常调用 next filter。</li>
+<li>header filter 不应该随意修改 body。</li>
+<li>body filter 必须处理 chain 中每个 buffer。</li>
+<li>filter 模块要特别注意顺序和兼容性。</li>
+</ul>
+<h2 id="23-调试方法"><a href="#23-调试方法" class="headerlink" title="23. 调试方法"></a>23. 调试方法</h2><h3 id="23-1-用-debug-log-追踪请求"><a href="#23-1-用-debug-log-追踪请求" class="headerlink" title="23.1 用 debug log 追踪请求"></a>23.1 用 debug log 追踪请求</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">error_log</span> logs/<span class="literal">error</span>.log <span class="literal">debug</span>;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">debug_connection</span> <span class="number">127.0.0.1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>发起请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H <span class="string">&#x27;Host: test.local&#x27;</span> http://127.0.0.1:8080/api/users</span><br></pre></td></tr></table></figure>
+
+<p>建议在日志中搜索：<code>accept</code>、<code>http wait request handler</code>、<code>http process request line</code>、<code>http process request header line</code>、<code>http init upstream</code>、<code>connect to</code>、<code>http upstream request</code>、<code>http output filter</code>、<code>http log handler</code>。</p>
+<h3 id="23-2-用-gdb-调试-worker"><a href="#23-2-用-gdb-调试-worker" class="headerlink" title="23.2 用 gdb 调试 worker"></a>23.2 用 gdb 调试 worker</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps -ef | grep nginx</span><br><span class="line"><span class="built_in">sudo</span> gdb -p &lt;worker_pid&gt;</span><br></pre></td></tr></table></figure>
+
+<p>常用 gdb 命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">bt</span><br><span class="line">info threads</span><br><span class="line">break ngx_http_process_request</span><br><span class="line">break ngx_http_proxy_handler</span><br><span class="line">break ngx_http_upstream_connect</span><br><span class="line">continue</span><br><span class="line">print r-&gt;uri</span><br><span class="line">print r-&gt;headers_in.host-&gt;value</span><br></pre></td></tr></table></figure>
+
+<p>注意：Nginx 是多进程，断点要打在处理请求的 worker 上；如果 worker 多个，建议实验时设置 <code>worker_processes 1;</code>；debug 编译更容易看到符号；gdb 会暂停 worker，不能直接在生产高峰使用。</p>
+<h3 id="23-3-用-strace-看系统调用"><a href="#23-3-用-strace-看系统调用" class="headerlink" title="23.3 用 strace 看系统调用"></a>23.3 用 strace 看系统调用</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> strace -f -p &lt;worker_pid&gt; -e trace=network,file,epoll_wait,<span class="built_in">read</span>,write</span><br></pre></td></tr></table></figure>
+
+<p>可观察 <code>epoll_wait</code>、<code>accept4</code>、<code>recvfrom</code>、<code>sendfile</code>、<code>writev</code>、<code>connect</code>、<code>openat</code>、<code>close</code>。strace 适合验证 Nginx 是否卡在系统调用层，但会影响性能，生产慎用。</p>
+<h3 id="23-4-用-perf-看热点"><a href="#23-4-用-perf-看热点" class="headerlink" title="23.4 用 perf 看热点"></a>23.4 用 perf 看热点</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> perf top -p &lt;worker_pid&gt;</span><br><span class="line"><span class="built_in">sudo</span> perf record -F 99 -p &lt;worker_pid&gt; -g -- <span class="built_in">sleep</span> 30</span><br><span class="line"><span class="built_in">sudo</span> perf report</span><br></pre></td></tr></table></figure>
+
+<p>适合分析 CPU 是否耗在 TLS、gzip、正则匹配、日志格式化或异常第三方模块热点。</p>
+<h3 id="23-5-用源码搜索定位"><a href="#23-5-用源码搜索定位" class="headerlink" title="23.5 用源码搜索定位"></a>23.5 用源码搜索定位</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rg <span class="string">&quot;proxy_pass&quot;</span> src/http</span><br><span class="line">rg <span class="string">&quot;NGX_HTTP_ACCESS_PHASE&quot;</span> src/http</span><br><span class="line">rg <span class="string">&quot;ngx_http_top_header_filter&quot;</span> src/http</span><br><span class="line">rg <span class="string">&quot;upstream_response_time&quot;</span> src/http</span><br><span class="line">rg <span class="string">&quot;client intended to send too large body&quot;</span> src</span><br></pre></td></tr></table></figure>
+
+<p>技巧：用配置指令名搜索 <code>ngx_command_t</code>；用 error log 中的英文报错搜索源码；用变量名搜索变量注册表；用函数名前缀判断模块归属；用 <code>objs/ngx_modules.c</code> 查看实际编译进来的模块顺序。</p>
+<h2 id="24-核心源码阅读路线"><a href="#24-核心源码阅读路线" class="headerlink" title="24. 核心源码阅读路线"></a>24. 核心源码阅读路线</h2><h3 id="24-1-第一轮：建立地图"><a href="#24-1-第一轮：建立地图" class="headerlink" title="24.1 第一轮：建立地图"></a>24.1 第一轮：建立地图</h3><p>目标：知道目录和主链路，不追求细节。</p>
+<p>阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">src/core/nginx.c</span><br><span class="line">src/core/ngx_cycle.c</span><br><span class="line">src/os/unix/ngx_process_cycle.c</span><br><span class="line">src/event/ngx_event.c</span><br><span class="line">src/event/modules/ngx_epoll_module.c</span><br><span class="line">src/http/ngx_http_request.c</span><br><span class="line">src/http/ngx_http_core_module.c</span><br></pre></td></tr></table></figure>
+
+<p>输出要求：</p>
+<ul>
+<li>画出启动流程图。</li>
+<li>画出 master&#x2F;worker 职责图。</li>
+<li>画出请求生命周期图。</li>
+</ul>
+<h3 id="24-2-第二轮：配置和-phase"><a href="#24-2-第二轮：配置和-phase" class="headerlink" title="24.2 第二轮：配置和 phase"></a>24.2 第二轮：配置和 phase</h3><p>目标：理解配置如何变成 handler。</p>
+<p>阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">src/core/ngx_conf_file.c</span><br><span class="line">src/http/ngx_http.c</span><br><span class="line">src/http/ngx_http_core_module.c</span><br><span class="line">src/http/modules/ngx_http_rewrite_module.c</span><br><span class="line">src/http/modules/ngx_http_access_module.c</span><br><span class="line">src/http/modules/ngx_http_static_module.c</span><br></pre></td></tr></table></figure>
+
+<p>输出要求：</p>
+<ul>
+<li>能说明一个指令如何被解析。</li>
+<li>能说明 server&#x2F;location 如何合并。</li>
+<li>能说明 phase handler 如何注册和执行。</li>
+</ul>
+<h3 id="24-3-第三轮：upstream"><a href="#24-3-第三轮：upstream" class="headerlink" title="24.3 第三轮：upstream"></a>24.3 第三轮：upstream</h3><p>目标：读懂 <code>proxy_pass</code> 主链路。</p>
+<p>阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">src/http/modules/ngx_http_proxy_module.c</span><br><span class="line">src/http/ngx_http_upstream.c</span><br><span class="line">src/http/ngx_http_upstream_round_robin.c</span><br><span class="line">src/event/ngx_event_connect.c</span><br></pre></td></tr></table></figure>
+
+<p>输出要求：</p>
+<ul>
+<li>画出 proxy 请求转发流程。</li>
+<li>能解释 connect&#x2F;send&#x2F;read timeout。</li>
+<li>能解释 upstream retry。</li>
+<li>能解释 <code>$upstream_status</code> 和 <code>$upstream_response_time</code>。</li>
+</ul>
+<h3 id="24-4-第四轮：filter"><a href="#24-4-第四轮：filter" class="headerlink" title="24.4 第四轮：filter"></a>24.4 第四轮：filter</h3><p>目标：理解响应如何输出。</p>
+<p>阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">src/http/ngx_http_header_filter_module.c</span><br><span class="line">src/http/ngx_http_write_filter_module.c</span><br><span class="line">src/http/modules/ngx_http_chunked_filter_module.c</span><br><span class="line">src/http/modules/ngx_http_gzip_filter_module.c</span><br><span class="line">src/http/modules/ngx_http_headers_filter_module.c</span><br></pre></td></tr></table></figure>
+
+<p>输出要求：</p>
+<ul>
+<li>能说明 header filter 和 body filter 的区别。</li>
+<li>能说明 filter 链如何串起来。</li>
+<li>能说明 <code>ngx_buf_t</code> 和 <code>ngx_chain_t</code> 在输出中的作用。</li>
+</ul>
+<h3 id="24-5-第五轮：内存和共享状态"><a href="#24-5-第五轮：内存和共享状态" class="headerlink" title="24.5 第五轮：内存和共享状态"></a>24.5 第五轮：内存和共享状态</h3><p>目标：理解高并发下的资源管理。</p>
+<p>阅读顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">src/core/ngx_palloc.c</span><br><span class="line">src/core/ngx_buf.c</span><br><span class="line">src/core/ngx_array.c</span><br><span class="line">src/core/ngx_list.c</span><br><span class="line">src/core/ngx_hash.c</span><br><span class="line">src/core/ngx_slab.c</span><br><span class="line">src/event/ngx_event_timer.c</span><br><span class="line">src/http/modules/ngx_http_limit_req_module.c</span><br><span class="line">src/http/ngx_http_file_cache.c</span><br></pre></td></tr></table></figure>
+
+<p>输出要求：</p>
+<ul>
+<li>能说明 pool 的生命周期。</li>
+<li>能说明 buffer&#x2F;chain 的数据传递方式。</li>
+<li>能说明 shared memory zone 的用途。</li>
+<li>能说明 limit_req 或 proxy_cache 为什么需要共享内存。</li>
+</ul>
+<h2 id="25-关键结构体速查"><a href="#25-关键结构体速查" class="headerlink" title="25. 关键结构体速查"></a>25. 关键结构体速查</h2><table>
+<thead>
+<tr>
+<th>结构体</th>
+<th>所在方向</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ngx_cycle_t</code></td>
+<td>core</td>
+<td>当前运行周期的全局上下文</td>
+</tr>
+<tr>
+<td><code>ngx_conf_t</code></td>
+<td>core</td>
+<td>配置解析上下文</td>
+</tr>
+<tr>
+<td><code>ngx_module_t</code></td>
+<td>core</td>
+<td>模块定义</td>
+</tr>
+<tr>
+<td><code>ngx_command_t</code></td>
+<td>core</td>
+<td>配置指令定义</td>
+</tr>
+<tr>
+<td><code>ngx_pool_t</code></td>
+<td>core</td>
+<td>内存池</td>
+</tr>
+<tr>
+<td><code>ngx_array_t</code></td>
+<td>core</td>
+<td>动态数组</td>
+</tr>
+<tr>
+<td><code>ngx_list_t</code></td>
+<td>core</td>
+<td>链式数组，常用于 header</td>
+</tr>
+<tr>
+<td><code>ngx_hash_t</code></td>
+<td>core</td>
+<td>hash 表</td>
+</tr>
+<tr>
+<td><code>ngx_rbtree_t</code></td>
+<td>core</td>
+<td>红黑树，timer、限流等使用</td>
+</tr>
+<tr>
+<td><code>ngx_connection_t</code></td>
+<td>event</td>
+<td>TCP 连接对象</td>
+</tr>
+<tr>
+<td><code>ngx_event_t</code></td>
+<td>event</td>
+<td>读写事件对象</td>
+</tr>
+<tr>
+<td><code>ngx_listening_t</code></td>
+<td>event&#x2F;core</td>
+<td>监听端口对象</td>
+</tr>
+<tr>
+<td><code>ngx_http_request_t</code></td>
+<td>http</td>
+<td>单个 HTTP 请求对象</td>
+</tr>
+<tr>
+<td><code>ngx_http_connection_t</code></td>
+<td>http</td>
+<td>HTTP 连接上下文</td>
+</tr>
+<tr>
+<td><code>ngx_http_core_main_conf_t</code></td>
+<td>http</td>
+<td>HTTP main 配置</td>
+</tr>
+<tr>
+<td><code>ngx_http_core_srv_conf_t</code></td>
+<td>http</td>
+<td>server 级核心配置</td>
+</tr>
+<tr>
+<td><code>ngx_http_core_loc_conf_t</code></td>
+<td>http</td>
+<td>location 级核心配置</td>
+</tr>
+<tr>
+<td><code>ngx_http_upstream_t</code></td>
+<td>upstream</td>
+<td>单次 upstream 请求上下文</td>
+</tr>
+<tr>
+<td><code>ngx_http_upstream_srv_conf_t</code></td>
+<td>upstream</td>
+<td>upstream server 配置</td>
+</tr>
+<tr>
+<td><code>ngx_buf_t</code></td>
+<td>output</td>
+<td>一段内存或文件数据</td>
+</tr>
+<tr>
+<td><code>ngx_chain_t</code></td>
+<td>output</td>
+<td>buffer 链表</td>
+</tr>
+<tr>
+<td><code>ngx_table_elt_t</code></td>
+<td>http</td>
+<td>HTTP header 项</td>
+</tr>
+</tbody></table>
+<p>建议学习时自己维护一份结构体笔记，记录字段含义、生命周期和典型使用位置。</p>
+<h2 id="26-从配置反查源码的方法"><a href="#26-从配置反查源码的方法" class="headerlink" title="26. 从配置反查源码的方法"></a>26. 从配置反查源码的方法</h2><h3 id="26-1-通过指令名找模块"><a href="#26-1-通过指令名找模块" class="headerlink" title="26.1 通过指令名找模块"></a>26.1 通过指令名找模块</h3><p>例如要研究：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">proxy_read_timeout</span> <span class="number">30s</span>;</span><br></pre></td></tr></table></figure>
+
+<p>步骤：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rg <span class="string">&quot;proxy_read_timeout&quot;</span> src</span><br></pre></td></tr></table></figure>
+
+<p>通常会找到 <code>ngx_command_t</code> 定义，然后继续看：指令属于哪个模块、允许出现在哪些上下文、写入哪个配置结构字段、字段在哪里被使用。</p>
+<h3 id="26-2-通过日志反查源码"><a href="#26-2-通过日志反查源码" class="headerlink" title="26.2 通过日志反查源码"></a>26.2 通过日志反查源码</h3><p>例如 error log 出现：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">upstream timed out (110: Connection timed out) while reading response header from upstream</span><br></pre></td></tr></table></figure>
+
+<p>可以搜索：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rg <span class="string">&quot;upstream timed out&quot;</span> src</span><br><span class="line">rg <span class="string">&quot;while reading response header from upstream&quot;</span> src</span><br></pre></td></tr></table></figure>
+
+<p>然后定位到 upstream 读取响应头的超时处理路径。</p>
+<h3 id="26-3-通过变量名反查源码"><a href="#26-3-通过变量名反查源码" class="headerlink" title="26.3 通过变量名反查源码"></a>26.3 通过变量名反查源码</h3><p>例如要研究：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$upstream_response_time</span><br></pre></td></tr></table></figure>
+
+<p>搜索：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rg <span class="string">&quot;upstream_response_time&quot;</span> src/http</span><br></pre></td></tr></table></figure>
+
+<p>关注变量在哪里注册、变量取值函数是什么、数据来源结构体是什么、多 upstream 重试时如何拼接。</p>
+<h3 id="26-4-通过模块顺序反查-filter"><a href="#26-4-通过模块顺序反查-filter" class="headerlink" title="26.4 通过模块顺序反查 filter"></a>26.4 通过模块顺序反查 filter</h3><p>查看编译模块：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> objs/ngx_modules.c</span><br></pre></td></tr></table></figure>
+
+<p>关注哪些模块被编译、filter 模块初始化顺序、第三方模块插入位置、动态模块加载顺序。</p>
+<h2 id="27-与前六阶段知识的对应关系"><a href="#27-与前六阶段知识的对应关系" class="headerlink" title="27. 与前六阶段知识的对应关系"></a>27. 与前六阶段知识的对应关系</h2><table>
+<thead>
+<tr>
+<th>前面阶段知识</th>
+<th>源码对应主线</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>nginx -t</code></td>
+<td>配置解析、模块指令、cycle 初始化</td>
+</tr>
+<tr>
+<td><code>server_name</code></td>
+<td>HTTP server 配置、虚拟主机查找</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td>location 树、正则 location、phase find config</td>
+</tr>
+<tr>
+<td><code>rewrite</code></td>
+<td>rewrite phase、script engine、内部跳转</td>
+</tr>
+<tr>
+<td><code>try_files</code></td>
+<td>precontent 阶段、内部跳转</td>
+</tr>
+<tr>
+<td><code>proxy_pass</code></td>
+<td>proxy module、upstream framework</td>
+</tr>
+<tr>
+<td>负载均衡</td>
+<td>upstream peer 选择、round robin</td>
+</tr>
+<tr>
+<td><code>proxy_next_upstream</code></td>
+<td>upstream 失败重试</td>
+</tr>
+<tr>
+<td><code>proxy_read_timeout</code></td>
+<td>upstream read event timer</td>
+</tr>
+<tr>
+<td>HTTPS</td>
+<td>SSL 模块、OpenSSL 集成、握手事件</td>
+</tr>
+<tr>
+<td>限流</td>
+<td>preaccess phase、shared memory、rbtree</td>
+</tr>
+<tr>
+<td>gzip</td>
+<td>body filter、buffer chain</td>
+</tr>
+<tr>
+<td><code>add_header</code></td>
+<td>header filter</td>
+</tr>
+<tr>
+<td>静态资源</td>
+<td>static content handler、sendfile</td>
+</tr>
+<tr>
+<td><code>open_file_cache</code></td>
+<td>文件缓存、打开文件句柄缓存</td>
+</tr>
+<tr>
+<td>access log</td>
+<td>log phase、变量系统</td>
+</tr>
+<tr>
+<td>reload</td>
+<td>master 信号、cycle 重建、worker 优雅退出</td>
+</tr>
+<tr>
+<td>高可用</td>
+<td>进程模型、监听 fd、平滑切换基础</td>
+</tr>
+</tbody></table>
+<p>学习源码时要不断回到配置和生产问题，这样不会变成孤立的源码阅读。</p>
+<h2 id="28-必做实验"><a href="#28-必做实验" class="headerlink" title="28. 必做实验"></a>28. 必做实验</h2><h3 id="28-1-实验一：debug-编译并启动"><a href="#28-1-实验一：debug-编译并启动" class="headerlink" title="28.1 实验一：debug 编译并启动"></a>28.1 实验一：debug 编译并启动</h3><p>目标：获得可调试的 Nginx。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/opt/nginx-debug --with-debug --with-http_ssl_module --with-http_stub_status_module</span><br><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br><span class="line"><span class="built_in">sudo</span> make install</span><br><span class="line">/opt/nginx-debug/sbin/nginx -V</span><br></pre></td></tr></table></figure>
+
+<p>过关标准：能看到 <code>--with-debug</code>，能启动 Nginx，能通过 <code>curl</code> 访问默认页面。</p>
+<h3 id="28-2-实验二：跟踪启动流程"><a href="#28-2-实验二：跟踪启动流程" class="headerlink" title="28.2 实验二：跟踪启动流程"></a>28.2 实验二：跟踪启动流程</h3><p>目标：理解 master&#x2F;worker 如何启动。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ps -ef | grep nginx</span><br><span class="line">pstree -p | grep nginx</span><br><span class="line"><span class="built_in">sudo</span> strace -f -o /tmp/nginx-start.log /opt/nginx-debug/sbin/nginx -c /opt/nginx-debug/conf/nginx.conf</span><br></pre></td></tr></table></figure>
+
+<p>观察 master PID、worker PID、listen socket 创建、fork worker、worker 进入 <code>epoll_wait</code>。</p>
+<h3 id="28-3-实验三：跟踪一次-HTTP-请求"><a href="#28-3-实验三：跟踪一次-HTTP-请求" class="headerlink" title="28.3 实验三：跟踪一次 HTTP 请求"></a>28.3 实验三：跟踪一次 HTTP 请求</h3><p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">worker_processes</span> <span class="number">1</span>;</span><br><span class="line"><span class="attribute">error_log</span> logs/<span class="literal">error</span>.log <span class="literal">debug</span>;</span><br><span class="line"></span><br><span class="line"><span class="section">events</span> &#123;</span><br><span class="line">    <span class="attribute">worker_connections</span> <span class="number">1024</span>;</span><br><span class="line">    <span class="attribute">debug_connection</span> <span class="number">127.0.0.1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -i http://127.0.0.1:8080/</span><br></pre></td></tr></table></figure>
+
+<p>任务：找到 accept 日志、request line 解析日志、header 解析日志、content handler 相关日志、output filter 相关日志、request finalize 和 log 阶段日志。</p>
+<h3 id="28-4-实验四：跟踪-location-匹配"><a href="#28-4-实验四：跟踪-location-匹配" class="headerlink" title="28.4 实验四：跟踪 location 匹配"></a>28.4 实验四：跟踪 location 匹配</h3><p>配置多个 location：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> = /exact &#123; <span class="attribute">return</span> <span class="number">200</span> exact; &#125;</span><br><span class="line"><span class="section">location</span><span class="regexp"> ^~</span> /static/ &#123; <span class="attribute">return</span> <span class="number">200</span> static; &#125;</span><br><span class="line"><span class="section">location</span> /static/test &#123; <span class="attribute">return</span> <span class="number">200</span> prefix; &#125;</span><br><span class="line"><span class="section">location</span> <span class="regexp">~ \.php$</span> &#123; <span class="attribute">return</span> <span class="number">200</span> php; &#125;</span><br><span class="line"><span class="section">location</span> / &#123; <span class="attribute">return</span> <span class="number">200</span> root; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>任务：请求不同 URI，对照 debug log 判断命中的 location，搜索 <code>ngx_http_core_find_location</code>，理解最长前缀和正则匹配的实际顺序。</p>
+<h3 id="28-5-实验五：跟踪-proxy-pass"><a href="#28-5-实验五：跟踪-proxy-pass" class="headerlink" title="28.5 实验五：跟踪 proxy_pass"></a>28.5 实验五：跟踪 <code>proxy_pass</code></h3><p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:9001</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">127.0.0.1:9002</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://backend;</span><br><span class="line">    <span class="attribute">proxy_connect_timeout</span> <span class="number">2s</span>;</span><br><span class="line">    <span class="attribute">proxy_read_timeout</span> <span class="number">5s</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>任务：启动两个简单后端，请求 <code>/api/</code>，观察 upstream 连接日志，停掉一个后端观察失败重试，对照 <code>$upstream_addr</code>、<code>$upstream_status</code>、<code>$upstream_response_time</code>，阅读 <code>ngx_http_proxy_handler</code> 到 <code>ngx_http_upstream_init</code> 的调用链。</p>
+<h3 id="28-6-实验六：观察-filter-链"><a href="#28-6-实验六：观察-filter-链" class="headerlink" title="28.6 实验六：观察 filter 链"></a>28.6 实验六：观察 filter 链</h3><p>任务：开启 gzip，添加 <code>add_header</code>，请求静态文本文件，对比开启&#x2F;关闭 gzip 的响应头和 body，阅读 gzip filter 和 headers filter 初始化位置，理解 filter 插入顺序。</p>
+<h3 id="28-7-实验七：分析内存池"><a href="#28-7-实验七：分析内存池" class="headerlink" title="28.7 实验七：分析内存池"></a>28.7 实验七：分析内存池</h3><p>任务：在 gdb 中断到 <code>ngx_http_create_request</code>，打印 <code>r-&gt;pool</code>，在 content handler 中观察从 <code>r-&gt;pool</code> 分配 buffer，请求结束后观察 request pool 释放路径。</p>
+<p>过关标准：能说明 request pool 生命周期，并能说明为什么模块不要把 request pool 中的指针保存到更长生命周期对象中。</p>
+<h3 id="28-8-实验八：观察-limit-req-shared-memory"><a href="#28-8-实验八：观察-limit-req-shared-memory" class="headerlink" title="28.8 实验八：观察 limit_req shared memory"></a>28.8 实验八：观察 <code>limit_req</code> shared memory</h3><p>配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=req_zone:<span class="number">10m</span> rate=1r/s;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">limit_req</span> zone=req_zone burst=<span class="number">2</span> nodelay;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">200</span> ok;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>任务：连续快速请求触发限流，阅读 <code>ngx_http_limit_req_module.c</code>，找到 shared memory zone 初始化、key 查找、节点插入、过期淘汰逻辑。</p>
+<h3 id="28-9-实验九：编写-hello-模块"><a href="#28-9-实验九：编写-hello-模块" class="headerlink" title="28.9 实验九：编写 hello 模块"></a>28.9 实验九：编写 hello 模块</h3><p>目标：实现最小 content handler 模块。任务包括创建模块目录，编写 <code>config</code> 和 <code>.c</code> 文件，静态编译进 Nginx，配置 <code>hello_nginx;</code>，使用 <code>curl -i</code> 验证响应。</p>
+<h3 id="28-10-实验十：编写-header-filter-模块"><a href="#28-10-实验十：编写-header-filter-模块" class="headerlink" title="28.10 实验十：编写 header filter 模块"></a>28.10 实验十：编写 header filter 模块</h3><p>目标：理解 filter 链。任务包括编写最小 header filter，添加 <code>X-Learn-Nginx</code> 响应头，编译并启动，验证响应头存在，与 <code>add_header</code> 模块对比实现方式。</p>
+<h2 id="29-常见源码阅读误区"><a href="#29-常见源码阅读误区" class="headerlink" title="29. 常见源码阅读误区"></a>29. 常见源码阅读误区</h2><h3 id="29-1-一开始逐行读"><a href="#29-1-一开始逐行读" class="headerlink" title="29.1 一开始逐行读"></a>29.1 一开始逐行读</h3><p>Nginx 源码包含大量平台兼容、宏、错误处理和性能优化细节。逐行读容易迷失。正确方式是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">先读主线</span><br><span class="line">  -&gt; 再读关键结构</span><br><span class="line">  -&gt; 再读典型模块</span><br><span class="line">  -&gt; 最后补细节</span><br></pre></td></tr></table></figure>
+
+<h3 id="29-2-只读文章不跑实验"><a href="#29-2-只读文章不跑实验" class="headerlink" title="29.2 只读文章不跑实验"></a>29.2 只读文章不跑实验</h3><p>源码理解必须和运行现象对应。至少要配合 debug log、curl 请求、gdb 断点、strace 系统调用和 access log 变量，否则很容易只记住结论，不知道如何验证。</p>
+<h3 id="29-3-忽略配置合并"><a href="#29-3-忽略配置合并" class="headerlink" title="29.3 忽略配置合并"></a>29.3 忽略配置合并</h3><p>很多配置问题不是指令本身，而是继承和合并导致最终值不同。阅读模块时一定要看 create conf、merge conf、指令 set 函数，以及 handler 使用的最终 conf。</p>
+<h3 id="29-4-把-worker-当线程理解"><a href="#29-4-把-worker-当线程理解" class="headerlink" title="29.4 把 worker 当线程理解"></a>29.4 把 worker 当线程理解</h3><p>worker 是进程，不是线程。不同 worker 的普通内存不共享。共享状态必须通过 shared memory、文件、socket 或外部系统实现。</p>
+<h3 id="29-5-在-handler-中写阻塞逻辑"><a href="#29-5-在-handler-中写阻塞逻辑" class="headerlink" title="29.5 在 handler 中写阻塞逻辑"></a>29.5 在 handler 中写阻塞逻辑</h3><p>自定义模块中不能随便做阻塞 DNS、阻塞 HTTP 调用、慢磁盘 IO 或长时间 CPU 计算。一个 worker 被阻塞，会影响该 worker 上所有连接。</p>
+<h3 id="29-6-错误处理不完整"><a href="#29-6-错误处理不完整" class="headerlink" title="29.6 错误处理不完整"></a>29.6 错误处理不完整</h3><p>Nginx 模块开发必须处理内存分配失败、非法配置、不支持的请求方法、请求提前关闭、upstream 失败、filter 链返回错误、reload 和退出场景。</p>
+<h3 id="29-7-错误使用-request-pool-指针"><a href="#29-7-错误使用-request-pool-指针" class="headerlink" title="29.7 错误使用 request pool 指针"></a>29.7 错误使用 request pool 指针</h3><p>从 <code>r-&gt;pool</code> 分配的内存只在请求生命周期内有效。不能把它保存到共享内存、全局变量或长生命周期结构中。</p>
+<h3 id="29-8-忽略-filter-的链式和异步特性"><a href="#29-8-忽略-filter-的链式和异步特性" class="headerlink" title="29.8 忽略 filter 的链式和异步特性"></a>29.8 忽略 filter 的链式和异步特性</h3><p>body filter 不能假设一次收到完整响应体，也不能只处理第一个 buffer。必须正确遍历 chain，并处理 <code>last_buf</code>、<code>flush</code>、<code>sync</code> 等标记。</p>
+<h2 id="30-源码学习检查清单"><a href="#30-源码学习检查清单" class="headerlink" title="30. 源码学习检查清单"></a>30. 源码学习检查清单</h2><h3 id="30-1-启动与进程"><a href="#30-1-启动与进程" class="headerlink" title="30.1 启动与进程"></a>30.1 启动与进程</h3><ul>
+<li>能找到 <code>main</code> 函数。</li>
+<li>能说明 <code>ngx_init_cycle</code> 做了什么。</li>
+<li>能说明 master 如何 fork worker。</li>
+<li>能说明 worker 如何进入事件循环。</li>
+<li>能说明 reload 的新旧 cycle 切换逻辑。</li>
+</ul>
+<h3 id="30-2-配置与模块"><a href="#30-2-配置与模块" class="headerlink" title="30.2 配置与模块"></a>30.2 配置与模块</h3><ul>
+<li>能解释 <code>ngx_command_t</code>。</li>
+<li>能解释 <code>ngx_module_t</code>。</li>
+<li>能说明指令上下文校验。</li>
+<li>能说明 main&#x2F;server&#x2F;location 配置创建与合并。</li>
+<li>能说明静态模块和动态模块区别。</li>
+</ul>
+<h3 id="30-3-事件与连接"><a href="#30-3-事件与连接" class="headerlink" title="30.3 事件与连接"></a>30.3 事件与连接</h3><ul>
+<li>能说明 <code>ngx_connection_t</code> 与 <code>ngx_event_t</code> 的关系。</li>
+<li>能说明 epoll 如何驱动 read&#x2F;write handler。</li>
+<li>能说明 accept 新连接流程。</li>
+<li>能说明定时器如何管理超时。</li>
+<li>能说明非阻塞 IO 下 <code>NGX_AGAIN</code> 的意义。</li>
+</ul>
+<h3 id="30-4-HTTP-请求"><a href="#30-4-HTTP-请求" class="headerlink" title="30.4 HTTP 请求"></a>30.4 HTTP 请求</h3><ul>
+<li>能说明请求行和请求头解析流程。</li>
+<li>能说明 request pool 生命周期。</li>
+<li>能说明 keepalive 请求如何复用连接。</li>
+<li>能说明 request finalize 的作用。</li>
+<li>能说明 access log 为什么在 log 阶段写入。</li>
+</ul>
+<h3 id="30-5-phase-与-location"><a href="#30-5-phase-与-location" class="headerlink" title="30.5 phase 与 location"></a>30.5 phase 与 location</h3><ul>
+<li>能列出主要 phase。</li>
+<li>能说明 rewrite&#x2F;access&#x2F;content&#x2F;log 的执行位置。</li>
+<li>能说明 location 查找过程。</li>
+<li>能说明内部跳转为什么会重新匹配 location。</li>
+<li>能说明 try_files 与 rewrite 的阶段差异。</li>
+</ul>
+<h3 id="30-6-upstream-与-filter"><a href="#30-6-upstream-与-filter" class="headerlink" title="30.6 upstream 与 filter"></a>30.6 upstream 与 filter</h3><ul>
+<li>能说明 proxy 模块如何接入 upstream。</li>
+<li>能说明 upstream connect&#x2F;send&#x2F;read 流程。</li>
+<li>能说明 upstream retry 的触发条件。</li>
+<li>能说明 header filter 和 body filter 的区别。</li>
+<li>能说明 <code>ngx_buf_t</code> 和 <code>ngx_chain_t</code> 的作用。</li>
+</ul>
+<h3 id="30-7-内存与共享状态"><a href="#30-7-内存与共享状态" class="headerlink" title="30.7 内存与共享状态"></a>30.7 内存与共享状态</h3><ul>
+<li>能说明 pool 小块和大块分配。</li>
+<li>能说明 cleanup 回调用途。</li>
+<li>能说明 shared memory zone 的用途。</li>
+<li>能说明 slab 为什么用于共享内存。</li>
+<li>能说明 limit_req 或 proxy_cache 的共享状态设计。</li>
+</ul>
+<h3 id="30-8-模块开发"><a href="#30-8-模块开发" class="headerlink" title="30.8 模块开发"></a>30.8 模块开发</h3><ul>
+<li>能写最小 content handler。</li>
+<li>能写最小 header filter。</li>
+<li>能正确声明配置指令。</li>
+<li>能正确处理 HEAD 请求。</li>
+<li>能避免阻塞 worker。</li>
+<li>能用 debug log 和 gdb 调试模块。</li>
+</ul>
+<h2 id="31-推荐学习节奏"><a href="#31-推荐学习节奏" class="headerlink" title="31. 推荐学习节奏"></a>31. 推荐学习节奏</h2><p>建议本阶段拆成 6 周完成：</p>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>主题</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 周</td>
+<td>源码目录、编译、debug、启动流程</td>
+<td>源码地图、debug 环境、启动流程图</td>
+</tr>
+<tr>
+<td>第 2 周</td>
+<td>配置解析、模块体系、server&#x2F;location 合并</td>
+<td>指令解析笔记、配置合并流程图</td>
+</tr>
+<tr>
+<td>第 3 周</td>
+<td>event、connection、timer、HTTP 请求解析</td>
+<td>请求从 accept 到 phase 的链路图</td>
+</tr>
+<tr>
+<td>第 4 周</td>
+<td>phase handler、rewrite、access、content、log</td>
+<td>phase 表格、location 匹配实验记录</td>
+</tr>
+<tr>
+<td>第 5 周</td>
+<td>upstream、proxy、filter、buffer、chain</td>
+<td>proxy_pass 源码链路图、filter 实验记录</td>
+</tr>
+<tr>
+<td>第 6 周</td>
+<td>pool、shared memory、limit_req、模块开发</td>
+<td>hello 模块、header filter 模块、总结文档</td>
+</tr>
+</tbody></table>
+<p>如果时间有限，至少完成下面最小闭环：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">debug 编译</span><br><span class="line">  -&gt; 跟踪一次普通静态请求</span><br><span class="line">  -&gt; 跟踪一次 proxy_pass 请求</span><br><span class="line">  -&gt; 阅读 phase handler</span><br><span class="line">  -&gt; 阅读 upstream 主链路</span><br><span class="line">  -&gt; 阅读 filter 链</span><br><span class="line">  -&gt; 编写 hello 模块</span><br></pre></td></tr></table></figure>
+
+<h2 id="32-面试与生产问题思考"><a href="#32-面试与生产问题思考" class="headerlink" title="32. 面试与生产问题思考"></a>32. 面试与生产问题思考</h2><h3 id="32-1-为什么-Nginx-高并发能力强"><a href="#32-1-为什么-Nginx-高并发能力强" class="headerlink" title="32.1 为什么 Nginx 高并发能力强"></a>32.1 为什么 Nginx 高并发能力强</h3><p>推荐回答主线：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">master/worker 多进程</span><br><span class="line">  + 每个 worker 单线程事件循环</span><br><span class="line">  + 非阻塞 IO</span><br><span class="line">  + epoll/kqueue 等事件通知</span><br><span class="line">  + 内存池减少分配释放成本</span><br><span class="line">  + sendfile/writev 等高效输出</span><br><span class="line">  + 模块化 filter/upstream pipeline</span><br></pre></td></tr></table></figure>
+
+<p>不要只回答“因为用了 epoll”。epoll 只是其中一部分。</p>
+<h3 id="32-2-reload-为什么通常不中断请求"><a href="#32-2-reload-为什么通常不中断请求" class="headerlink" title="32.2 reload 为什么通常不中断请求"></a>32.2 reload 为什么通常不中断请求</h3><p>推荐回答主线：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">master 收到 HUP</span><br><span class="line">  -&gt; 解析新配置并创建新 cycle</span><br><span class="line">  -&gt; 成功后启动新 worker</span><br><span class="line">  -&gt; 旧 worker 关闭监听 socket</span><br><span class="line">  -&gt; 旧 worker 不再接新连接</span><br><span class="line">  -&gt; 旧 worker 处理完已有请求后退出</span><br></pre></td></tr></table></figure>
+
+<p>同时补充边界：长连接、慢请求、WebSocket、模块兼容、共享内存变化都可能影响 reload 表现。</p>
+<h3 id="32-3-502-和-504-在源码链路上怎么理解"><a href="#32-3-502-和-504-在源码链路上怎么理解" class="headerlink" title="32.3 502 和 504 在源码链路上怎么理解"></a>32.3 502 和 504 在源码链路上怎么理解</h3><ul>
+<li>502 更偏 upstream 返回异常、连接失败、响应头非法、后端提前关闭等。</li>
+<li>504 更偏 upstream 超时，例如连接超时、发送超时、读取响应超时。</li>
+<li>源码关注 <code>ngx_http_upstream.c</code> 中连接、读写事件、超时处理和 finalize 逻辑。</li>
+</ul>
+<h3 id="32-4-proxy-read-timeout-是总耗时吗"><a href="#32-4-proxy-read-timeout-是总耗时吗" class="headerlink" title="32.4 proxy_read_timeout 是总耗时吗"></a>32.4 <code>proxy_read_timeout</code> 是总耗时吗</h3><p>不是简单的接口总耗时。它更接近两次读取 upstream 响应之间允许等待的最大时间。只要后端持续有数据返回，整体响应时间可能超过该值。</p>
+<h3 id="32-5-为什么自定义模块不能随便阻塞"><a href="#32-5-为什么自定义模块不能随便阻塞" class="headerlink" title="32.5 为什么自定义模块不能随便阻塞"></a>32.5 为什么自定义模块不能随便阻塞</h3><p>因为 worker 通常是单线程事件循环。如果模块 handler 中执行阻塞调用，该 worker 上的其他连接都会受影响。高并发场景下，这会导致延迟抖动甚至大面积超时。</p>
+<h3 id="32-6-为什么多-worker-需要-shared-memory"><a href="#32-6-为什么多-worker-需要-shared-memory" class="headerlink" title="32.6 为什么多 worker 需要 shared memory"></a>32.6 为什么多 worker 需要 shared memory</h3><p>worker 是多进程，普通内存互不共享。限流计数、连接统计、cache 元数据等跨 worker 状态必须放到 shared memory 或外部系统中。</p>
+<h2 id="33-最终过关标准"><a href="#33-最终过关标准" class="headerlink" title="33. 最终过关标准"></a>33. 最终过关标准</h2><p>完成第七阶段后，应达到下面标准：</p>
+<ul>
+<li>能画出 Nginx 启动、配置解析、worker 事件循环的主流程。</li>
+<li>能解释 master&#x2F;worker、cycle、module、connection、request 的关系。</li>
+<li>能从源码角度说明 Nginx 高并发能力来源。</li>
+<li>能说明 HTTP 请求从 accept 到 access log 的完整内部路径。</li>
+<li>能解释 server&#x2F;location 匹配、rewrite、access、content、log 的阶段关系。</li>
+<li>能解释 <code>proxy_pass</code> 如何进入 upstream，并说明 connect&#x2F;send&#x2F;read&#x2F;timeout&#x2F;retry 流程。</li>
+<li>能解释 header filter、body filter、write filter 的协作方式。</li>
+<li>能说明内存池、buffer、chain、shared memory、slab 的用途和边界。</li>
+<li>能使用 debug log、gdb、strace、perf 辅助定位源码路径。</li>
+<li>能通过指令名、日志文本、变量名反查对应源码。</li>
+<li>能读懂常见 HTTP 模块的基本结构。</li>
+<li>能编写并编译一个最小 content handler 模块。</li>
+<li>能编写一个最小 header filter 或 log 阶段模块。</li>
+<li>能把源码理解反哺生产排障、性能优化和模块选型。</li>
+</ul>
+<h2 id="34-本阶段总结"><a href="#34-本阶段总结" class="headerlink" title="34. 本阶段总结"></a>34. 本阶段总结</h2><p>第七阶段是 Nginx 学习路线中最深入的一层。前六个阶段解决“如何正确使用 Nginx”，第七阶段解决“为什么 Nginx 会这样运行，以及复杂问题该从哪里定位”。</p>
+<p>学习本阶段时要始终抓住几条主线：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">启动主线：main -&gt; cycle -&gt; master -&gt; worker</span><br><span class="line">配置主线：directive -&gt; command -&gt; conf -&gt; merge -&gt; handler</span><br><span class="line">事件主线：connection -&gt; event -&gt; epoll -&gt; callback -&gt; timer</span><br><span class="line">请求主线：request line -&gt; headers -&gt; phase -&gt; content -&gt; log</span><br><span class="line">代理主线：proxy module -&gt; upstream -&gt; peer -&gt; backend -&gt; retry</span><br><span class="line">输出主线：header filter -&gt; body filter -&gt; write filter -&gt; client</span><br><span class="line">内存主线：pool -&gt; buf -&gt; chain -&gt; slab -&gt; shared memory</span><br><span class="line">模块主线：module -&gt; commands -&gt; ctx -&gt; init -&gt; handler/filter</span><br></pre></td></tr></table></figure>
+
+<p>真正掌握第七阶段后，看到一个 Nginx 配置项，不仅知道怎么写，还能大致知道它属于哪个模块、在哪个阶段执行、使用哪些核心结构、可能带来哪些性能和稳定性影响。这就是从熟练使用者走向专家级理解的关键一步。</p>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
