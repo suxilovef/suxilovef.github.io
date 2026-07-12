@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Background decorative -->
+    <path d="M200 180 Q430 60 650 160" stroke="#F59E0B" stroke-width="5" opacity="0.20"/>
+    <path d="M1200 200 Q1360 130 1480 230" stroke="#34D399" stroke-width="4" opacity="0.15"/>
+    <path d="M220 700 Q500 820 800 720 Q1100 620 1380 750" stroke="#6DB33F" stroke-width="4" opacity="0.10"/>
+    <circle cx="260" cy="220" r="4" fill="#6DB33F" opacity="0.15"/>
+    <circle cx="1350" cy="280" r="4" fill="#F59E0B" opacity="0.13"/>
+    <circle cx="1100" cy="720" r="5" fill="#34D399" opacity="0.13"/>
+
+    <!-- Central: Advisor box (large) -->
+    <rect x="520" y="230" width="560" height="420" rx="28" stroke="#6DB33F" stroke-width="8" fill="#F7FEE7"/>
+
+    <!-- Advisor label -->
+    <text x="800" y="280" text-anchor="middle" font-size="30" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.75">Advisor</text>
+
+    <!-- Divider line -->
+    <line x1="560" y1="310" x2="1040" y2="310" stroke="#6DB33F" stroke-width="2" opacity="0.25"/>
+
+    <!-- Left component: Pointcut -->
+    <rect x="560" y="340" width="200" height="120" rx="14" stroke="#F59E0B" stroke-width="5" fill="#FFFBEB"/>
+    <text x="660" y="390" text-anchor="middle" font-size="24" font-weight="800" fill="#F59E0B" font-family="sans-serif">Pointcut</text>
+    <text x="660" y="420" text-anchor="middle" font-size="14" font-weight="600" fill="#D97706" font-family="sans-serif">匹配规则</text>
+
+    <!-- Plus sign -->
+    <text x="780" y="412" text-anchor="middle" font-size="36" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.50">+</text>
+
+    <!-- Right component: Advice -->
+    <rect x="840" y="340" width="200" height="120" rx="14" stroke="#34D399" stroke-width="5" fill="#ECFDF5"/>
+    <text x="940" y="390" text-anchor="middle" font-size="24" font-weight="800" fill="#34D399" font-family="sans-serif">Advice</text>
+    <text x="940" y="420" text-anchor="middle" font-size="14" font-weight="600" fill="#059669" font-family="sans-serif">增强逻辑</text>
+
+    <!-- Arrow: Pointcut + Advice → Advisor -->
+    <path d="M800 460 L800 490" stroke="#6DB33F" stroke-width="4" opacity="0.4"/>
+
+    <!-- Bottom: MethodInterceptor transformation -->
+    <rect x="620" y="500" width="360" height="110" rx="14" stroke="#6DB33F" stroke-width="5" fill="#ffffff"/>
+    <text x="800" y="540" text-anchor="middle" font-size="20" font-weight="800" fill="#6DB33F" font-family="sans-serif">MethodInterceptor</text>
+    <text x="800" y="570" text-anchor="middle" font-size="14" font-weight="600" fill="#6B7280" font-family="sans-serif">运行时执行形态</text>
+    <text x="800" y="595" text-anchor="middle" font-size="13" font-weight="600" fill="#9CA3AF" font-family="sans-serif">invoke(MethodInvocation)</text>
+
+    <!-- Transformation arrow -->
+    <path d="M800 610 L800 640" stroke="#F59E0B" stroke-width="5"/>
+    <polygon points="800,650 790,635 810,635" fill="#F59E0B"/>
+
+    <!-- External annotations feeding into Advisor -->
+    <path d="M340 300 Q430 240 560 300" stroke="#F59E0B" stroke-width="4" opacity="0.4"/>
+    <path d="M1260 300 Q1170 240 1040 300" stroke="#34D399" stroke-width="4" opacity="0.4"/>
+
+    <!-- @Aspect label -->
+    <rect x="220" y="260" width="130" height="36" rx="8" stroke="#F59E0B" stroke-width="3" fill="#FFFBEB"/>
+    <text x="285" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#F59E0B" font-family="sans-serif">@Aspect</text>
+
+    <!-- @Transactional label -->
+    <rect x="1250" y="260" width="150" height="36" rx="8" stroke="#34D399" stroke-width="3" fill="#ECFDF5"/>
+    <text x="1325" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#34D399" font-family="sans-serif">@Transactional</text>
+
+    <!-- Decorative dots -->
+    <circle cx="560" cy="340" r="5" fill="#F59E0B" opacity="0.6"/>
+    <circle cx="1040" cy="340" r="5" fill="#34D399" opacity="0.6"/>
+    <circle cx="620" cy="500" r="4" fill="#6DB33F" opacity="0.4"/>
+    <circle cx="980" cy="500" r="4" fill="#6DB33F" opacity="0.4"/>
+  </g>
+
+  <!-- Title section -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="78" text-anchor="middle" font-weight="800">Spring AOP 元模型</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">Advisor = Pointcut + Advice → MethodInterceptor</text>
+  </g>
+</svg>

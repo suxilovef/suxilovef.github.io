@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Background decorative elements -->
+    <path d="M200 220 Q430 90 650 190" stroke="#F59E0B" stroke-width="5" opacity="0.22"/>
+    <path d="M1240 250 Q1380 180 1480 280" stroke="#34D399" stroke-width="4" opacity="0.16"/>
+    <path d="M250 680 Q520 800 800 700 Q1080 600 1350 730" stroke="#6DB33F" stroke-width="4" opacity="0.10"/>
+    <circle cx="300" cy="250" r="5" fill="#6DB33F" opacity="0.16"/>
+    <circle cx="480" cy="180" r="4" fill="#34D399" opacity="0.16"/>
+    <circle cx="1120" cy="170" r="5" fill="#6DB33F" opacity="0.16"/>
+    <circle cx="1320" cy="310" r="4" fill="#F59E0B" opacity="0.14"/>
+
+    <!-- Stage 1: Raw Bean (left) -->
+    <rect x="180" y="320" width="200" height="140" rx="16" stroke="#6DB33F" stroke-width="5" fill="#ffffff"/>
+    <text x="280" y="380" text-anchor="middle" font-size="22" font-weight="800" fill="#6DB33F" font-family="sans-serif" opacity="0.7">原始 Bean</text>
+    <text x="280" y="410" text-anchor="middle" font-size="14" font-weight="600" fill="#9CA3AF" font-family="sans-serif">UserService</text>
+
+    <!-- Arrow 1: Bean enters lifecycle -->
+    <path d="M380 390 L480 390" stroke="#F59E0B" stroke-width="6"/>
+    <polygon points="490,390 478,380 478,400" fill="#F59E0B"/>
+
+    <!-- Stage 2: AutoProxyCreator (center) - gear/factory concept -->
+    <circle cx="680" cy="390" r="110" stroke="#6DB33F" stroke-width="8" opacity="0.20"/>
+    <circle cx="680" cy="390" r="80" stroke="#34D399" stroke-width="6" opacity="0.35"/>
+    <circle cx="680" cy="390" r="45" stroke="#6DB33F" stroke-width="5" opacity="0.50"/>
+
+    <!-- Gear teeth (simplified) -->
+    <rect x="660" y="275" width="40" height="16" rx="4" fill="#6DB33F" opacity="0.35"/>
+    <rect x="660" y="489" width="40" height="16" rx="4" fill="#6DB33F" opacity="0.35"/>
+    <rect x="565" y="370" width="16" height="40" rx="4" fill="#6DB33F" opacity="0.35"/>
+    <rect x="779" y="370" width="16" height="40" rx="4" fill="#6DB33F" opacity="0.35"/>
+
+    <!-- wrapIfNecessary indicator -->
+    <text x="680" y="385" text-anchor="middle" font-size="18" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.65">wrapIf</text>
+    <text x="680" y="408" text-anchor="middle" font-size="18" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.65">Necessary</text>
+
+    <!-- Matching Advisor indicators -->
+    <path d="M570 310 Q620 250 740 310" stroke="#F59E0B" stroke-width="4" opacity="0.5"/>
+    <path d="M570 470 Q620 530 740 470" stroke="#F59E0B" stroke-width="4" opacity="0.5"/>
+
+    <!-- Advisor tags -->
+    <rect x="500" y="220" width="120" height="32" rx="8" stroke="#F59E0B" stroke-width="3" fill="#FFFBEB" opacity="0.8"/>
+    <text x="560" y="241" text-anchor="middle" font-size="14" font-weight="700" fill="#F59E0B" font-family="sans-serif">Advisor</text>
+    <rect x="500" y="530" width="120" height="32" rx="8" stroke="#34D399" stroke-width="3" fill="#ECFDF5" opacity="0.8"/>
+    <text x="560" y="551" text-anchor="middle" font-size="14" font-weight="700" fill="#34D399" font-family="sans-serif">Pointcut</text>
+
+    <!-- Arrow 2: Proxy created -->
+    <path d="M790 390 L890 390" stroke="#F59E0B" stroke-width="6"/>
+    <polygon points="900,390 888,380 888,400" fill="#F59E0B"/>
+
+    <!-- Stage 3: Proxy Bean (right) -->
+    <rect x="910" y="310" width="220" height="160" rx="16" stroke="#34D399" stroke-width="6" fill="#F7FEE7"/>
+    <rect x="930" y="330" width="180" height="120" rx="10" stroke="#6DB33F" stroke-width="3" stroke-dasharray="8,4" opacity="0.5"/>
+    <text x="1020" y="385" text-anchor="middle" font-size="22" font-weight="800" fill="#34D399" font-family="sans-serif" opacity="0.75">代理 Bean</text>
+    <text x="1020" y="415" text-anchor="middle" font-size="14" font-weight="600" fill="#9CA3AF" font-family="sans-serif">$Proxy / $$CGLIB</text>
+
+    <!-- Container boundary -->
+    <rect x="120" y="210" width="1040" height="340" rx="32" stroke="#E5E7EB" stroke-width="3" fill="none" stroke-dasharray="10,6" opacity="0.5"/>
+
+    <!-- BeanPostProcessor label -->
+    <rect x="370" y="200" width="240" height="28" rx="14" fill="#ffffff" stroke="#D1D5DB" stroke-width="2"/>
+    <text x="490" y="219" text-anchor="middle" font-size="14" font-weight="700" fill="#6B7280" font-family="sans-serif">BeanPostProcessor 生命周期</text>
+
+    <!-- Bottom decorative -->
+    <circle cx="1040" cy="700" r="5" fill="#34D399" opacity="0.14"/>
+  </g>
+
+  <!-- Title section -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="74" text-anchor="middle" font-weight="800">Spring AOP 自动代理创建器</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">BeanPostProcessor · wrapIfNecessary · Advisor 匹配</text>
+  </g>
+</svg>

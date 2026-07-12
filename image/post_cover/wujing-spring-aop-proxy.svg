@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Background decorative elements -->
+    <path d="M200 200 Q420 80 640 180" stroke="#F59E0B" stroke-width="5" opacity="0.22"/>
+    <path d="M1200 220 Q1360 150 1480 250" stroke="#34D399" stroke-width="4" opacity="0.16"/>
+    <path d="M220 680 Q500 800 800 700 Q1100 600 1380 730" stroke="#6DB33F" stroke-width="4" opacity="0.10"/>
+    <circle cx="280" cy="240" r="5" fill="#6DB33F" opacity="0.16"/>
+    <circle cx="460" cy="170" r="4" fill="#34D399" opacity="0.16"/>
+    <circle cx="1300" cy="300" r="4" fill="#F59E0B" opacity="0.14"/>
+    <circle cx="1150" cy="700" r="5" fill="#34D399" opacity="0.14"/>
+
+    <!-- Target object (innermost) -->
+    <rect x="640" y="310" width="320" height="200" rx="14" stroke="#6DB33F" stroke-width="14" fill="#F7FEE7"/>
+
+    <!-- JDK Proxy layer (dashed, interface-based) -->
+    <rect x="600" y="270" width="400" height="280" rx="18" stroke="#34D399" stroke-width="8" stroke-dasharray="16,8" opacity="0.70"/>
+
+    <!-- CGLIB Proxy layer (solid, subclass-based) -->
+    <rect x="560" y="230" width="480" height="360" rx="22" stroke="#6DB33F" stroke-width="10" opacity="0.55"/>
+
+    <!-- Outer proxy pulse rings -->
+    <rect x="520" y="190" width="560" height="440" rx="26" stroke="#6DB33F" stroke-width="3" opacity="0.15"/>
+    <rect x="480" y="150" width="640" height="520" rx="30" stroke="#6DB33F" stroke-width="2" opacity="0.08"/>
+
+    <!-- Incoming call arrow -->
+    <path d="M800 130 L800 190" stroke="#F59E0B" stroke-width="8"/>
+    <polygon points="800,120 790,138 810,138" fill="#F59E0B"/>
+
+    <!-- Outgoing arrow -->
+    <path d="M800 630 L800 690" stroke="#F59E0B" stroke-width="8"/>
+    <polygon points="800,700 790,682 810,682" fill="#F59E0B"/>
+
+    <!-- Side interception arrows -->
+    <path d="M360 390 L480 350" stroke="#34D399" stroke-width="6" opacity="0.65"/>
+    <path d="M360 430 L480 470" stroke="#34D399" stroke-width="6" opacity="0.65"/>
+
+    <!-- JDK label connector -->
+    <path d="M600 320 L500 280" stroke="#34D399" stroke-width="3" opacity="0.4"/>
+    <!-- CGLIB label connector -->
+    <path d="M560 520 L460 580" stroke="#6DB33F" stroke-width="3" opacity="0.4"/>
+
+    <!-- Decorative dots at proxy corners -->
+    <circle cx="560" cy="230" r="6" fill="#6DB33F" opacity="0.5"/>
+    <circle cx="1040" cy="230" r="6" fill="#6DB33F" opacity="0.5"/>
+    <circle cx="560" cy="590" r="6" fill="#6DB33F" opacity="0.5"/>
+    <circle cx="1040" cy="590" r="6" fill="#6DB33F" opacity="0.5"/>
+
+    <!-- Curved decorative arcs -->
+    <path d="M300 260 Q540 100 800 160 Q1060 220 1300 240" stroke="#F59E0B" stroke-width="4" opacity="0.30"/>
+    <path d="M320 560 Q580 740 800 660 Q1020 580 1280 600" stroke="#34D399" stroke-width="4" opacity="0.28"/>
+  </g>
+
+  <!-- Layer labels -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" font-size="15" font-weight="700">
+    <text x="460" y="270" fill="#34D399" text-anchor="middle">JDK 动态代理</text>
+    <text x="440" y="595" fill="#6DB33F" text-anchor="middle">CGLIB 代理</text>
+  </g>
+
+  <!-- Target label -->
+  <text x="800" y="425" text-anchor="middle" font-size="36" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.40">Target</text>
+
+  <!-- Small indicator dots -->
+  <circle cx="490" cy="345" r="5" fill="#34D399"/>
+  <circle cx="490" cy="475" r="5" fill="#34D399"/>
+
+  <!-- Title section -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="790" font-size="78" text-anchor="middle" font-weight="800">Spring AOP 代理机制</text>
+    <text x="800" y="845" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">JDK 动态代理 · CGLIB 子类代理 · 代理失效场景</text>
+  </g>
+</svg>

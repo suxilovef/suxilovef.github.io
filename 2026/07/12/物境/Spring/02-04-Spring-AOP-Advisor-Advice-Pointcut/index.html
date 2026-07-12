@@ -1,24 +1,24 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>无言 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="无言">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02-04-Spring-AOP-Advisor-Advice-Pointcut | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spring AOP Advisor Advice Pointcut">
 <meta property="og:type" content="article">
-<meta property="og:title" content="无言">
-<meta property="og:url" content="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html">
+<meta property="og:title" content="02-04-Spring-AOP-Advisor-Advice-Pointcut">
+<meta property="og:url" content="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-04-Spring-AOP-Advisor-Advice-Pointcut/index.html">
 <meta property="og:site_name" content="九方">
-<meta property="og:description" content="无言">
+<meta property="og:description" content="Spring AOP Advisor Advice Pointcut">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg">
-<meta property="article:published_time" content="2026-03-28T08:24:24.000Z">
-<meta property="article:modified_time" content="2026-07-12T07:38:28.032Z">
+<meta property="og:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-advisor.svg">
+<meta property="article:published_time" content="2026-07-12T09:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-12T12:18:07.926Z">
 <meta property="article:author" content="九方">
-<meta property="article:tag" content="语录">
+<meta property="article:tag" content="Spring">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg"><script type="application/ld+json">{
+<meta name="twitter:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-advisor.svg"><script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "无言",
-  "url": "https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/",
-  "image": "https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg",
-  "datePublished": "2026-03-28T08:24:24.000Z",
-  "dateModified": "2026-07-12T07:38:28.032Z",
+  "headline": "02-04-Spring-AOP-Advisor-Advice-Pointcut",
+  "url": "https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-04-Spring-AOP-Advisor-Advice-Pointcut/",
+  "image": "https://suxi.love/image/post_cover/wujing-spring-aop-advisor.svg",
+  "datePublished": "2026-07-12T09:30:00.000Z",
+  "dateModified": "2026-07-12T12:18:07.926Z",
   "author": [
     {
       "@type": "Person",
@@ -26,7 +26,7 @@
       "url": "https://suxi.love"
     }
   ]
-}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-04-Spring-AOP-Advisor-Advice-Pointcut/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
     (() => {
       
     const saveToLocal = {
@@ -150,7 +150,7 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '无言',
+  title: '02-04-Spring-AOP-Advisor-Advice-Pointcut',
   isHighlightShrink: false,
   isToc: false,
   pageType: 'post'
@@ -510,7 +510,302 @@ body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
   .custom-toc a{display:block;margin:.24rem 0}
 }
 </style>
-<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">无言</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">无言</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-03-28T08:24:24.000Z" title="发表于 2026-03-28 16:24:24">2026-03-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T07:38:28.032Z" title="更新于 2026-07-12 15:38:28">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">21</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>1分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><p>九刻舟，剑涤尘，破心方，一理情，渡失劫，痴愚时，齐万物</p>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">02-04-Spring-AOP-Advisor-Advice-Pointcut</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">02-04-Spring-AOP-Advisor-Advice-Pointcut</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-12T09:30:00.000Z" title="发表于 2026-07-12 17:30:00">2026-07-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T12:18:07.926Z" title="更新于 2026-07-12 20:18:07">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Spring-AOP-Advisor、Advice、Pointcut"><a href="#Spring-AOP-Advisor、Advice、Pointcut" class="headerlink" title="Spring AOP Advisor、Advice、Pointcut"></a>Spring AOP Advisor、Advice、Pointcut</h1><blockquote>
+<p>本文承接 <code>02-03-Spring-AOP-AutoProxyCreator.md</code>，专门拆解 Spring AOP 的元模型：<code>Advisor</code>、<code>Advice</code>、<code>Pointcut</code>、<code>MethodInterceptor</code> 到底是什么关系。<br>主线是：Advisor &#x3D; Pointcut + Advice -&gt; Pointcut 负责匹配 -&gt; Advice 表示增强逻辑 -&gt; MethodInterceptor 是运行时执行形态。</p>
+</blockquote>
+<hr>
+<h2 id="一、先建立主线：Advisor-到底是什么"><a href="#一、先建立主线：Advisor-到底是什么" class="headerlink" title="一、先建立主线：Advisor 到底是什么"></a>一、先建立主线：Advisor 到底是什么</h2><p>在 Spring AOP 中，<code>Advisor</code> 是一个非常核心的概念。</p>
+<p>一句话概括：</p>
+<blockquote>
+<p><code>Advisor</code> &#x3D; <code>Pointcut</code> + <code>Advice</code>。</p>
+</blockquote>
+<p>它同时回答两个问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>对应组件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>哪些类、哪些方法需要增强</td>
+<td><code>Pointcut</code></td>
+</tr>
+<tr>
+<td>命中后执行什么增强逻辑</td>
+<td><code>Advice</code></td>
+</tr>
+</tbody></table>
+<p>整体关系如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Aspect / @Transactional / 手动 Advisor</span><br><span class="line">  -&gt; 解析成 Advisor</span><br><span class="line">      -&gt; Pointcut 判断是否匹配目标方法</span><br><span class="line">      -&gt; Advice 表示增强逻辑</span><br><span class="line">          -&gt; 适配成 MethodInterceptor</span><br></pre></td></tr></table></figure>
+
+<p>前面 <code>02-03-Spring-AOP-AutoProxyCreator.md</code> 讲过，自动代理创建器判断一个 Bean 是否需要代理，本质就是看：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当前 Bean 是否存在可应用的 Advisor</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>Advisor</code> 是 Spring AOP 连接“匹配规则”和“增强执行”的桥梁。</p>
+<hr>
+<h2 id="二、Advice：增强逻辑的抽象"><a href="#二、Advice：增强逻辑的抽象" class="headerlink" title="二、Advice：增强逻辑的抽象"></a>二、Advice：增强逻辑的抽象</h2><p><code>Advice</code> 表示增强逻辑，也就是在目标方法前后要执行的动作。</p>
+<p>常见注解式 Advice：</p>
+<table>
+<thead>
+<tr>
+<th>注解</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@Before</code></td>
+<td>目标方法执行前执行</td>
+</tr>
+<tr>
+<td><code>@After</code></td>
+<td>目标方法结束后执行，无论正常还是异常</td>
+</tr>
+<tr>
+<td><code>@AfterReturning</code></td>
+<td>目标方法正常返回后执行</td>
+</tr>
+<tr>
+<td><code>@AfterThrowing</code></td>
+<td>目标方法抛出异常后执行</td>
+</tr>
+<tr>
+<td><code>@Around</code></td>
+<td>包围目标方法执行，能力最强</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogAspect</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>before()</code> 方法体就是增强逻辑。</p>
+<p>但 Spring AOP 内部不会直接拿 <code>@Before</code> 方法裸跑，而是会解析成统一对象模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">@Before 方法</span><br><span class="line">  -&gt; Advice</span><br><span class="line">      -&gt; Advisor 中的一部分</span><br></pre></td></tr></table></figure>
+
+<h3 id="Advice-不是匹配规则"><a href="#Advice-不是匹配规则" class="headerlink" title="Advice 不是匹配规则"></a>Advice 不是匹配规则</h3><p><code>Advice</code> 只表示“要做什么”，不负责判断“对谁做”。</p>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里实际包含两部分：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>execution(* com.example..*Service.*(..))</code></td>
+<td><code>Pointcut</code></td>
+</tr>
+<tr>
+<td><code>before()</code> 方法体</td>
+<td><code>Advice</code></td>
+</tr>
+</tbody></table>
+<p>所以不要把 Advice 和 Pointcut 混在一起。</p>
+<hr>
+<h2 id="三、Pointcut：匹配规则的抽象"><a href="#三、Pointcut：匹配规则的抽象" class="headerlink" title="三、Pointcut：匹配规则的抽象"></a>三、Pointcut：匹配规则的抽象</h2><p><code>Pointcut</code> 负责判断一个类或方法是否需要被增强。</p>
+<p>它通常包含两个层面的匹配：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Pointcut</span><br><span class="line">  -&gt; ClassFilter：判断目标类是否可能匹配</span><br><span class="line">  -&gt; MethodMatcher：判断目标方法是否匹配</span><br></pre></td></tr></table></figure>
+
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个表达式表示：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">匹配 com.example 包及子包下</span><br><span class="line">所有以 Service 结尾的类中的所有方法</span><br></pre></td></tr></table></figure>
+
+<h3 id="常见-Pointcut-表达式"><a href="#常见-Pointcut-表达式" class="headerlink" title="常见 Pointcut 表达式"></a>常见 Pointcut 表达式</h3><table>
+<thead>
+<tr>
+<th>表达式</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>execution(...)</code></td>
+<td>按方法签名匹配，最常用</td>
+</tr>
+<tr>
+<td><code>within(...)</code></td>
+<td>按类型范围匹配</td>
+</tr>
+<tr>
+<td><code>this(...)</code></td>
+<td>按代理对象类型匹配</td>
+</tr>
+<tr>
+<td><code>target(...)</code></td>
+<td>按目标对象类型匹配</td>
+</tr>
+<tr>
+<td><code>args(...)</code></td>
+<td>按运行时参数类型匹配</td>
+</tr>
+<tr>
+<td><code>@annotation(...)</code></td>
+<td>匹配带指定注解的方法</td>
+</tr>
+<tr>
+<td><code>@within(...)</code></td>
+<td>匹配带指定注解的类中的方法</td>
+</tr>
+<tr>
+<td><code>bean(...)</code></td>
+<td>按 Spring Bean 名称匹配</td>
+</tr>
+</tbody></table>
+<p>常用示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Pointcut(&quot;execution(* com.example..service..*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">serviceMethods</span><span class="params">()</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Pointcut(&quot;@annotation(org.springframework.transaction.annotation.Transactional)&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transactionalMethods</span><span class="params">()</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="静态匹配与动态匹配"><a href="#静态匹配与动态匹配" class="headerlink" title="静态匹配与动态匹配"></a>静态匹配与动态匹配</h3><p>Spring AOP 会尽量先做静态匹配。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">能提前判断的：创建代理或构建拦截器链时判断</span><br><span class="line">依赖运行时参数的：方法调用时再判断</span><br></pre></td></tr></table></figure>
+
+<p>例如 <code>execution(...)</code> 多数可以静态判断，而 <code>args(...)</code> 可能依赖运行时参数。</p>
+<hr>
+<h2 id="四、Advisor：组合-Pointcut-和-Advice"><a href="#四、Advisor：组合-Pointcut-和-Advice" class="headerlink" title="四、Advisor：组合 Pointcut 和 Advice"></a>四、Advisor：组合 Pointcut 和 Advice</h2><p><code>Advisor</code> 把 <code>Pointcut</code> 和 <code>Advice</code> 组合成一条完整增强规则。</p>
+<p>常见接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Advisor</span> &#123;</span><br><span class="line">    Advice <span class="title function_">getAdvice</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>带 Pointcut 的 Advisor：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">PointcutAdvisor</span> <span class="keyword">extends</span> <span class="title class_">Advisor</span> &#123;</span><br><span class="line">    Pointcut <span class="title function_">getPointcut</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以一个 <code>PointcutAdvisor</code> 可以理解为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PointcutAdvisor</span><br><span class="line">  -&gt; Pointcut：匹配哪些方法</span><br><span class="line">  -&gt; Advice：匹配后执行什么增强</span><br></pre></td></tr></table></figure>
+
+<h3 id="一个注解切面如何变成-Advisor"><a href="#一个注解切面如何变成-Advisor" class="headerlink" title="一个注解切面如何变成 Advisor"></a>一个注解切面如何变成 Advisor</h3><p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogAspect</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Spring 解析后可以理解为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Advisor</span><br><span class="line">  -&gt; Pointcut: execution(* com.example..*Service.*(..))</span><br><span class="line">  -&gt; Advice: before()</span><br></pre></td></tr></table></figure>
+
+<p>如果一个切面里有多个通知方法，就可能解析出多个 Advisor：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">LogAspect</span><br><span class="line">  -&gt; Advisor 1: Pointcut + Before Advice</span><br><span class="line">  -&gt; Advisor 2: Pointcut + AfterReturning Advice</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、Advice-如何适配成-MethodInterceptor"><a href="#五、Advice-如何适配成-MethodInterceptor" class="headerlink" title="五、Advice 如何适配成 MethodInterceptor"></a>五、Advice 如何适配成 MethodInterceptor</h2><p><code>Advice</code> 是增强逻辑的抽象，但 Spring AOP 运行时真正执行的是 <code>MethodInterceptor</code>。</p>
+<p><code>MethodInterceptor</code> 的核心方法是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Object <span class="title function_">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable;</span><br></pre></td></tr></table></figure>
+
+<p>运行时调用链只认识一种统一模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MethodInterceptor</span><br><span class="line">  -&gt; invocation.proceed()</span><br></pre></td></tr></table></figure>
+
+<p>因此不同类型的 Advice 会被适配成不同的拦截器。</p>
+<table>
+<thead>
+<tr>
+<th>Advice 类型</th>
+<th>运行时适配后的形态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@Before</code></td>
+<td>前置拦截器</td>
+</tr>
+<tr>
+<td><code>@AfterReturning</code></td>
+<td>返回后拦截器</td>
+</tr>
+<tr>
+<td><code>@AfterThrowing</code></td>
+<td>异常拦截器</td>
+</tr>
+<tr>
+<td><code>@Around</code></td>
+<td>环绕拦截器，本身最接近 <code>MethodInterceptor</code></td>
+</tr>
+<tr>
+<td><code>@After</code></td>
+<td>finally 风格拦截器</td>
+</tr>
+</tbody></table>
+<p>可以简化为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Advisor</span><br><span class="line">  -&gt; Advice</span><br><span class="line">      -&gt; AdvisorAdapter</span><br><span class="line">          -&gt; MethodInterceptor</span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么需要适配"><a href="#为什么需要适配" class="headerlink" title="为什么需要适配"></a>为什么需要适配</h3><p>不同 Advice 语义不同：</p>
+<ul>
+<li><code>@Before</code> 只需要在目标方法前执行。</li>
+<li><code>@AfterReturning</code> 只在正常返回后执行。</li>
+<li><code>@AfterThrowing</code> 只在异常时执行。</li>
+<li><code>@Around</code> 可以决定是否继续调用目标方法。</li>
+</ul>
+<p>但拦截器链执行时，需要统一入口。</p>
+<p>所以 Spring 把它们统一成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MethodInterceptor 链</span><br></pre></td></tr></table></figure>
+
+<p>这样 <code>ReflectiveMethodInvocation#proceed()</code> 只需要按顺序执行拦截器，不需要关心每个 Advice 原来是什么注解。</p>
+<hr>
+<h2 id="六、Advisor-在自动代理创建中的作用"><a href="#六、Advisor-在自动代理创建中的作用" class="headerlink" title="六、Advisor 在自动代理创建中的作用"></a>六、Advisor 在自动代理创建中的作用</h2><p>自动代理创建器判断一个 Bean 是否需要代理时，核心逻辑就是找 Advisor。</p>
+<p>主线如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">wrapIfNecessary()</span><br><span class="line">  -&gt; findEligibleAdvisors()</span><br><span class="line">      -&gt; findCandidateAdvisors()</span><br><span class="line">      -&gt; findAdvisorsThatCanApply()</span><br><span class="line">  -&gt; createProxy()</span><br></pre></td></tr></table></figure>
+
+<p>其中：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>findCandidateAdvisors()</code></td>
+<td>找到容器中的候选 Advisor</td>
+</tr>
+<tr>
+<td><code>findAdvisorsThatCanApply()</code></td>
+<td>判断哪些 Advisor 能应用到当前 Bean</td>
+</tr>
+<tr>
+<td><code>createProxy()</code></td>
+<td>把可应用 Advisor 放进代理配置</td>
+</tr>
+</tbody></table>
+<p>也就是说：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">有 Advisor 匹配当前 Bean</span><br><span class="line">  -&gt; 创建代理</span><br><span class="line">没有 Advisor 匹配当前 Bean</span><br><span class="line">  -&gt; 返回原始 Bean</span><br></pre></td></tr></table></figure>
+
+<p>代理对象不是因为某个类上有 <code>@Service</code> 就创建，真正依据是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当前 Bean 的方法是否命中了某个 Advisor 的 Pointcut</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、和前后几篇的关系"><a href="#七、和前后几篇的关系" class="headerlink" title="七、和前后几篇的关系"></a>七、和前后几篇的关系</h2><p>这一篇主要讲 AOP 的元模型，不展开完整运行时调用链。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">02-02-Spring-AOP-Proxy.md</span><br><span class="line">  -&gt; 代理对象如何拦截方法调用</span><br><span class="line"></span><br><span class="line">02-03-Spring-AOP-AutoProxyCreator.md</span><br><span class="line">  -&gt; 代理对象如何被 Spring 自动创建</span><br><span class="line"></span><br><span class="line">02-04-Spring-AOP-Advisor-Advice-Pointcut.md</span><br><span class="line">  -&gt; Advisor、Advice、Pointcut、MethodInterceptor 的关系</span><br><span class="line"></span><br><span class="line">02-05-Spring-AOP-Invocation-Chain.md</span><br><span class="line">  -&gt; MethodInterceptor 链如何通过 proceed() 执行</span><br></pre></td></tr></table></figure>
+
+<p>本篇只讲到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Advice 会被适配成 MethodInterceptor</span><br></pre></td></tr></table></figure>
+
+<p>至于多个 <code>MethodInterceptor</code> 如何一层层执行，放到下一篇专门分析。</p>
+<hr>
+<h2 id="八、面试高频快答"><a href="#八、面试高频快答" class="headerlink" title="八、面试高频快答"></a>八、面试高频快答</h2><p><strong>Advisor、Advice、Pointcut 分别是什么？</strong></p>
+<blockquote>
+<p><code>Pointcut</code> 负责匹配哪些类和方法，<code>Advice</code> 表示增强逻辑，<code>Advisor</code> 把两者组合起来，形成一条完整的增强规则。</p>
+</blockquote>
+<p><strong>为什么说 Advisor &#x3D; Pointcut + Advice？</strong></p>
+<blockquote>
+<p>因为一个 Advisor 既要知道“对谁增强”，也要知道“增强什么逻辑”。前者由 Pointcut 表示，后者由 Advice 表示。</p>
+</blockquote>
+<p><strong>MethodInterceptor 和 Advice 是什么关系？</strong></p>
+<blockquote>
+<p>Advice 是用户视角的增强逻辑抽象，MethodInterceptor 是 Spring AOP 运行时真正执行的统一拦截器形态。</p>
+</blockquote>
+<p><strong><code>@Before</code>、<code>@AfterReturning</code> 最终怎么执行？</strong></p>
+<blockquote>
+<p>它们会先被解析成 Advice，再通过适配器转换成 MethodInterceptor，最终放入拦截器链中执行。</p>
+</blockquote>
+<p><strong>一个 Bean 是否需要代理由什么决定？</strong></p>
+<blockquote>
+<p>主要看是否存在能应用到这个 Bean 的 Advisor，也就是 Advisor 中的 Pointcut 是否匹配当前 Bean 的方法。</p>
+</blockquote>
+<hr>
+<h2 id="九、本篇总结"><a href="#九、本篇总结" class="headerlink" title="九、本篇总结"></a>九、本篇总结</h2><p>本文的核心是建立 Spring AOP 元模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Advisor</span><br><span class="line">  -&gt; Pointcut：匹配规则</span><br><span class="line">  -&gt; Advice：增强逻辑</span><br><span class="line">      -&gt; MethodInterceptor：运行时执行形态</span><br></pre></td></tr></table></figure>
+
+<p>必须掌握的点：</p>
+<ul>
+<li><code>Advice</code> 只表示增强逻辑，不负责匹配。</li>
+<li><code>Pointcut</code> 只表示匹配规则，不负责执行增强。</li>
+<li><code>Advisor</code> 把 <code>Pointcut</code> 和 <code>Advice</code> 组合起来。</li>
+<li>Spring AOP 判断是否创建代理，本质是判断是否存在可应用的 Advisor。</li>
+<li>运行时真正执行的是 <code>MethodInterceptor</code> 链。</li>
+</ul>
 </article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
 /* ============== 文章页：TOC + 暗色模式 ============== */
 (function(){

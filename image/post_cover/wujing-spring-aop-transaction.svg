@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Background decorative -->
+    <path d="M200 200 Q430 70 650 170" stroke="#F59E0B" stroke-width="5" opacity="0.20"/>
+    <path d="M1200 220 Q1380 150 1480 250" stroke="#34D399" stroke-width="4" opacity="0.15"/>
+    <path d="M220 680 Q500 800 800 700 Q1100 600 1380 730" stroke="#6DB33F" stroke-width="4" opacity="0.10"/>
+    <circle cx="280" cy="230" r="4" fill="#6DB33F" opacity="0.15"/>
+    <circle cx="1320" cy="300" r="4" fill="#F59E0B" opacity="0.13"/>
+
+    <!-- Left: @Transactional method -->
+    <rect x="160" y="310" width="240" height="140" rx="16" stroke="#6DB33F" stroke-width="6" fill="#F7FEE7"/>
+    <text x="280" y="365" text-anchor="middle" font-size="20" font-weight="800" fill="#6DB33F" font-family="sans-serif">@Transactional</text>
+    <text x="280" y="400" text-anchor="middle" font-size="16" font-weight="700" fill="#6B7280" font-family="sans-serif">createOrder()</text>
+
+    <!-- Arrow to proxy -->
+    <path d="M400 380 L500 380" stroke="#F59E0B" stroke-width="6"/>
+    <polygon points="510,380 498,370 498,390" fill="#F59E0B"/>
+
+    <!-- Center: Proxy object -->
+    <rect x="520" y="290" width="280" height="180" rx="20" stroke="#34D399" stroke-width="8" fill="#ECFDF5"/>
+    <rect x="550" y="320" width="220" height="120" rx="12" stroke="#6DB33F" stroke-width="3" stroke-dasharray="8,4" opacity="0.45"/>
+    <text x="660" y="370" text-anchor="middle" font-size="22" font-weight="800" fill="#34D399" font-family="sans-serif">代理对象</text>
+    <text x="660" y="405" text-anchor="middle" font-size="14" font-weight="600" fill="#6B7280" font-family="sans-serif">$Proxy / $$CGLIB</text>
+
+    <!-- Arrow to TransactionInterceptor -->
+    <path d="M800 380 L900 380" stroke="#F59E0B" stroke-width="6"/>
+    <polygon points="910,380 898,370 898,390" fill="#F59E0B"/>
+
+    <!-- Right: TransactionInterceptor -->
+    <rect x="920" y="290" width="260" height="180" rx="14" stroke="#F59E0B" stroke-width="6" fill="#FFFBEB"/>
+    <text x="1050" y="345" text-anchor="middle" font-size="18" font-weight="800" fill="#F59E0B" font-family="sans-serif">Transaction</text>
+    <text x="1050" y="370" text-anchor="middle" font-size="18" font-weight="800" fill="#F59E0B" font-family="sans-serif">Interceptor</text>
+
+    <!-- Transaction actions inside interceptor -->
+    <text x="1050" y="405" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" font-family="sans-serif">① 开启事务</text>
+    <text x="1050" y="428" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" font-family="sans-serif">② proceed() → 业务方法</text>
+    <text x="1050" y="451" text-anchor="middle" font-size="13" font-weight="700" fill="#6B7280" font-family="sans-serif">③ 提交 / 回滚</text>
+
+    <!-- Arrow to DB -->
+    <path d="M1050 470 L1050 540" stroke="#34D399" stroke-width="5"/>
+    <polygon points="1050,550 1040,538 1060,538" fill="#34D399"/>
+
+    <!-- Database icon -->
+    <ellipse cx="1050" cy="580" rx="80" ry="18" fill="#34D399" opacity="0.20"/>
+    <path d="M970 560 L970 600 Q970 620 1050 620 Q1130 620 1130 600 L1130 560" stroke="#34D399" stroke-width="5" fill="#ECFDF5"/>
+    <path d="M970 560 Q970 580 1050 580 Q1130 580 1130 560" stroke="#34D399" stroke-width="4" fill="none"/>
+    <text x="1050" y="600" text-anchor="middle" font-size="15" font-weight="700" fill="#34D399" font-family="sans-serif">DB</text>
+
+    <!-- Advisor = Pointcut + Advice label (connection) -->
+    <rect x="580" y="510" width="440" height="36" rx="10" stroke="#6DB33F" stroke-width="3" fill="#ffffff" opacity="0.8"/>
+    <text x="800" y="533" text-anchor="middle" font-size="15" font-weight="700" fill="#6DB33F" font-family="sans-serif">Advisor = TransactionAttributeSourcePointcut + TransactionInterceptor</text>
+
+    <!-- Curved decorative arc -->
+    <path d="M300 600 Q560 750 800 660 Q1040 570 1300 620" stroke="#6DB33F" stroke-width="4" opacity="0.22"/>
+
+    <!-- BeanFactoryTransactionAttributeSourceAdvisor -->
+    <circle cx="1140" cy="700" r="5" fill="#F59E0B" opacity="0.14"/>
+  </g>
+
+  <!-- Title section -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="795" font-size="76" text-anchor="middle" font-weight="800">Spring AOP 与声明式事务</text>
+    <text x="800" y="848" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">@Transactional · TransactionInterceptor · 事务 Advisor</text>
+  </g>
+</svg>

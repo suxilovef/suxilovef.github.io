@@ -1,24 +1,24 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>无言 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="无言">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02-05-Spring-AOP-Invocation-Chain | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spring AOP Invocation Chain">
 <meta property="og:type" content="article">
-<meta property="og:title" content="无言">
-<meta property="og:url" content="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html">
+<meta property="og:title" content="02-05-Spring-AOP-Invocation-Chain">
+<meta property="og:url" content="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-05-Spring-AOP-Invocation-Chain/index.html">
 <meta property="og:site_name" content="九方">
-<meta property="og:description" content="无言">
+<meta property="og:description" content="Spring AOP Invocation Chain">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg">
-<meta property="article:published_time" content="2026-03-28T08:24:24.000Z">
-<meta property="article:modified_time" content="2026-07-12T07:38:28.032Z">
+<meta property="og:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-chain.svg">
+<meta property="article:published_time" content="2026-07-12T10:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-12T12:18:08.737Z">
 <meta property="article:author" content="九方">
-<meta property="article:tag" content="语录">
+<meta property="article:tag" content="Spring">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg"><script type="application/ld+json">{
+<meta name="twitter:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-chain.svg"><script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "无言",
-  "url": "https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/",
-  "image": "https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg",
-  "datePublished": "2026-03-28T08:24:24.000Z",
-  "dateModified": "2026-07-12T07:38:28.032Z",
+  "headline": "02-05-Spring-AOP-Invocation-Chain",
+  "url": "https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-05-Spring-AOP-Invocation-Chain/",
+  "image": "https://suxi.love/image/post_cover/wujing-spring-aop-chain.svg",
+  "datePublished": "2026-07-12T10:00:00.000Z",
+  "dateModified": "2026-07-12T12:18:08.737Z",
   "author": [
     {
       "@type": "Person",
@@ -26,7 +26,7 @@
       "url": "https://suxi.love"
     }
   ]
-}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-05-Spring-AOP-Invocation-Chain/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
     (() => {
       
     const saveToLocal = {
@@ -150,7 +150,7 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '无言',
+  title: '02-05-Spring-AOP-Invocation-Chain',
   isHighlightShrink: false,
   isToc: false,
   pageType: 'post'
@@ -510,7 +510,241 @@ body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
   .custom-toc a{display:block;margin:.24rem 0}
 }
 </style>
-<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">无言</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">无言</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-03-28T08:24:24.000Z" title="发表于 2026-03-28 16:24:24">2026-03-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T07:38:28.032Z" title="更新于 2026-07-12 15:38:28">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">21</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>1分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><p>九刻舟，剑涤尘，破心方，一理情，渡失劫，痴愚时，齐万物</p>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">02-05-Spring-AOP-Invocation-Chain</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">02-05-Spring-AOP-Invocation-Chain</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-12T10:00:00.000Z" title="发表于 2026-07-12 18:00:00">2026-07-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T12:18:08.737Z" title="更新于 2026-07-12 20:18:08">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Spring-AOP-拦截器链执行过程"><a href="#Spring-AOP-拦截器链执行过程" class="headerlink" title="Spring AOP 拦截器链执行过程"></a>Spring AOP 拦截器链执行过程</h1><blockquote>
+<p>本文承接 <code>02-04-Spring-AOP-Advisor-Advice-Pointcut.md</code>，专门分析 Spring AOP 方法调用时，拦截器链是如何执行的。<br>主线是：代理对象拦截方法调用 -&gt; 获取 MethodInterceptor 链 -&gt; 创建 MethodInvocation -&gt; <code>ReflectiveMethodInvocation#proceed()</code> 递归推进。</p>
+</blockquote>
+<hr>
+<h2 id="一、先建立主线：AOP-方法调用到底执行了什么"><a href="#一、先建立主线：AOP-方法调用到底执行了什么" class="headerlink" title="一、先建立主线：AOP 方法调用到底执行了什么"></a>一、先建立主线：AOP 方法调用到底执行了什么</h2><p>前面已经讲过，Spring AOP 最终会把不同类型的 Advice 适配成 <code>MethodInterceptor</code>。</p>
+<p>方法真正被调用时，执行链可以简化成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">调用代理对象方法</span><br><span class="line">  -&gt; 进入 JDK / CGLIB 代理入口</span><br><span class="line">  -&gt; 获取当前方法匹配的 MethodInterceptor 链</span><br><span class="line">  -&gt; 创建 MethodInvocation</span><br><span class="line">  -&gt; 调用 proceed()</span><br><span class="line">  -&gt; 依次执行每个 MethodInterceptor</span><br><span class="line">  -&gt; 最后调用目标方法</span><br></pre></td></tr></table></figure>
+
+<p>这一篇重点看一个方法：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ReflectiveMethodInvocation#proceed()</span><br></pre></td></tr></table></figure>
+
+<p>它是理解 Spring AOP 运行时链式调用的关键。</p>
+<hr>
+<h2 id="二、代理入口如何进入拦截器链"><a href="#二、代理入口如何进入拦截器链" class="headerlink" title="二、代理入口如何进入拦截器链"></a>二、代理入口如何进入拦截器链</h2><p>不管是 JDK 动态代理还是 CGLIB 代理，入口不同，但最终都会走向同一个模型。</p>
+<h3 id="JDK-动态代理入口"><a href="#JDK-动态代理入口" class="headerlink" title="JDK 动态代理入口"></a>JDK 动态代理入口</h3><p>JDK 动态代理入口是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">JdkDynamicAopProxy#invoke()</span><br></pre></td></tr></table></figure>
+
+<p>简化流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">proxy.method()</span><br><span class="line">  -&gt; JdkDynamicAopProxy.invoke()</span><br><span class="line">  -&gt; 获取 interceptorsAndDynamicMethodMatchers</span><br><span class="line">  -&gt; 创建 ReflectiveMethodInvocation</span><br><span class="line">  -&gt; invocation.proceed()</span><br></pre></td></tr></table></figure>
+
+<h3 id="CGLIB-代理入口"><a href="#CGLIB-代理入口" class="headerlink" title="CGLIB 代理入口"></a>CGLIB 代理入口</h3><p>CGLIB 代理入口是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CglibAopProxy.DynamicAdvisedInterceptor#intercept()</span><br></pre></td></tr></table></figure>
+
+<p>简化流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">proxy.method()</span><br><span class="line">  -&gt; DynamicAdvisedInterceptor.intercept()</span><br><span class="line">  -&gt; 获取 interceptorsAndDynamicMethodMatchers</span><br><span class="line">  -&gt; 创建 CglibMethodInvocation</span><br><span class="line">  -&gt; invocation.proceed()</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，两者最终都会抽象成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MethodInvocation + MethodInterceptor 链</span><br></pre></td></tr></table></figure>
+
+<p>所以真正的重点不是代理入口，而是 <code>proceed()</code> 如何推进。</p>
+<hr>
+<h2 id="三、MethodInvocation-是什么"><a href="#三、MethodInvocation-是什么" class="headerlink" title="三、MethodInvocation 是什么"></a>三、MethodInvocation 是什么</h2><p><code>MethodInvocation</code> 表示一次方法调用上下文。</p>
+<p>它通常包含：</p>
+<table>
+<thead>
+<tr>
+<th>信息</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>proxy</code></td>
+<td>当前代理对象</td>
+</tr>
+<tr>
+<td><code>target</code></td>
+<td>目标对象</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td>当前被调用的方法</td>
+</tr>
+<tr>
+<td><code>arguments</code></td>
+<td>方法参数</td>
+</tr>
+<tr>
+<td><code>targetClass</code></td>
+<td>目标类类型</td>
+</tr>
+<tr>
+<td><code>interceptorsAndDynamicMethodMatchers</code></td>
+<td>当前方法匹配到的拦截器链</td>
+</tr>
+<tr>
+<td><code>currentInterceptorIndex</code></td>
+<td>当前执行到第几个拦截器</td>
+</tr>
+</tbody></table>
+<p>可以把它理解成一次调用现场：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">MethodInvocation</span><br><span class="line">  -&gt; 谁调用</span><br><span class="line">  -&gt; 调哪个方法</span><br><span class="line">  -&gt; 参数是什么</span><br><span class="line">  -&gt; 有哪些拦截器</span><br><span class="line">  -&gt; 当前执行到哪里</span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么需要-MethodInvocation"><a href="#为什么需要-MethodInvocation" class="headerlink" title="为什么需要 MethodInvocation"></a>为什么需要 MethodInvocation</h3><p>因为 <code>@Around</code> 这类增强需要主动控制是否继续执行后续链路：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Around(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">around</span><span class="params">(ProceedingJoinPoint joinPoint)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> joinPoint.proceed();</span><br><span class="line">    System.out.println(<span class="string">&quot;after&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>joinPoint.proceed()</code>，底层本质就是继续推进当前方法调用链。</p>
+<hr>
+<h2 id="四、ReflectiveMethodInvocation-proceed-核心逻辑"><a href="#四、ReflectiveMethodInvocation-proceed-核心逻辑" class="headerlink" title="四、ReflectiveMethodInvocation#proceed() 核心逻辑"></a>四、ReflectiveMethodInvocation#proceed() 核心逻辑</h2><p><code>ReflectiveMethodInvocation#proceed()</code> 可以简化成下面的伪代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">proceed</span><span class="params">()</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    <span class="keyword">if</span> (currentInterceptorIndex == interceptors.size() - <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> invokeJoinpoint();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Object</span> <span class="variable">interceptor</span> <span class="operator">=</span> interceptors.get(++currentInterceptorIndex);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (interceptor is MethodInterceptor) &#123;</span><br><span class="line">        <span class="keyword">return</span> interceptor.invoke(<span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> proceed();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>核心点只有两个：</p>
+<ol>
+<li>每调用一次 <code>proceed()</code>，索引 <code>currentInterceptorIndex</code> 向后推进一位。</li>
+<li>所有拦截器执行完后，才真正调用目标方法。</li>
+</ol>
+<p>可以用这条链路理解：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">proceed()</span><br><span class="line">  -&gt; interceptor 0.invoke(invocation)</span><br><span class="line">      -&gt; invocation.proceed()</span><br><span class="line">          -&gt; interceptor 1.invoke(invocation)</span><br><span class="line">              -&gt; invocation.proceed()</span><br><span class="line">                  -&gt; target.method()</span><br></pre></td></tr></table></figure>
+
+<p>这就是 Spring AOP 拦截器链的递归推进模型。</p>
+<hr>
+<h2 id="五、拦截器链为什么像洋葱模型"><a href="#五、拦截器链为什么像洋葱模型" class="headerlink" title="五、拦截器链为什么像洋葱模型"></a>五、拦截器链为什么像洋葱模型</h2><p>假设有两个 <code>@Around</code> 切面：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Around(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">around1</span><span class="params">(ProceedingJoinPoint pjp)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;around1 before&quot;</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> pjp.proceed();</span><br><span class="line">    System.out.println(<span class="string">&quot;around1 after&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Around(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">around2</span><span class="params">(ProceedingJoinPoint pjp)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;around2 before&quot;</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> pjp.proceed();</span><br><span class="line">    System.out.println(<span class="string">&quot;around2 after&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果执行顺序是 <code>around1 -&gt; around2 -&gt; target</code>，输出会类似：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">around1 before</span><br><span class="line">around2 before</span><br><span class="line">target method</span><br><span class="line">around2 after</span><br><span class="line">around1 after</span><br></pre></td></tr></table></figure>
+
+<p>原因是调用链展开后是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">around1.invoke()</span><br><span class="line">  -&gt; proceed()</span><br><span class="line">      -&gt; around2.invoke()</span><br><span class="line">          -&gt; proceed()</span><br><span class="line">              -&gt; target.method()</span><br><span class="line">          -&gt; around2 after</span><br><span class="line">  -&gt; around1 after</span><br></pre></td></tr></table></figure>
+
+<p>所以越靠前的拦截器，越在外层。</p>
+<hr>
+<h2 id="六、不同-Advice-在链中的执行位置"><a href="#六、不同-Advice-在链中的执行位置" class="headerlink" title="六、不同 Advice 在链中的执行位置"></a>六、不同 Advice 在链中的执行位置</h2><p>不同 Advice 最终都会适配成 <code>MethodInterceptor</code>，但语义不同。</p>
+<table>
+<thead>
+<tr>
+<th>Advice</th>
+<th>执行特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@Before</code></td>
+<td>在调用 <code>proceed()</code> 前执行逻辑，然后继续链路</td>
+</tr>
+<tr>
+<td><code>@AfterReturning</code></td>
+<td>先调用 <code>proceed()</code>，正常返回后执行逻辑</td>
+</tr>
+<tr>
+<td><code>@AfterThrowing</code></td>
+<td>先调用 <code>proceed()</code>，捕获异常后执行逻辑并继续抛出</td>
+</tr>
+<tr>
+<td><code>@After</code></td>
+<td>使用 <code>finally</code> 语义，方法结束一定执行</td>
+</tr>
+<tr>
+<td><code>@Around</code></td>
+<td>自己决定何时、是否调用 <code>proceed()</code></td>
+</tr>
+</tbody></table>
+<p><code>@Before</code> 可以理解为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    before();</span><br><span class="line">    <span class="keyword">return</span> invocation.proceed();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>@AfterReturning</code> 可以理解为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> invocation.proceed();</span><br><span class="line">    afterReturning(result);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>@AfterThrowing</code> 可以理解为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> invocation.proceed();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">        afterThrowing(ex);</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>@Around</code> 能力最强，也最容易破坏调用语义。</p>
+<hr>
+<h2 id="七、proceed-不调用会发生什么"><a href="#七、proceed-不调用会发生什么" class="headerlink" title="七、proceed() 不调用会发生什么"></a>七、proceed() 不调用会发生什么</h2><p><code>@Around</code> 中如果不调用 <code>proceed()</code>，目标方法就不会执行。</p>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Around(&quot;execution(* com.example..*Service.*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">around</span><span class="params">(ProceedingJoinPoint joinPoint)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;skip target&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用链会停在当前拦截器：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">proxy.method()</span><br><span class="line">  -&gt; around interceptor</span><br><span class="line">      -&gt; 不调用 proceed()</span><br><span class="line">      -&gt; target.method() 不执行</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>@Around</code> 中要特别注意：</p>
+<ul>
+<li>是否调用了 <code>proceed()</code>。</li>
+<li>是否正确返回 <code>proceed()</code> 的结果。</li>
+<li>是否保持异常语义，不要随意吞异常。</li>
+</ul>
+<hr>
+<h2 id="八、异常如何在拦截器链中传播"><a href="#八、异常如何在拦截器链中传播" class="headerlink" title="八、异常如何在拦截器链中传播"></a>八、异常如何在拦截器链中传播</h2><p>拦截器链本质是嵌套调用，所以异常会从内层向外层抛出。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">around1.invoke()</span><br><span class="line">  -&gt; around2.invoke()</span><br><span class="line">      -&gt; target.method() throws exception</span><br><span class="line">  -&gt; around2 捕获或抛出</span><br><span class="line">-&gt; around1 捕获或抛出</span><br></pre></td></tr></table></figure>
+
+<p>如果没有拦截器吞掉异常，异常会一直抛回调用方。</p>
+<p>这也是 <code>@AfterThrowing</code> 能工作的原因。</p>
+<p>注意：</p>
+<blockquote>
+<p>如果某个环绕通知吞掉异常，外层拦截器和调用方看到的语义都会被改变。</p>
+</blockquote>
+<p>这对事务尤其重要，因为事务回滚通常依赖异常继续向外传播。</p>
+<p>事务细节放到 <code>02-06-Spring-AOP-And-Transaction.md</code> 继续展开。</p>
+<hr>
+<h2 id="九、调试-ReflectiveMethodInvocation"><a href="#九、调试-ReflectiveMethodInvocation" class="headerlink" title="九、调试 ReflectiveMethodInvocation"></a>九、调试 ReflectiveMethodInvocation</h2><p>建议断点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ReflectiveMethodInvocation#proceed()</span><br><span class="line">JdkDynamicAopProxy#invoke()</span><br><span class="line">CglibAopProxy.DynamicAdvisedInterceptor#intercept()</span><br><span class="line">DefaultAdvisorChainFactory#getInterceptorsAndDynamicInterceptionAdvice()</span><br></pre></td></tr></table></figure>
+
+<p>重点观察：</p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>观察点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>method</code></td>
+<td>当前调用的方法</td>
+</tr>
+<tr>
+<td><code>targetClass</code></td>
+<td>目标类</td>
+</tr>
+<tr>
+<td><code>interceptorsAndDynamicMethodMatchers</code></td>
+<td>当前方法匹配到的拦截器链</td>
+</tr>
+<tr>
+<td><code>currentInterceptorIndex</code></td>
+<td>当前执行到第几个拦截器</td>
+</tr>
+<tr>
+<td><code>arguments</code></td>
+<td>当前调用参数</td>
+</tr>
+</tbody></table>
+<p>调试时可以重点看 <code>currentInterceptorIndex</code> 的变化：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-1 -&gt; 0 -&gt; 1 -&gt; 2 -&gt; ... -&gt; target method</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十、面试高频快答"><a href="#十、面试高频快答" class="headerlink" title="十、面试高频快答"></a>十、面试高频快答</h2><p><strong>Spring AOP 拦截器链是怎么执行的？</strong></p>
+<blockquote>
+<p>代理对象拦截方法调用后，会获取当前方法匹配的 MethodInterceptor 链，创建 MethodInvocation，并通过 <code>proceed()</code> 按索引递归推进拦截器，最后调用目标方法。</p>
+</blockquote>
+<p><strong><code>ReflectiveMethodInvocation#proceed()</code> 的核心逻辑是什么？</strong></p>
+<blockquote>
+<p>每次调用 <code>proceed()</code> 都会把当前拦截器索引向后推进一位，执行下一个 MethodInterceptor；当拦截器全部执行完后，调用目标方法。</p>
+</blockquote>
+<p><strong>为什么多个 <code>@Around</code> 像洋葱模型？</strong></p>
+<blockquote>
+<p>因为外层拦截器先执行前置逻辑，再通过 <code>proceed()</code> 进入内层拦截器，目标方法返回后再逐层执行后置逻辑。</p>
+</blockquote>
+<p><strong><code>@Around</code> 不调用 <code>proceed()</code> 会怎样？</strong></p>
+<blockquote>
+<p>后续拦截器和目标方法都不会执行，调用链会在当前环绕通知处终止。</p>
+</blockquote>
+<p><strong>异常在 AOP 链中怎么传播？</strong></p>
+<blockquote>
+<p>异常从目标方法或内层拦截器向外层逐层抛出，除非某个拦截器主动捕获并吞掉异常。</p>
+</blockquote>
+<hr>
+<h2 id="十一、本篇总结"><a href="#十一、本篇总结" class="headerlink" title="十一、本篇总结"></a>十一、本篇总结</h2><p>本文的核心是理解 <code>proceed()</code> 的链式推进：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">proxy.method()</span><br><span class="line">  -&gt; interceptor0.invoke(invocation)</span><br><span class="line">      -&gt; invocation.proceed()</span><br><span class="line">          -&gt; interceptor1.invoke(invocation)</span><br><span class="line">              -&gt; invocation.proceed()</span><br><span class="line">                  -&gt; target.method()</span><br></pre></td></tr></table></figure>
+
+<p>必须掌握的点：</p>
+<ul>
+<li>Spring AOP 运行时执行的是 <code>MethodInterceptor</code> 链。</li>
+<li><code>MethodInvocation</code> 保存一次方法调用的上下文。</li>
+<li><code>ReflectiveMethodInvocation#proceed()</code> 通过索引推进拦截器链。</li>
+<li><code>@Around</code> 是否调用 <code>proceed()</code> 决定后续链路是否继续。</li>
+<li>异常会沿着拦截器嵌套结构从内向外传播。</li>
+</ul>
 </article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
 /* ============== 文章页：TOC + 暗色模式 ============== */
 (function(){

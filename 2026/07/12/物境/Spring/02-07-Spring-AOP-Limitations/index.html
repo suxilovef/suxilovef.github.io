@@ -1,24 +1,24 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>无言 | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="无言">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02-07-Spring-AOP-Limitations | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spring AOP Limitations">
 <meta property="og:type" content="article">
-<meta property="og:title" content="无言">
-<meta property="og:url" content="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html">
+<meta property="og:title" content="02-07-Spring-AOP-Limitations">
+<meta property="og:url" content="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-07-Spring-AOP-Limitations/index.html">
 <meta property="og:site_name" content="九方">
-<meta property="og:description" content="无言">
+<meta property="og:description" content="Spring AOP Limitations">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg">
-<meta property="article:published_time" content="2026-03-28T08:24:24.000Z">
-<meta property="article:modified_time" content="2026-07-12T07:38:28.032Z">
+<meta property="og:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-limitations.svg">
+<meta property="article:published_time" content="2026-07-12T11:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-12T12:18:10.427Z">
 <meta property="article:author" content="九方">
-<meta property="article:tag" content="语录">
+<meta property="article:tag" content="Spring">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg"><script type="application/ld+json">{
+<meta name="twitter:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-limitations.svg"><script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "无言",
-  "url": "https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/",
-  "image": "https://suxi.love/image/%E5%A4%B4%E5%83%8F.jpg",
-  "datePublished": "2026-03-28T08:24:24.000Z",
-  "dateModified": "2026-07-12T07:38:28.032Z",
+  "headline": "02-07-Spring-AOP-Limitations",
+  "url": "https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-07-Spring-AOP-Limitations/",
+  "image": "https://suxi.love/image/post_cover/wujing-spring-aop-limitations.svg",
+  "datePublished": "2026-07-12T11:00:00.000Z",
+  "dateModified": "2026-07-12T12:18:10.427Z",
   "author": [
     {
       "@type": "Person",
@@ -26,7 +26,7 @@
       "url": "https://suxi.love"
     }
   ]
-}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/03/28/%E5%BF%83%E5%A2%83/%E6%97%A0%E8%A8%80/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-07-Spring-AOP-Limitations/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
     (() => {
       
     const saveToLocal = {
@@ -150,7 +150,7 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '无言',
+  title: '02-07-Spring-AOP-Limitations',
   isHighlightShrink: false,
   isToc: false,
   pageType: 'post'
@@ -510,7 +510,354 @@ body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
   .custom-toc a{display:block;margin:.24rem 0}
 }
 </style>
-<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">无言</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">无言</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-03-28T08:24:24.000Z" title="发表于 2026-03-28 16:24:24">2026-03-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T07:38:28.032Z" title="更新于 2026-07-12 15:38:28">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">21</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>1分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><p>九刻舟，剑涤尘，破心方，一理情，渡失劫，痴愚时，齐万物</p>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">02-07-Spring-AOP-Limitations</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">02-07-Spring-AOP-Limitations</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-12T11:00:00.000Z" title="发表于 2026-07-12 19:00:00">2026-07-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T12:18:10.427Z" title="更新于 2026-07-12 20:18:10">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Spring-AOP-限制与问题排查"><a href="#Spring-AOP-限制与问题排查" class="headerlink" title="Spring AOP 限制与问题排查"></a>Spring AOP 限制与问题排查</h1><blockquote>
+<p>本文是 Spring AOP 系列的边界总结篇，重点整理 Spring AOP 做不到什么、哪些场景容易失效、以及遇到 AOP 不生效时应该如何排查。<br>主线是：代理模型决定能力边界 -&gt; 常见失效场景 -&gt; 定位路径 -&gt; 解决建议。</p>
+</blockquote>
+<hr>
+<h2 id="一、先建立主线：限制来自代理模型"><a href="#一、先建立主线：限制来自代理模型" class="headerlink" title="一、先建立主线：限制来自代理模型"></a>一、先建立主线：限制来自代理模型</h2><p>Spring AOP 的优势是轻量、和 Spring IOC 集成紧密、适合处理方法级横切逻辑。</p>
+<p>但它的限制也很明确：</p>
+<blockquote>
+<p>Spring AOP 基于运行期代理对象工作，所以只有经过 Spring 代理对象的方法调用，才有机会被增强。</p>
+</blockquote>
+<p>这句话决定了大部分限制：</p>
+<ul>
+<li>目标对象必须是 Spring 容器管理的 Bean。</li>
+<li>调用必须经过 Spring 暴露出来的代理对象。</li>
+<li>默认主要拦截方法调用，不是字段访问或构造器执行。</li>
+<li>JDK 动态代理和 CGLIB 各自有类型限制。</li>
+<li>自调用、<code>final</code>、<code>private</code>、直接 <code>new</code> 对象都会导致增强失效。</li>
+</ul>
+<p>遇到 AOP 不生效，第一步不要先怀疑注解，而是先问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这次调用真的经过代理对象了吗？</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、限制一：只能增强-Spring-Bean"><a href="#二、限制一：只能增强-Spring-Bean" class="headerlink" title="二、限制一：只能增强 Spring Bean"></a>二、限制一：只能增强 Spring Bean</h2><p>Spring AOP 只能代理 Spring 容器中的 Bean。</p>
+<p>如果对象是自己 <code>new</code> 出来的，Spring 根本没有机会为它创建代理。</p>
+<p>错误示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">UserService</span> <span class="variable">userService</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UserService</span>();</span><br><span class="line">        userService.createUser();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原因是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">new UserService()</span><br><span class="line">  -&gt; 不经过 Spring 容器</span><br><span class="line">  -&gt; 不经过 BeanPostProcessor</span><br><span class="line">  -&gt; 不会创建代理对象</span><br></pre></td></tr></table></figure>
+
+<p>正确方式是从 Spring 容器注入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">DemoService</span><span class="params">(UserService userService)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.userService = userService;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、限制二：调用必须经过代理对象"><a href="#三、限制二：调用必须经过代理对象" class="headerlink" title="三、限制二：调用必须经过代理对象"></a>三、限制二：调用必须经过代理对象</h2><p>即使 Bean 已经被代理，如果调用绕过代理，也不会触发 AOP。</p>
+<p>最典型的是自调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">outer</span><span class="params">()</span> &#123;</span><br><span class="line">        inner();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">inner</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用链是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">调用方</span><br><span class="line">  -&gt; 代理对象</span><br><span class="line">      -&gt; outer()</span><br><span class="line">          -&gt; this.inner()</span><br></pre></td></tr></table></figure>
+
+<p><code>this.inner()</code> 是目标对象内部调用，没有重新经过代理对象。</p>
+<p>常见解决方式：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>建议程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>拆分到另一个 Bean</td>
+<td>推荐</td>
+<td>结构最清晰，最符合 Spring 代理模型</td>
+</tr>
+<tr>
+<td>注入自身代理</td>
+<td>可用但谨慎</td>
+<td>需要处理循环依赖，代码可读性一般</td>
+</tr>
+<tr>
+<td><code>AopContext.currentProxy()</code></td>
+<td>不推荐常规使用</td>
+<td>强依赖 Spring AOP，需要开启 <code>exposeProxy</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、限制三：默认是方法级代理"><a href="#四、限制三：默认是方法级代理" class="headerlink" title="四、限制三：默认是方法级代理"></a>四、限制三：默认是方法级代理</h2><p>Spring AOP 主要拦截方法调用。</p>
+<p>它不适合处理：</p>
+<ul>
+<li>字段读写拦截。</li>
+<li>构造器调用拦截。</li>
+<li>任意对象创建拦截。</li>
+<li>非 Spring 管理对象的调用。</li>
+<li>更底层的字节码织入场景。</li>
+</ul>
+<p>例如字段赋值不会触发 AOP：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">user.name = <span class="string">&quot;Tom&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>构造器内部调用也不会触发 AOP：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">UserService</span><span class="params">()</span> &#123;</span><br><span class="line">        init();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原因是构造器执行时，代理对象还没有完成创建。</p>
+<p>如果确实需要字段级、构造器级、对象创建级织入，应考虑 AspectJ 编译期织入或加载期织入，而不是 Spring AOP。</p>
+<hr>
+<h2 id="五、限制四：JDK-动态代理的类型限制"><a href="#五、限制四：JDK-动态代理的类型限制" class="headerlink" title="五、限制四：JDK 动态代理的类型限制"></a>五、限制四：JDK 动态代理的类型限制</h2><p>如果目标类实现了接口，Spring 默认可能使用 JDK 动态代理。</p>
+<p>JDK 动态代理的特点是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">代理对象 implements 接口</span><br><span class="line">代理对象不 extends 目标实现类</span><br></pre></td></tr></table></figure>
+
+<p>因此下面这种注入可能出问题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserServiceImpl userService;</span><br></pre></td></tr></table></figure>
+
+<p>因为代理对象可能只是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class jdk.proxy2.$Proxy58 implements UserService</span><br></pre></td></tr></table></figure>
+
+<p>它不是 <code>UserServiceImpl</code> 的子类。</p>
+<p>推荐写法是面向接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br></pre></td></tr></table></figure>
+
+<p>如果确实需要基于类代理，可以强制 CGLIB：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">aop:</span></span><br><span class="line">    <span class="attr">proxy-target-class:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>但设计上仍优先推荐面向接口依赖。</p>
+<hr>
+<h2 id="六、限制五：CGLIB-的-final-private-限制"><a href="#六、限制五：CGLIB-的-final-private-限制" class="headerlink" title="六、限制五：CGLIB 的 final &#x2F; private 限制"></a>六、限制五：CGLIB 的 final &#x2F; private 限制</h2><p>CGLIB 通过生成目标类子类实现代理。</p>
+<p>它依赖两个前提：</p>
+<ol>
+<li>目标类可以被继承。</li>
+<li>目标方法可以被重写。</li>
+</ol>
+<p>这些场景会有问题：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>final</code> 类</td>
+<td>不能被继承，无法生成代理子类</td>
+</tr>
+<tr>
+<td><code>final</code> 方法</td>
+<td>不能被重写，无法插入拦截逻辑</td>
+</tr>
+<tr>
+<td><code>private</code> 方法</td>
+<td>子类不可见，也不能被外部代理调用</td>
+</tr>
+<tr>
+<td><code>static</code> 方法</td>
+<td>属于类，不属于实例代理调用</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">createUser</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果需要 CGLIB 代理，<code>final</code> 类会阻碍代理生成。</p>
+<p>方法级别也一样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">createUser</span><span class="params">()</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即使代理对象存在，<code>final</code> 方法也无法被子类覆盖拦截。</p>
+<hr>
+<h2 id="七、限制六：Pointcut-没匹配上"><a href="#七、限制六：Pointcut-没匹配上" class="headerlink" title="七、限制六：Pointcut 没匹配上"></a>七、限制六：Pointcut 没匹配上</h2><p>很多 AOP 不生效，不是代理机制问题，而是切点表达式没有匹配目标方法。</p>
+<p>常见问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>包路径写错</td>
+<td><code>com.demo.service</code> 写成 <code>com.demo.services</code></td>
+</tr>
+<tr>
+<td>方法签名不匹配</td>
+<td>只匹配 public，但目标方法不是 public</td>
+</tr>
+<tr>
+<td>注解位置不对</td>
+<td>匹配方法注解，但注解放在类上</td>
+</tr>
+<tr>
+<td>代理类型影响 <code>this</code></td>
+<td>JDK 代理下 <code>this(实现类)</code> 可能不匹配</td>
+</tr>
+<tr>
+<td>Bean 名称不匹配</td>
+<td><code>bean(orderService)</code> 写错 BeanName</td>
+</tr>
+</tbody></table>
+<p>建议先用更宽的表达式验证切面是否能触发：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before(&quot;execution(* com.example..*(..))&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果宽表达式能触发，再逐步收窄范围。</p>
+<hr>
+<h2 id="八、限制七：多个切面顺序不符合预期"><a href="#八、限制七：多个切面顺序不符合预期" class="headerlink" title="八、限制七：多个切面顺序不符合预期"></a>八、限制七：多个切面顺序不符合预期</h2><p>多个切面同时命中一个方法时，执行顺序由 Advisor 排序决定。</p>
+<p>常见控制方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Order(1)</span></span><br><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FirstAspect</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Order(2)</span></span><br><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SecondAspect</span> &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于 <code>@Around</code>，顺序表现为洋葱模型：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">First before</span><br><span class="line">  -&gt; Second before</span><br><span class="line">      -&gt; target method</span><br><span class="line">  -&gt; Second after</span><br><span class="line">-&gt; First after</span><br></pre></td></tr></table></figure>
+
+<p>如果事务也参与其中，事务拦截器同样是拦截器链的一部分。</p>
+<hr>
+<h2 id="九、AOP-不生效排查总表"><a href="#九、AOP-不生效排查总表" class="headerlink" title="九、AOP 不生效排查总表"></a>九、AOP 不生效排查总表</h2><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>常见原因</th>
+<th>排查方式</th>
+<th>建议解决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>切面完全不执行</td>
+<td>没启用 AOP 或切面没注册</td>
+<td>检查依赖、<code>@Aspect</code>、<code>@Component</code></td>
+<td>引入 AOP 依赖，确保组件扫描到切面</td>
+</tr>
+<tr>
+<td>某个 Bean 不执行</td>
+<td>Bean 没被代理</td>
+<td>打印 <code>bean.getClass()</code>，检查 <code>AopUtils.isAopProxy()</code></td>
+<td>检查 Pointcut、Bean 是否由 Spring 管理</td>
+</tr>
+<tr>
+<td>某个方法不执行</td>
+<td>方法没匹配或绕过代理</td>
+<td>检查 Pointcut，排查自调用</td>
+<td>调整表达式或拆分 Bean</td>
+</tr>
+<tr>
+<td><code>@Transactional</code> 不生效</td>
+<td>自调用、异常被吞、非 Spring Bean</td>
+<td>看是否进入 <code>TransactionInterceptor</code></td>
+<td>拆分 Bean，保持异常传播</td>
+</tr>
+<tr>
+<td>按实现类注入失败</td>
+<td>JDK 动态代理不是实现类子类</td>
+<td>看代理类是否 <code>$Proxy</code></td>
+<td>面向接口注入或强制 CGLIB</td>
+</tr>
+<tr>
+<td>CGLIB 代理失败</td>
+<td><code>final</code> 类或方法</td>
+<td>检查类和方法修饰符</td>
+<td>去掉 <code>final</code> 或改设计</td>
+</tr>
+<tr>
+<td>顺序不符合预期</td>
+<td>Advisor 排序问题</td>
+<td>查看 Advisor 链顺序</td>
+<td>使用 <code>@Order</code> 或配置 order</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十、推荐排查路径"><a href="#十、推荐排查路径" class="headerlink" title="十、推荐排查路径"></a>十、推荐排查路径</h2><p>遇到 AOP 不生效，建议按下面顺序排查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1. 切面类是否是 Spring Bean</span><br><span class="line">2. AOP 自动代理创建器是否注册</span><br><span class="line">3. 目标对象是否是 Spring Bean</span><br><span class="line">4. 目标 Bean 是否被代理</span><br><span class="line">5. Pointcut 是否匹配目标方法</span><br><span class="line">6. 调用是否经过代理对象</span><br><span class="line">7. 方法是否可被代理</span><br><span class="line">8. 拦截器链中是否有对应 MethodInterceptor</span><br><span class="line">9. 异常或返回值语义是否被其他切面改变</span><br></pre></td></tr></table></figure>
+
+<p>常用调试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(bean.getClass());</span><br><span class="line">System.out.println(AopUtils.isAopProxy(bean));</span><br><span class="line">System.out.println(AopUtils.isJdkDynamicProxy(bean));</span><br><span class="line">System.out.println(AopUtils.isCglibProxy(bean));</span><br><span class="line">System.out.println(AopUtils.getTargetClass(bean));</span><br></pre></td></tr></table></figure>
+
+<p>常用断点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">AbstractAutoProxyCreator#wrapIfNecessary()</span><br><span class="line">AbstractAdvisorAutoProxyCreator#findEligibleAdvisors()</span><br><span class="line">DefaultAdvisorChainFactory#getInterceptorsAndDynamicInterceptionAdvice()</span><br><span class="line">ReflectiveMethodInvocation#proceed()</span><br></pre></td></tr></table></figure>
+
+<p>如果是事务问题，再额外看：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TransactionInterceptor#invoke()</span><br><span class="line">TransactionAttributeSourcePointcut#matches()</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十一、什么时候不该用-Spring-AOP"><a href="#十一、什么时候不该用-Spring-AOP" class="headerlink" title="十一、什么时候不该用 Spring AOP"></a>十一、什么时候不该用 Spring AOP</h2><p>Spring AOP 适合：</p>
+<ul>
+<li>日志记录。</li>
+<li>权限校验。</li>
+<li>事务管理。</li>
+<li>缓存处理。</li>
+<li>幂等控制。</li>
+<li>简单性能统计。</li>
+<li>方法级审计。</li>
+</ul>
+<p>不太适合：</p>
+<ul>
+<li>字段读写增强。</li>
+<li>构造器增强。</li>
+<li>非 Spring 对象增强。</li>
+<li>大量细粒度方法的性能敏感增强。</li>
+<li>复杂编译期织入场景。</li>
+<li>需要跨对象创建、字段访问、静态方法的全面织入。</li>
+</ul>
+<p>如果需求超出 Spring AOP 能力边界，可以考虑：</p>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>更合适方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字段、构造器、对象创建织入</td>
+<td>AspectJ 编译期 &#x2F; 加载期织入</td>
+</tr>
+<tr>
+<td>Web 请求统一处理</td>
+<td>Filter &#x2F; HandlerInterceptor</td>
+</tr>
+<tr>
+<td>参数校验</td>
+<td>Bean Validation &#x2F; Method Validation</td>
+</tr>
+<tr>
+<td>全链路追踪</td>
+<td>Observability &#x2F; Tracing 组件</td>
+</tr>
+<tr>
+<td>安全控制</td>
+<td>Spring Security</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十二、和前面几篇的关系"><a href="#十二、和前面几篇的关系" class="headerlink" title="十二、和前面几篇的关系"></a>十二、和前面几篇的关系</h2><p>本篇是边界总结，不重复展开源码细节。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">02-02-Spring-AOP-Proxy.md</span><br><span class="line">  -&gt; 解释代理为什么导致自调用、final 等限制</span><br><span class="line"></span><br><span class="line">02-03-Spring-AOP-AutoProxyCreator.md</span><br><span class="line">  -&gt; 解释 Bean 为什么会或不会被自动代理</span><br><span class="line"></span><br><span class="line">02-04-Spring-AOP-Advisor-Advice-Pointcut.md</span><br><span class="line">  -&gt; 解释 Pointcut 为什么可能匹配不上</span><br><span class="line"></span><br><span class="line">02-05-Spring-AOP-Invocation-Chain.md</span><br><span class="line">  -&gt; 解释拦截器链、@Around、异常传播问题</span><br><span class="line"></span><br><span class="line">02-06-Spring-AOP-And-Transaction.md</span><br><span class="line">  -&gt; 解释 @Transactional 为什么有同样的代理限制</span><br></pre></td></tr></table></figure>
+
+<p>排查问题时，不要孤立看某个注解，要回到完整链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">是否有 Advisor</span><br><span class="line">  -&gt; 是否匹配 Bean</span><br><span class="line">  -&gt; 是否创建代理</span><br><span class="line">  -&gt; 调用是否经过代理</span><br><span class="line">  -&gt; 拦截器链是否执行</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="十三、面试高频快答"><a href="#十三、面试高频快答" class="headerlink" title="十三、面试高频快答"></a>十三、面试高频快答</h2><p><strong>Spring AOP 最大限制是什么？</strong></p>
+<blockquote>
+<p>Spring AOP 基于代理对象工作，只有 Spring 容器管理的 Bean，并且调用经过代理对象时，增强才会生效。</p>
+</blockquote>
+<p><strong>为什么自调用会失效？</strong></p>
+<blockquote>
+<p>因为自调用是目标对象内部通过 <code>this</code> 调用，没有经过 Spring 暴露的代理对象。</p>
+</blockquote>
+<p><strong>为什么非 Spring Bean 不生效？</strong></p>
+<blockquote>
+<p>因为对象没有经过 Spring 容器创建和 BeanPostProcessor 处理，Spring 没机会为它生成代理。</p>
+</blockquote>
+<p><strong>为什么 final 方法不能被 CGLIB 增强？</strong></p>
+<blockquote>
+<p>CGLIB 依赖子类重写目标方法来拦截调用，<code>final</code> 方法不能被重写，所以无法增强。</p>
+</blockquote>
+<p><strong>为什么 JDK 动态代理按实现类注入可能失败？</strong></p>
+<blockquote>
+<p>JDK 动态代理生成的是接口代理对象，不继承目标实现类，所以不能当作实现类注入。</p>
+</blockquote>
+<p><strong>AOP 不生效第一步排查什么？</strong></p>
+<blockquote>
+<p>先确认目标 Bean 是否是代理对象，再确认 Pointcut 是否匹配，最后确认调用是否经过代理。</p>
+</blockquote>
+<hr>
+<h2 id="十四、本篇总结"><a href="#十四、本篇总结" class="headerlink" title="十四、本篇总结"></a>十四、本篇总结</h2><p>Spring AOP 的限制都可以回到代理模型解释：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Spring Bean</span><br><span class="line">  -&gt; 自动代理创建器判断 Advisor</span><br><span class="line">  -&gt; 创建代理对象</span><br><span class="line">  -&gt; 调用经过代理</span><br><span class="line">  -&gt; 拦截器链执行增强</span><br></pre></td></tr></table></figure>
+
+<p>任何一个环节断掉，AOP 都可能不生效。</p>
+<p>必须掌握的点：</p>
+<ul>
+<li>Spring AOP 只能增强 Spring 管理的 Bean。</li>
+<li>调用必须经过代理对象，自调用会绕过代理。</li>
+<li>Spring AOP 默认主要处理方法级增强。</li>
+<li>JDK 动态代理和 CGLIB 都有各自限制。</li>
+<li>事务失效本质上也是 AOP 代理链路失效。</li>
+<li>排查 AOP 问题要沿着 Advisor、代理对象、调用链三个方向定位。</li>
+</ul>
 </article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
 /* ============== 文章页：TOC + 暗色模式 ============== */
 (function(){

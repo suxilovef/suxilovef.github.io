@@ -1,0 +1,927 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02-02-Spring-AOP-Proxy | 九方</title><meta name="author" content="九方"><meta name="copyright" content="九方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Spring AOP Proxy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02-02-Spring-AOP-Proxy">
+<meta property="og:url" content="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-02-Spring-AOP-Proxy/index.html">
+<meta property="og:site_name" content="九方">
+<meta property="og:description" content="Spring AOP Proxy">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-proxy.svg">
+<meta property="article:published_time" content="2026-07-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-12T12:18:06.226Z">
+<meta property="article:author" content="九方">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://suxi.love/image/post_cover/wujing-spring-aop-proxy.svg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "02-02-Spring-AOP-Proxy",
+  "url": "https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-02-Spring-AOP-Proxy/",
+  "image": "https://suxi.love/image/post_cover/wujing-spring-aop-proxy.svg",
+  "datePublished": "2026-07-11T16:00:00.000Z",
+  "dateModified": "2026-07-12T12:18:06.226Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "九方",
+      "url": "https://suxi.love"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/favicon.jpg"><link rel="canonical" href="https://suxi.love/2026/07/12/%E7%89%A9%E5%A2%83/Spring/02-02-Spring-AOP-Proxy/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="IA85u-t8og6kFq_nLR8HPKFzH0dnT8otaek8WcAZRaE"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":false,"highlightLang":false,"highlightHeightLimit":200,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '02-02-Spring-AOP-Proxy',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><style>#page-header.post-bg{background-size:contain!important;background-repeat:no-repeat;background-position:center}#recent-posts .post_cover img.post-bg{object-fit:contain!important}.article-sort-item-img img{object-fit:contain!important}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"><script>(function(){var p=decodeURIComponent(location.pathname);if(p.indexOf('/物境/')>-1||p.indexOf('/java/')>-1)document.documentElement.classList.add('post-realm-wujing');if(p.indexOf('/心境/')>-1||p.indexOf('/scriptures/')>-1)document.documentElement.classList.add('post-realm-xinjing');})();</script><script>
+(function(){
+  var blockedHexoPrefixes = ['/tags/', '/categories/', '/archives/', '/posts/'];
+
+  function normalizePath(path) {
+    return ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/?$/, '/');
+  }
+
+  function isBlockedHexoPath(path) {
+    var normalized = normalizePath(path);
+    return blockedHexoPrefixes.some(function(prefix) {
+      return normalized === prefix || normalized.indexOf(prefix) === 0;
+    });
+  }
+
+  if (isBlockedHexoPath(decodeURIComponent(location.pathname))) {
+    location.replace('/');
+    return;
+  }
+
+  function isBlockedHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    try {
+      var url = new URL(href, location.origin);
+      return url.origin === location.origin && isBlockedHexoPath(decodeURIComponent(url.pathname));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableHexoLinks() {
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      if (!isBlockedHref(link.getAttribute('href'))) return;
+      link.dataset.hexoBlocked = 'true';
+      link.dataset.originalHref = link.getAttribute('href');
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+      link.setAttribute('tabindex', '-1');
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a') : null;
+    if (link && (link.dataset.hexoBlocked === 'true' || isBlockedHref(link.getAttribute('href')))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function buildPostToc(){
+    if (!document.querySelector('#body-wrap.post') || document.querySelector('.custom-toc')) return;
+    var article = document.getElementById('article-container');
+    var headings = article ? article.querySelectorAll('h2,h3') : [];
+    if (!headings.length) return;
+
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+
+    var postInfo = document.querySelector('#post-info');
+    var contentInner = document.querySelector('#content-inner');
+    if (postInfo && postInfo.parentNode) {
+      postInfo.parentNode.insertBefore(toc, postInfo.nextSibling);
+    } else if (contentInner) {
+      contentInner.insertBefore(toc, article);
+    }
+
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var current = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) current = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + current;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) list.scrollTop = itemTop;
+          else if (itemBottom > list.scrollTop + list.clientHeight) list.scrollTop = itemBottom - list.clientHeight;
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPostToc);
+  } else {
+    buildPostToc();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableHexoLinks);
+  } else {
+    disableHexoLinks();
+  }
+})();
+</script>
+<style>
+/* ============== 文章页样式 ============== */
+:root{--bg:#fafaf8;--card:#fffefb;--text:#111827;--muted:#5f6875;--faint:#9aa3af;--border:#e8e3d8;--accent:#2563a8;--accent-soft:rgba(37,99,168,.1);--shadow:0 18px 48px rgba(17,24,39,.06);--code-block-bg:#f7f7f3;--body-start:#fbfbfa;--body-end:#f4f6f8;--title-rule-end:#d8bf75;--heading-dot:#d8bf75;--quote-accent:#d8bf75;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--scrollbar-track:transparent;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark]{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--faint:#6e7681;--border:#30363d;--accent:#74b4ff;--accent-soft:rgba(116,180,255,.12);--shadow:none;--code-block-bg:#171b20;--code-border:#4a3f2a;--body-start:#0d1117;--body-end:#0d1117;--title-rule-end:#8a7a54;--heading-dot:#8a7a54;--quote-accent:#8a7a54;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--scrollbar-track:transparent;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+:root{--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d}
+[data-theme=dark]{--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78}
+html.post-realm-wujing{--bg:#f6fafc;--card:#fbfdff;--text:#142838;--muted:#627786;--faint:#8ca0ac;--border:#d5e2ea;--accent:#2f7898;--accent-soft:rgba(47,120,152,.1);--shadow:0 20px 52px rgba(23,63,84,.07);--code-block-bg:#f1f6f8;--body-start:#eef7f9;--body-end:#f7fbfc;--title-rule-end:#8bb8c9;--heading-dot:#4f91a8;--quote-accent:#4f91a8;--code-border:#c8d9e2;--scrollbar-thumb:#9fc3d2;--scrollbar-thumb-hover:#6fa5ba;--code-scrollbar-thumb:#c4d9e3;--code-scrollbar-thumb-hover:#98bdcf;--code-scrollbar-track:rgba(196,217,227,.28);--code-expand-bg:linear-gradient(180deg,rgba(241,246,248,.18),rgba(236,245,248,.95));--code-expand-icon:#3f7f97;--rightside-bg:#d7e8ef;--rightside-bg-hover:#6fa5ba;--rightside-text:#21485b;--rightside-border:rgba(79,145,168,.22)}
+html.post-realm-xinjing{--bg:#fffaf2;--card:#fffdf8;--text:#3d2b1e;--muted:#806c59;--faint:#a79582;--border:#ead8bd;--accent:#a86f30;--accent-soft:rgba(168,111,48,.1);--shadow:0 20px 52px rgba(99,65,35,.07);--code-block-bg:#fff7e9;--body-start:#fff8ee;--body-end:#fffdf8;--title-rule-end:#d8bf75;--heading-dot:#c89b58;--quote-accent:#c89b58;--code-border:#eadfbd;--scrollbar-thumb:#d8c987;--scrollbar-thumb-hover:#c8b56f;--code-scrollbar-thumb:#eadfbd;--code-scrollbar-thumb-hover:#dccb9b;--code-scrollbar-track:rgba(234,223,189,.28);--code-expand-bg:linear-gradient(180deg,rgba(247,247,243,.2),rgba(247,243,231,.94));--code-expand-icon:#9b7a2d;--rightside-bg:#d8c987;--rightside-bg-hover:#c8b56f;--rightside-text:#463a1b;--rightside-border:rgba(157,132,60,.18)}
+[data-theme=dark].post-realm-wujing{--bg:#0c1419;--card:#121d24;--text:#d7e8f2;--muted:#8ba3b2;--faint:#68808d;--border:#2d4456;--accent:#7db7dc;--accent-soft:rgba(125,183,220,.13);--shadow:none;--code-block-bg:#101a21;--body-start:#0c1419;--body-end:#0c1419;--title-rule-end:#4b7f9a;--heading-dot:#7db7dc;--quote-accent:#7db7dc;--code-border:#2d4456;--scrollbar-thumb:#4b7082;--scrollbar-thumb-hover:#6d93a6;--code-scrollbar-thumb:#405d6d;--code-scrollbar-thumb-hover:#6d93a6;--code-scrollbar-track:rgba(64,93,109,.24);--code-expand-bg:linear-gradient(180deg,rgba(16,26,33,.2),rgba(18,29,36,.95));--code-expand-icon:#9fd2ea;--rightside-bg:#334f5d;--rightside-bg-hover:#4b7082;--rightside-text:#d7e8f2;--rightside-border:#4b7082}
+[data-theme=dark].post-realm-xinjing{--bg:#171411;--card:#1e1a15;--text:#e2d4c2;--muted:#a4937f;--faint:#766858;--border:#3a2f22;--accent:#d2a660;--accent-soft:rgba(210,166,96,.13);--shadow:none;--code-block-bg:#1b1712;--body-start:#171411;--body-end:#171411;--title-rule-end:#8a7a54;--heading-dot:#d2a660;--quote-accent:#d2a660;--code-border:#4a3f2a;--scrollbar-thumb:#776b4e;--scrollbar-thumb-hover:#8a7a54;--code-scrollbar-thumb:#6d644f;--code-scrollbar-thumb-hover:#8a7a54;--code-scrollbar-track:rgba(74,63,42,.24);--code-expand-bg:linear-gradient(180deg,rgba(23,27,32,.2),rgba(34,31,24,.94));--code-expand-icon:#d2bb78;--rightside-bg:#776b4e;--rightside-bg-hover:#8a7a54;--rightside-text:#f3e8c9;--rightside-border:#8a7a54}
+
+/* 隐藏 Butterfly 无关元素 */
+#body-wrap.post #page-header,
+#body-wrap.post #footer,
+#body-wrap.post #rightside,
+#body-wrap.post #loading-box,
+#body-wrap.post #web_bg,
+#page-header.post-bg #post-info,
+#page-header.post-bg:before{display:none!important}
+#page-header.post-bg{height:0!important;min-height:0!important;background:0 0!important}
+body{background:linear-gradient(180deg,var(--body-start) 0%,var(--bg) 42%,var(--body-end) 100%)!important}
+[data-theme=dark] body{background:var(--bg)!important}
+html:has(#body-wrap.post),body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+html:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover,
+body:has(#body-wrap.post)::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover)}
+[data-theme=dark]:has(#body-wrap.post),[data-theme=dark] body:has(#body-wrap.post){--scrollbar-color:var(--scrollbar-thumb);scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+[data-theme=dark]:has(#body-wrap.post)::-webkit-scrollbar-thumb,
+[data-theme=dark] body:has(#body-wrap.post)::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb)}
+#body-wrap.post{--hlscrollbar-bg:var(--code-scrollbar-thumb);--hlexpand-bg:var(--code-expand-bg)}
+.post-copyright,.post-reward,.related-post,.post-outdate-notice,#post-comment,.post-edit-link,.meta-secondline{display:none!important}
+
+/* 内容区 */
+#body-wrap.post #content-inner{max-width:880px;width:clamp(320px,61.8%,880px);margin:0 auto;padding:5.5rem 1.5rem 0}
+#body-wrap.post #post{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important}
+html.post-realm-wujing #body-wrap.post #content-inner{max-width:920px;width:clamp(320px,66%,920px)}
+html.post-realm-xinjing #body-wrap.post #content-inner{max-width:820px;width:clamp(320px,58%,820px)}
+html.post-realm-wujing #post:before,
+html.post-realm-xinjing #post:before{display:inline-flex;align-items:center;gap:.45rem;margin:0 0 1.15rem;padding:.28rem .72rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--accent);font-size:.78rem;letter-spacing:0;box-shadow:0 8px 24px rgba(17,24,39,.04)}
+html.post-realm-wujing #post:before{content:"物境 · 格物致知";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing #post:before{content:"心境 · 素履以往";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+
+/* 标题 */
+#post .post-title{font-family:"Noto Serif SC","Ma Shan Zheng",serif;font-size:clamp(1.9rem,4vw,2.45rem);font-weight:700;color:var(--text);line-height:1.28;margin-bottom:.6rem;letter-spacing:0}
+#post .post-title:after{content:"";display:block;width:3.5rem;height:3px;margin:1rem 0 0;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));border-radius:999px}
+
+/* 元信息 */
+.meta-firstline{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;font-size:.82rem;color:var(--faint);margin-bottom:3rem}
+.meta-firstline a{color:var(--accent);text-decoration:none;font-weight:500}
+.meta-firstline a:hover{opacity:.8}
+
+/* 正文 */
+.post-content{font-size:1.05rem;line-height:1.92;color:var(--text)}
+html.post-realm-wujing .post-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.86}
+html.post-realm-xinjing .post-content{font-family:"Noto Serif SC","ZCOOL XiaoWei",serif;line-height:2.02}
+.post-content h2{font-size:1.34rem;font-weight:700;margin:3.1rem 0 1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);color:var(--text);letter-spacing:0}
+.post-content h2:before{content:"";display:inline-block;width:.42rem;height:.42rem;margin-right:.65rem;border-radius:50%;background:var(--heading-dot);vertical-align:.18em}
+html.post-realm-wujing .post-content h2:before{border-radius:2px;transform:rotate(45deg)}
+html.post-realm-xinjing .post-content h2:before{border-radius:50%}
+.post-content h3{font-size:1.14rem;font-weight:650;margin:2.2rem 0 .65rem;color:var(--text)}
+.post-content h4{font-size:1.02rem;font-weight:650;margin:1.7rem 0 .45rem;color:var(--text)}
+.post-content p{margin:0 0 1.1rem}
+.post-content ul,.post-content ol{margin:0 0 1.1rem;padding-left:1.5rem}
+.post-content li{margin-bottom:.35rem}
+.post-content strong{color:var(--text);font-weight:600}
+.post-content code{background:var(--card);padding:.15em .48em;border-radius:5px;font-size:.88em;color:var(--accent);border:1px solid var(--border)}
+.post-content figure.highlight{background:var(--code-block-bg);border-radius:8px;overflow:hidden;margin:1.55rem 0;border:1px solid var(--code-border);box-shadow:0 12px 34px rgba(17,24,39,.045)}
+[data-theme=dark] .post-content figure.highlight{border-color:var(--code-border)}
+
+.post-content figure.highlight table{width:100%;border-collapse:collapse;margin:0}
+.post-content figure.highlight .gutter{display:none}
+.post-content figure.highlight .code pre{background:0 0;border:0;margin:0;padding:1.25rem 1.45rem;overflow-x:auto;font-size:.84rem;line-height:1.72;font-family:"SF Mono","Fira Code","Cascadia Code",Consolas,monospace;color:var(--text)}
+.post-content figure.highlight .highlight-tools,
+.post-content figure.highlight .code-tools,
+.post-content figure.highlight .highlight-tools-wrap{display:none!important}
+.post-content figure.highlight table,
+.post-content figure.highlight pre,
+.post-content figure.highlight .code pre{scrollbar-width:thin;scrollbar-color:var(--code-scrollbar-thumb) var(--code-scrollbar-track)}
+.post-content figure.highlight table::-webkit-scrollbar,
+.post-content figure.highlight pre::-webkit-scrollbar,
+.post-content figure.highlight .code pre::-webkit-scrollbar{height:9px;width:9px}
+.post-content figure.highlight table::-webkit-scrollbar-track,
+.post-content figure.highlight pre::-webkit-scrollbar-track,
+.post-content figure.highlight .code pre::-webkit-scrollbar-track{background:var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb{background:var(--code-scrollbar-thumb)!important;border:3px solid var(--code-scrollbar-track);border-radius:999px}
+.post-content figure.highlight table::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight pre::-webkit-scrollbar-thumb:hover,
+.post-content figure.highlight .code pre::-webkit-scrollbar-thumb:hover{background:var(--code-scrollbar-thumb-hover)!important}
+.post-content figure.highlight .code-expand-btn{background:var(--code-expand-bg)!important;backdrop-filter:blur(2px);border-top:1px solid var(--code-scrollbar-track);border-radius:0 0 8px 8px}
+.post-content figure.highlight .code-expand-btn i{color:var(--code-expand-icon)!important;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+[data-theme=dark] .post-content figure.highlight .code-expand-btn i{text-shadow:none}
+.post-content blockquote{border-left:3px solid var(--quote-accent);padding:.75rem 1.15rem;margin:1.35rem 0;color:var(--muted);background:var(--card);border-radius:0 8px 8px 0;box-shadow:0 8px 28px rgba(17,24,39,.04)}
+.post-content a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+.post-content a:hover{border-bottom-color:var(--accent)}
+.post-content a:focus-visible,
+.post-meta__tags:focus-visible,
+.custom-toc a:focus-visible,
+body:has(#body-wrap.post) #rightside button:focus-visible,
+body:has(#body-wrap.post) #rightside a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.post-content img{max-width:100%;border-radius:8px}
+.post-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.95rem}
+.post-content th,.post-content td{border:1px solid var(--border);padding:.6rem .9rem;text-align:left}
+.post-content th{background:var(--card);font-weight:600}
+.post-content hr{height:1px;margin:2.5rem 0;border:0;background:var(--border)}
+
+/* 标签 */
+.tag_share{border-top:1px solid var(--border);padding-top:1.8rem;margin-top:3.5rem}
+.post-meta__tag-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.post-meta__tags{display:inline-block;padding:.25rem .8rem;border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--muted);text-decoration:none;transition:all .15s;background:var(--card)}
+.post-meta__tags:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#body-wrap.post .tag_share .post-meta__tags{pointer-events:none;cursor:default}
+#body-wrap.post .tag_share .post-meta__tags:hover{border-color:var(--border);color:var(--muted);background:var(--card)}
+a[data-hexo-blocked=true]{pointer-events:none!important;cursor:default!important}
+#menus a[href^="/tags/"],
+#menus a[href^="/categories/"],
+#menus a[href^="/archives/"],
+#menus a[href^="/posts/"],
+#sidebar-menus a[href^="/tags/"],
+#sidebar-menus a[href^="/categories/"],
+#sidebar-menus a[href^="/archives/"],
+#sidebar-menus a[href^="/posts/"],
+#menus a[data-hexo-blocked=true],
+#sidebar-menus a[data-hexo-blocked=true]{display:none!important}
+
+/* 页脚 */
+#body-wrap.post::after{content:"© 2025–2026 九方";display:block;text-align:center;padding:2.5rem 0 2rem;font-size:.75rem;color:var(--faint)}
+
+/* TOC */
+.custom-toc{position:fixed;left:max(1.35rem,calc((100vw - 1060px)/ 2 - 235px));top:50%;transform:translateY(-50%);width:224px;max-height:62vh;overflow:hidden;z-index:50;padding:1rem .95rem 1rem 1.05rem;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:0 18px 46px rgba(17,24,39,.07);backdrop-filter:blur(10px);font-size:.8rem;line-height:1.7;opacity:.82;transition:opacity .18s,box-shadow .18s,border-color .18s}
+.custom-toc:hover{opacity:1;border-color:var(--accent);box-shadow:0 22px 54px rgba(17,24,39,.1)}
+.custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;opacity:.86}
+.custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+.custom-toc:not(.is-open) .custom-toc__title,
+.custom-toc:not(.is-open) .custom-toc__progress,
+.custom-toc:not(.is-open) .custom-toc__list{display:none}
+.custom-toc.is-open{opacity:1}
+.custom-toc__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 .72rem;color:var(--accent);font-size:.74rem;font-weight:650;letter-spacing:0}
+.custom-toc__toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 1.85rem;width:1.85rem;height:1.85rem;margin:0;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--accent);box-shadow:none;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.custom-toc__toggle:before{content:"目";font-size:.86rem;font-weight:700;line-height:1}
+.custom-toc__toggle:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.custom-toc__toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.custom-toc__title:before{content:"目录"}
+html.post-realm-wujing .custom-toc__title:before{content:"文章脉络";font-family:"SF Mono","Cascadia Code",Consolas,monospace}
+html.post-realm-xinjing .custom-toc__title:before{content:"卷首目录";font-family:"Noto Serif SC","ZCOOL XiaoWei",serif}
+.custom-toc__progress{position:relative;flex:1;height:3px;min-width:3.6rem;overflow:hidden;border-radius:999px;background:var(--accent-soft)}
+.custom-toc__progress:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--toc-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--title-rule-end));transition:width .1s linear}
+.custom-toc__list{max-height:calc(62vh - 3.3rem);overflow-y:auto;padding:.05rem .1rem .05rem 0;scrollbar-width:thin;scrollbar-color:var(--scrollbar-thumb) transparent}
+.custom-toc__list::-webkit-scrollbar{width:6px}
+.custom-toc__list::-webkit-scrollbar-track{background:transparent}
+.custom-toc__list::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:999px}
+.custom-toc a{position:relative;display:block;min-height:1.85rem;padding:.16rem .4rem .16rem .95rem;border-radius:6px;color:var(--faint);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .12s,background .12s,transform .12s}
+.custom-toc a:before{content:"";position:absolute;left:.2rem;top:.82rem;width:.28rem;height:.28rem;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+html.post-realm-wujing .custom-toc a:before{border-radius:2px;transform:rotate(45deg)}
+.custom-toc a:hover{color:var(--text);background:var(--accent-soft)}
+.custom-toc a.active{color:var(--accent);font-weight:650;background:var(--accent-soft)}
+.custom-toc a.active:before{background:var(--accent);transform:scale(1.25)}
+html.post-realm-wujing .custom-toc a.active:before{transform:rotate(45deg) scale(1.25)}
+.custom-toc .toc-h3{margin-left:.58rem;padding-left:.9rem;font-size:.76rem;color:var(--muted)}
+.custom-toc .toc-h3:before{width:.22rem;height:.22rem;opacity:.72}
+
+/* 文章页右下角工具 */
+body:has(#body-wrap.post) #rightside{display:block!important;right:1.1rem;bottom:1.1rem}
+body:has(#body-wrap.post) #rightside #rightside-config-hide,
+body:has(#body-wrap.post) #rightside #rightside-config,
+body:has(#body-wrap.post) #rightside #readmode,
+body:has(#body-wrap.post) #rightside #darkmode,
+body:has(#body-wrap.post) #rightside #hide-aside-btn,
+body:has(#body-wrap.post) #rightside #mobile-toc-button{display:none!important}
+body:has(#body-wrap.post) #rightside #rightside-config-show{display:flex!important;flex-direction:column;gap:.45rem;transform:none!important;opacity:1!important}
+body:has(#body-wrap.post) #rightside button,
+body:has(#body-wrap.post) #rightside a{width:2.65rem;height:2.65rem;border-radius:8px;background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border:1px solid var(--rightside-border);box-shadow:0 8px 22px rgba(17,24,39,.08);transition:background .15s,color .15s,border-color .15s}
+body:has(#body-wrap.post) #rightside button:hover,
+body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important;border-color:var(--rightside-bg-hover)}
+body:has(#body-wrap.post) #rightside button i,
+body:has(#body-wrap.post) #rightside a i{font-size:1rem;color:inherit!important}
+body:has(#body-wrap.post) #rightside #go-up .scroll-percent{color:inherit!important;font-size:1rem}
+body:has(#body-wrap.post) #rightside #go-up i{color:inherit!important}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a{background:var(--rightside-bg)!important;color:var(--rightside-text)!important;border-color:var(--rightside-border)}
+[data-theme=dark] body:has(#body-wrap.post) #rightside button:hover,
+[data-theme=dark] body:has(#body-wrap.post) #rightside a:hover{background:var(--rightside-bg-hover)!important;color:#fff!important}
+
+@media screen and (max-width:1400px){
+  .custom-toc{position:static;transform:none;width:auto;max-height:none;margin:0 0 2.2rem;padding:1rem 1.05rem;border-radius:8px;background:var(--card);opacity:1;box-shadow:var(--shadow)}
+  .custom-toc:not(.is-open){width:2.7rem;max-height:2.7rem;padding:.34rem;margin:0 0 1.4rem}
+  .custom-toc__toggle{display:inline-flex}
+  .custom-toc__head{margin-bottom:.6rem}
+  .custom-toc:not(.is-open) .custom-toc__head{display:block;margin:0}
+  .custom-toc:not(.is-open) .custom-toc__title,
+  .custom-toc:not(.is-open) .custom-toc__progress{display:none}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc__list{max-height:13rem;display:flex;flex-wrap:wrap;gap:.35rem .45rem;overflow-y:auto;padding:.05rem}
+  .custom-toc a{display:inline-flex;align-items:center;max-width:100%;min-height:2rem;padding:.2rem .62rem .2rem .82rem;border:1px solid var(--border);background:transparent}
+  .custom-toc a:before{left:.38rem;top:50%;transform:translateY(-50%)}
+  html.post-realm-wujing .custom-toc a:before{transform:translateY(-50%) rotate(45deg)}
+  .custom-toc a.active:before{transform:translateY(-50%) scale(1.2)}
+  html.post-realm-wujing .custom-toc a.active:before{transform:translateY(-50%) rotate(45deg) scale(1.2)}
+  .custom-toc .toc-h3{margin-left:0;padding-left:.82rem}
+}
+@media screen and (max-width:680px){
+  #body-wrap.post #content-inner{padding-top:4.6rem}
+  .custom-toc{margin-bottom:1.8rem;padding:.9rem}
+  .custom-toc:not(.is-open){padding:.9rem}
+  .custom-toc__list{display:block;max-height:11.5rem}
+  .custom-toc:not(.is-open) .custom-toc__list{display:none}
+  .custom-toc a{display:block;margin:.24rem 0}
+}
+</style>
+<meta name="generator" content="Hexo 8.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/%E5%A4%B4%E5%83%8F.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">九方</span></a><a class="nav-page-title" href="/"><span class="site-name">02-02-Spring-AOP-Proxy</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/wujing/"><i class="fa-fw fas fa-cube"></i><span> 物境</span></a></div><div class="menus_item"><a class="site-page" href="/xinjing/"><i class="fa-fw fas fa-feather-alt"></i><span> 心境</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout hide-aside" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">02-02-Spring-AOP-Proxy</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T16:00:00.000Z" title="发表于 2026-07-12 00:00:00">2026-07-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-12T12:18:06.226Z" title="更新于 2026-07-12 20:18:06">2026-07-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><h1 id="Spring-AOP-代理机制"><a href="#Spring-AOP-代理机制" class="headerlink" title="Spring AOP 代理机制"></a>Spring AOP 代理机制</h1><blockquote>
+<p>本文承接 <code>02-01-Spring-AOP.md</code>，只聚焦一个问题：Spring AOP 的代理对象到底如何工作。<br>主线是：为什么需要代理 -&gt; 代理对象是什么 -&gt; JDK&#x2F;CGLIB 如何选择 -&gt; 方法调用如何进入增强链 -&gt; 哪些场景会绕过代理。</p>
+</blockquote>
+<hr>
+<h2 id="一、先建立主线：Spring-AOP-为什么依赖代理"><a href="#一、先建立主线：Spring-AOP-为什么依赖代理" class="headerlink" title="一、先建立主线：Spring AOP 为什么依赖代理"></a>一、先建立主线：Spring AOP 为什么依赖代理</h2><p>Spring AOP 的核心不是“修改业务类”，而是在运行期把目标 Bean 包装成代理 Bean。</p>
+<p>业务代码看起来调用的是 Service：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userService.createUser(request);</span><br></pre></td></tr></table></figure>
+
+<p>但如果这个 Bean 命中了切面、事务、缓存等增强，容器中暴露给调用方的通常不是原始对象，而是代理对象：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">调用方</span><br><span class="line">  -&gt; 代理对象 Proxy</span><br><span class="line">      -&gt; 日志 / 权限 / 事务 / 缓存等增强逻辑</span><br><span class="line">      -&gt; 目标对象 Target</span><br></pre></td></tr></table></figure>
+
+<p>所以 Spring AOP 最重要的一句话是：</p>
+<blockquote>
+<p>只有调用经过代理对象，Spring AOP 才有机会在目标方法前后织入增强逻辑。</p>
+</blockquote>
+<p>这句话可以解释后面大部分问题：</p>
+<ul>
+<li>为什么自调用会失效。</li>
+<li>为什么 <code>private</code> 方法无法被增强。</li>
+<li>为什么构造器里调用增强方法不生效。</li>
+<li>为什么 JDK 动态代理按实现类注入可能失败。</li>
+<li>为什么 <code>final</code> 类和 <code>final</code> 方法会影响 CGLIB 代理。</li>
+</ul>
+<p>Spring AOP 选择代理模式，主要是为了和 IOC 容器天然结合：Bean 创建完成后，容器可以统一决定是否把原始 Bean 替换成代理 Bean。</p>
+<hr>
+<h2 id="二、代理对象、目标对象与调用入口"><a href="#二、代理对象、目标对象与调用入口" class="headerlink" title="二、代理对象、目标对象与调用入口"></a>二、代理对象、目标对象与调用入口</h2><p>理解 Spring AOP 前，先区分两个对象：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Target</code></td>
+<td>原始业务对象，也就是开发者写的类实例</td>
+</tr>
+<tr>
+<td><code>Proxy</code></td>
+<td>Spring 根据目标对象和增强逻辑创建出来的代理对象</td>
+</tr>
+</tbody></table>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">createUser</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;create user&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>UserService</code> 的原始实例就是 <code>Target</code>。如果它命中了某个切面，Spring 最终注入给其他 Bean 的可能是 <code>Proxy</code>。</p>
+<p>可以打印运行时类型验证：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(userService.getClass());</span><br></pre></td></tr></table></figure>
+
+<p>可能输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class jdk.proxy2.$Proxy58</span><br></pre></td></tr></table></figure>
+
+<p>也可能输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class com.example.UserService$$SpringCGLIB$$0</span><br></pre></td></tr></table></figure>
+
+<p>前者是 JDK 动态代理，后者是 CGLIB 代理。</p>
+<h3 id="this-与-target-的区别"><a href="#this-与-target-的区别" class="headerlink" title="this 与 target 的区别"></a><code>this</code> 与 <code>target</code> 的区别</h3><p>AOP 表达式里经常看到：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Pointcut(&quot;this(com.example.UserService)&quot;)</span></span><br><span class="line"><span class="meta">@Pointcut(&quot;target(com.example.UserService)&quot;)</span></span><br></pre></td></tr></table></figure>
+
+<p>两者关注点不同：</p>
+<table>
+<thead>
+<tr>
+<th>表达式</th>
+<th>判断对象</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>this</code></td>
+<td>当前代理对象的类型</td>
+</tr>
+<tr>
+<td><code>target</code></td>
+<td>被代理的目标对象类型</td>
+</tr>
+</tbody></table>
+<p>在 CGLIB 代理中，代理对象是目标类子类，所以 <code>this</code> 和 <code>target</code> 往往都容易匹配。</p>
+<p>在 JDK 动态代理中，代理对象只实现接口，不继承目标实现类，所以 <code>this(实现类)</code> 可能匹配不上。</p>
+<hr>
+<h2 id="三、JDK-动态代理与-CGLIB-代理"><a href="#三、JDK-动态代理与-CGLIB-代理" class="headerlink" title="三、JDK 动态代理与 CGLIB 代理"></a>三、JDK 动态代理与 CGLIB 代理</h2><p>Spring AOP 常用两种代理技术：</p>
+<ul>
+<li>JDK 动态代理：基于接口生成代理对象。</li>
+<li>CGLIB 代理：基于目标类生成子类代理对象。</li>
+</ul>
+<h3 id="JDK-动态代理"><a href="#JDK-动态代理" class="headerlink" title="JDK 动态代理"></a>JDK 动态代理</h3><p>JDK 动态代理要求目标类至少实现一个接口。</p>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">createUser</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserServiceImpl</span> <span class="keyword">implements</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">createUser</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;create user&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成的代理对象大致是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class jdk.proxy2.$Proxy58 implements UserService</span><br></pre></td></tr></table></figure>
+
+<p>它的特点是：</p>
+<ul>
+<li>代理对象实现接口。</li>
+<li>代理对象不继承目标实现类。</li>
+<li>调用入口是 <code>InvocationHandler#invoke()</code>。</li>
+</ul>
+<p>因此下面这种注入方式更稳妥：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br></pre></td></tr></table></figure>
+
+<p>而不是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserServiceImpl userService;</span><br></pre></td></tr></table></figure>
+
+<p>如果 Spring 使用的是 JDK 动态代理，按实现类注入可能失败，因为代理对象不是实现类的子类。</p>
+<h3 id="CGLIB-代理"><a href="#CGLIB-代理" class="headerlink" title="CGLIB 代理"></a>CGLIB 代理</h3><p>CGLIB 代理不要求目标类实现接口，它通过生成目标类子类来完成代理。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UserService$$SpringCGLIB$$0 extends UserService</span><br></pre></td></tr></table></figure>
+
+<p>它的特点是：</p>
+<ul>
+<li>代理对象继承目标类。</li>
+<li>可以代理没有接口的类。</li>
+<li>调用入口是 CGLIB 的 <code>MethodInterceptor#intercept()</code>。</li>
+<li>无法代理 <code>final</code> 类和 <code>final</code> 方法。</li>
+</ul>
+<h3 id="两种代理方式对比"><a href="#两种代理方式对比" class="headerlink" title="两种代理方式对比"></a>两种代理方式对比</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>JDK 动态代理</th>
+<th>CGLIB 代理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>生成方式</td>
+<td>基于接口生成代理类</td>
+<td>基于目标类生成子类</td>
+</tr>
+<tr>
+<td>是否需要接口</td>
+<td>需要</td>
+<td>不需要</td>
+</tr>
+<tr>
+<td>代理对象类型</td>
+<td>接口实现类</td>
+<td>目标类子类</td>
+</tr>
+<tr>
+<td>方法入口</td>
+<td><code>InvocationHandler#invoke()</code></td>
+<td><code>MethodInterceptor#intercept()</code></td>
+</tr>
+<tr>
+<td>典型限制</td>
+<td>不能按实现类注入</td>
+<td>不能代理 <code>final</code> 类 &#x2F; 方法</td>
+</tr>
+</tbody></table>
+<h3 id="Spring-如何选择代理方式"><a href="#Spring-如何选择代理方式" class="headerlink" title="Spring 如何选择代理方式"></a>Spring 如何选择代理方式</h3><p>核心判断逻辑可以简化为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">如果配置了 proxyTargetClass=true</span><br><span class="line">  -&gt; 使用 CGLIB</span><br><span class="line">否则如果目标类实现了接口</span><br><span class="line">  -&gt; 优先使用 JDK 动态代理</span><br><span class="line">否则</span><br><span class="line">  -&gt; 使用 CGLIB</span><br></pre></td></tr></table></figure>
+
+<p>常见强制 CGLIB 的方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableAspectJAutoProxy(proxyTargetClass = true)</span></span><br></pre></td></tr></table></figure>
+
+<p>Spring Boot 中也可以通过配置控制：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">aop:</span></span><br><span class="line">    <span class="attr">proxy-target-class:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、代理方法调用链是怎么执行的"><a href="#四、代理方法调用链是怎么执行的" class="headerlink" title="四、代理方法调用链是怎么执行的"></a>四、代理方法调用链是怎么执行的</h2><p>代理对象创建完成后，真正发生在运行期的是“方法调用被代理拦截”。</p>
+<p>两种代理入口不同，但最终都会进入 Spring AOP 的拦截器链。</p>
+<h3 id="JDK-动态代理调用链"><a href="#JDK-动态代理调用链" class="headerlink" title="JDK 动态代理调用链"></a>JDK 动态代理调用链</h3><p>JDK 动态代理的入口是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">JdkDynamicAopProxy#invoke(Object proxy, Method method, Object[] args)</span><br></pre></td></tr></table></figure>
+
+<p>简化调用链如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">调用接口方法</span><br><span class="line">  -&gt; jdk.proxy2.$ProxyXX</span><br><span class="line">  -&gt; JdkDynamicAopProxy.invoke()</span><br><span class="line">  -&gt; 获取当前方法匹配的拦截器链</span><br><span class="line">  -&gt; ReflectiveMethodInvocation.proceed()</span><br><span class="line">  -&gt; 依次执行 MethodInterceptor</span><br><span class="line">  -&gt; 调用目标方法</span><br></pre></td></tr></table></figure>
+
+<p>关键点是：代理对象不会直接调用目标方法，而是先拿到当前方法对应的拦截器链。</p>
+<h3 id="CGLIB-代理调用链"><a href="#CGLIB-代理调用链" class="headerlink" title="CGLIB 代理调用链"></a>CGLIB 代理调用链</h3><p>CGLIB 代理入口是：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DynamicAdvisedInterceptor#intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy)</span><br></pre></td></tr></table></figure>
+
+<p>简化调用链如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">调用代理子类方法</span><br><span class="line">  -&gt; UserService$$SpringCGLIB$$0</span><br><span class="line">  -&gt; DynamicAdvisedInterceptor.intercept()</span><br><span class="line">  -&gt; 获取当前方法匹配的拦截器链</span><br><span class="line">  -&gt; CglibMethodInvocation.proceed()</span><br><span class="line">  -&gt; 依次执行 MethodInterceptor</span><br><span class="line">  -&gt; 调用目标方法</span><br></pre></td></tr></table></figure>
+
+<p>因此，不管是 JDK 动态代理还是 CGLIB，最终运行模型都是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">代理入口</span><br><span class="line">  -&gt; Advisor 匹配出来的 MethodInterceptor 链</span><br><span class="line">  -&gt; 目标方法</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、代理对象什么时候创建"><a href="#五、代理对象什么时候创建" class="headerlink" title="五、代理对象什么时候创建"></a>五、代理对象什么时候创建</h2><p>代理对象通常不是在方法第一次调用时才创建的，而是在 Bean 生命周期中提前创建。</p>
+<p>典型时机是 Bean 初始化之后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Bean 实例化</span><br><span class="line">  -&gt; 属性填充</span><br><span class="line">  -&gt; 初始化回调</span><br><span class="line">  -&gt; BeanPostProcessor.postProcessAfterInitialization()</span><br><span class="line">  -&gt; 判断是否需要 AOP 代理</span><br><span class="line">  -&gt; 返回原始对象或代理对象</span><br></pre></td></tr></table></figure>
+
+<p>源码入口在下一篇重点展开：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AbstractAutoProxyCreator#postProcessAfterInitialization()</span><br><span class="line">  -&gt; wrapIfNecessary()</span><br><span class="line">  -&gt; createProxy()</span><br></pre></td></tr></table></figure>
+
+<p>所以本文只需要记住：</p>
+<blockquote>
+<p><code>02-02</code> 讲代理对象如何工作，<code>02-03-Spring-AOP-AutoProxyCreator.md</code> 讲代理对象如何被 Spring 自动创建。</p>
+</blockquote>
+<hr>
+<h2 id="六、代理失效的典型场景"><a href="#六、代理失效的典型场景" class="headerlink" title="六、代理失效的典型场景"></a>六、代理失效的典型场景</h2><p>代理失效不要死记场景，统一按一个判断标准看：</p>
+<blockquote>
+<p>这次调用有没有经过 Spring 暴露出来的代理对象？</p>
+</blockquote>
+<p>如果没有经过代理对象，AOP 就没有机会拦截。</p>
+<h3 id="自调用为什么会失效"><a href="#自调用为什么会失效" class="headerlink" title="自调用为什么会失效"></a>自调用为什么会失效</h3><p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">outer</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.inner();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">inner</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;inner&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>外部调用 <code>outer()</code> 时，调用链是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">调用方</span><br><span class="line">  -&gt; 代理对象</span><br><span class="line">      -&gt; outer()</span><br><span class="line">          -&gt; this.inner()</span><br></pre></td></tr></table></figure>
+
+<p><code>this.inner()</code> 的 <code>this</code> 是目标对象自身，不是代理对象，所以不会再次进入代理逻辑。</p>
+<p>这就是自调用失效的根本原因。</p>
+<h3 id="如何解决自调用失效"><a href="#如何解决自调用失效" class="headerlink" title="如何解决自调用失效"></a>如何解决自调用失效</h3><p>推荐优先拆分职责：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserFacade</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">UserFacade</span><span class="params">(UserService userService)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.userService = userService;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">outer</span><span class="params">()</span> &#123;</span><br><span class="line">        userService.inner();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">inner</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;inner&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样调用链重新经过代理对象：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UserFacade</span><br><span class="line">  -&gt; UserService 代理对象</span><br><span class="line">      -&gt; inner()</span><br></pre></td></tr></table></figure>
+
+<p>也可以注入自身代理，但不如拆分职责清晰：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> UserService self;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">UserService</span><span class="params">(<span class="meta">@Lazy</span> UserService self)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.self = self;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">outer</span><span class="params">()</span> &#123;</span><br><span class="line">        self.inner();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">inner</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;inner&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还可以使用 <code>AopContext.currentProxy()</code>，但它会让业务代码强依赖 Spring AOP，不建议作为常规方案。</p>
+<h3 id="final、private-与构造器调用限制"><a href="#final、private-与构造器调用限制" class="headerlink" title="final、private 与构造器调用限制"></a><code>final</code>、<code>private</code> 与构造器调用限制</h3><p>CGLIB 代理通过子类重写方法实现拦截，因此：</p>
+<ul>
+<li><code>final</code> 类无法被继承，不能生成 CGLIB 子类代理。</li>
+<li><code>final</code> 方法无法被子类重写，不能被 CGLIB 拦截。</li>
+<li><code>private</code> 方法不能被子类重写，也不是外部代理调用入口。</li>
+<li>构造器执行时代理对象还没创建完成，构造器中调用增强方法不会触发 AOP。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">UserService</span><span class="params">()</span> &#123;</span><br><span class="line">        init();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Transactional</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;init&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>init()</code> 在构造器里被调用时，代理对象尚未完成创建，因此不会触发事务增强。</p>
+<h3 id="代理与类型注入问题"><a href="#代理与类型注入问题" class="headerlink" title="代理与类型注入问题"></a>代理与类型注入问题</h3><p>如果目标类实现了接口，Spring 默认可能使用 JDK 动态代理：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">UserServiceImpl implements UserService</span><br><span class="line">Proxy implements UserService</span><br></pre></td></tr></table></figure>
+
+<p>此时代理对象不是 <code>UserServiceImpl</code> 类型。</p>
+<p>所以推荐面向接口注入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br></pre></td></tr></table></figure>
+
+<p>避免按实现类注入：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> UserServiceImpl userService;</span><br></pre></td></tr></table></figure>
+
+<p>如果确实需要按类代理，可以考虑强制 CGLIB，但更推荐从设计上面向接口依赖。</p>
+<hr>
+<h2 id="七、调试、Demo-与面试总结"><a href="#七、调试、Demo-与面试总结" class="headerlink" title="七、调试、Demo 与面试总结"></a>七、调试、Demo 与面试总结</h2><h3 id="调试代理对象的几个方法"><a href="#调试代理对象的几个方法" class="headerlink" title="调试代理对象的几个方法"></a>调试代理对象的几个方法</h3><p>打印代理类名：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(bean.getClass());</span><br></pre></td></tr></table></figure>
+
+<p>判断是否是 AOP 代理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AopUtils.isAopProxy(bean);</span><br><span class="line">AopUtils.isJdkDynamicProxy(bean);</span><br><span class="line">AopUtils.isCglibProxy(bean);</span><br></pre></td></tr></table></figure>
+
+<p>获取目标类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AopUtils.getTargetClass(bean);</span><br></pre></td></tr></table></figure>
+
+<p>建议断点：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">JdkDynamicAopProxy#invoke()</span><br><span class="line">CglibAopProxy.DynamicAdvisedInterceptor#intercept()</span><br><span class="line">ReflectiveMethodInvocation#proceed()</span><br></pre></td></tr></table></figure>
+
+<h3 id="一个最小可验证-Demo"><a href="#一个最小可验证-Demo" class="headerlink" title="一个最小可验证 Demo"></a>一个最小可验证 Demo</h3><p>Service：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">outer</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;outer&quot;</span>);</span><br><span class="line">        inner();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">inner</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;inner&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Aspect：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogAspect</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;execution(* com.example..UserService.*(..))&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">before</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;before&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Runner：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DemoRunner</span> <span class="keyword">implements</span> <span class="title class_">CommandLineRunner</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">DemoRunner</span><span class="params">(UserService userService)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.userService = userService;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">(String... args)</span> &#123;</span><br><span class="line">        System.out.println(userService.getClass());</span><br><span class="line">        userService.outer();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>观察重点：</p>
+<ul>
+<li>外部调用 <code>outer()</code> 会触发 AOP。</li>
+<li><code>outer()</code> 内部直接调用 <code>inner()</code> 不会再次触发 AOP。</li>
+<li>打印出来的 <code>userService.getClass()</code> 不是普通业务类。</li>
+</ul>
+<h3 id="面试高频快答"><a href="#面试高频快答" class="headerlink" title="面试高频快答"></a>面试高频快答</h3><p><strong>Spring AOP 为什么使用代理？</strong></p>
+<blockquote>
+<p>Spring AOP 通过运行期代理对象在目标方法前后插入增强逻辑，不直接修改业务类字节码。</p>
+</blockquote>
+<p><strong>JDK 动态代理和 CGLIB 的区别？</strong></p>
+<blockquote>
+<p>JDK 动态代理基于接口生成代理对象，CGLIB 基于目标类生成子类代理；JDK 代理不能按实现类注入，CGLIB 不能代理 <code>final</code> 类和 <code>final</code> 方法。</p>
+</blockquote>
+<p><strong>Spring 如何选择代理方式？</strong></p>
+<blockquote>
+<p>如果强制 <code>proxyTargetClass=true</code> 则使用 CGLIB；否则有接口时默认优先 JDK 动态代理，没有接口时使用 CGLIB。</p>
+</blockquote>
+<p><strong>为什么自调用会导致 AOP 失效？</strong></p>
+<blockquote>
+<p>因为自调用是目标对象内部通过 <code>this</code> 调用，没有经过 Spring 暴露的代理对象。</p>
+</blockquote>
+<p><strong>为什么构造器里调用 AOP 方法不生效？</strong></p>
+<blockquote>
+<p>构造器执行时 Bean 还没有完成生命周期处理，代理对象尚未创建或尚未暴露，调用不会经过代理。</p>
+</blockquote>
+<h3 id="源码阅读路线"><a href="#源码阅读路线" class="headerlink" title="源码阅读路线"></a>源码阅读路线</h3><p>建议按下面顺序阅读：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">AopProxy</span><br><span class="line">  -&gt; JdkDynamicAopProxy</span><br><span class="line">  -&gt; CglibAopProxy</span><br><span class="line">  -&gt; ProxyFactory</span><br><span class="line">  -&gt; AdvisedSupport</span><br><span class="line">  -&gt; ReflectiveMethodInvocation</span><br></pre></td></tr></table></figure>
+
+<p>读源码时抓住两个问题：</p>
+<ol>
+<li>代理对象是 JDK 还是 CGLIB 创建的。</li>
+<li>方法调用如何进入 <code>MethodInterceptor</code> 链。</li>
+</ol>
+<h3 id="本篇总结"><a href="#本篇总结" class="headerlink" title="本篇总结"></a>本篇总结</h3><p>本文只讲代理机制本身，可以总结成一条链路：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">目标对象 Target</span><br><span class="line">  -&gt; Spring 判断代理方式</span><br><span class="line">  -&gt; 创建 JDK/CGLIB 代理对象 Proxy</span><br><span class="line">  -&gt; 调用经过 Proxy</span><br><span class="line">  -&gt; 进入 MethodInterceptor 链</span><br><span class="line">  -&gt; 调用目标方法</span><br></pre></td></tr></table></figure>
+
+<p>必须掌握的核心点：</p>
+<ul>
+<li>Spring AOP 生效的前提是调用经过代理对象。</li>
+<li>JDK 动态代理基于接口，CGLIB 基于目标类子类。</li>
+<li>自调用、<code>private</code>、<code>final</code>、构造器调用都可能绕过或限制代理。</li>
+<li>代理对象创建时机属于自动代理创建器的职责，下一篇继续展开。</li>
+</ul>
+</article><div class="tag_share"></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 九方</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.0.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script>
+/* ============== 文章页：TOC + 暗色模式 ============== */
+(function(){
+  var isPost = document.querySelector('#body-wrap.post');
+  if (!isPost) return;
+
+  function setPostRealm(realm) {
+    document.documentElement.classList.remove('post-realm-wujing', 'post-realm-xinjing');
+    if (realm === 'wujing' || realm === 'xinjing') {
+      document.documentElement.classList.add('post-realm-' + realm);
+    }
+  }
+
+  var currentPath = decodeURIComponent(location.pathname).replace(/^\/+/, '').replace(/\/?$/, '/');
+  if (currentPath.indexOf('/物境/') !== -1 || currentPath.indexOf('物境/') === 0 || currentPath.indexOf('/java/') !== -1 || currentPath.indexOf('java/') === 0) {
+    setPostRealm('wujing');
+  } else if (currentPath.indexOf('/心境/') !== -1 || currentPath.indexOf('心境/') === 0 || currentPath.indexOf('/scriptures/') !== -1 || currentPath.indexOf('scriptures/') !== -1) {
+    setPostRealm('xinjing');
+  }
+
+  fetch('/posts.json').then(function(r) {
+    return r.json();
+  }).then(function(data) {
+    var posts = Array.isArray(data) ? data : (data && Array.isArray(data.posts) ? data.posts : []);
+    var current = posts.find(function(post) {
+      return post.path && post.path.replace(/^\/+/, '').replace(/\/?$/, '/') === currentPath;
+    });
+    if (current && current.realm) setPostRealm(current.realm);
+  }).catch(function() {});
+
+  /* ---- TOC ---- */
+  var article = document.getElementById('article-container');
+  var headings = article ? article.querySelectorAll('h2,h3') : [];
+  if (headings.length && !document.querySelector('.custom-toc')) {
+    var toc = document.createElement('nav');
+    toc.className = 'custom-toc';
+    toc.setAttribute('aria-label', '文章目录');
+    var head = document.createElement('div');
+    head.className = 'custom-toc__head';
+    var toggle = document.createElement('button');
+    toggle.className = 'custom-toc__toggle';
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开文章目录');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.title = '目录';
+    var title = document.createElement('span');
+    title.className = 'custom-toc__title';
+    var progress = document.createElement('span');
+    progress.className = 'custom-toc__progress';
+    progress.setAttribute('aria-hidden', 'true');
+    head.appendChild(toggle);
+    head.appendChild(title);
+    head.appendChild(progress);
+    toc.appendChild(head);
+    var list = document.createElement('div');
+    list.className = 'custom-toc__list';
+    headings.forEach(function(h, i) {
+      var id = h.id || ('h-' + i);
+      if (!h.id) h.id = id;
+      var a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var t = document.getElementById(id);
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      list.appendChild(a);
+    });
+    toc.appendChild(list);
+    toggle.addEventListener('click', function() {
+      var open = toc.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? '收起文章目录' : '展开文章目录');
+    });
+    var ci = document.querySelector('#content-inner');
+    if (ci) ci.insertBefore(toc, article);
+
+    /* scroll spy */
+    var links = list.querySelectorAll('a');
+    function updateToc() {
+      var top = window.scrollY + 130;
+      var cur = '';
+      headings.forEach(function(h) { if (h.offsetTop <= top) cur = h.id; });
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
+      toc.style.setProperty('--toc-progress', percent.toFixed(2) + '%');
+      links.forEach(function(a) {
+        var active = a.getAttribute('href') === '#' + cur;
+        a.classList.toggle('active', active);
+        if (active && list.scrollHeight > list.clientHeight) {
+          var itemTop = a.offsetTop;
+          var itemBottom = itemTop + a.offsetHeight;
+          if (itemTop < list.scrollTop) {
+            list.scrollTop = itemTop;
+          } else if (itemBottom > list.scrollTop + list.clientHeight) {
+            list.scrollTop = itemBottom - list.clientHeight;
+          }
+        }
+      });
+    }
+    window.addEventListener('scroll', updateToc, { passive: true });
+    window.addEventListener('resize', updateToc);
+    updateToc();
+  }
+
+  /* ---- 暗色模式 ---- */
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

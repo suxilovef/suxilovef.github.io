@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Background decorative -->
+    <path d="M200 200 Q430 70 650 170" stroke="#F59E0B" stroke-width="5" opacity="0.20"/>
+    <path d="M1200 220 Q1380 150 1480 250" stroke="#34D399" stroke-width="4" opacity="0.15"/>
+    <path d="M220 680 Q500 800 800 700 Q1100 600 1380 730" stroke="#6DB33F" stroke-width="4" opacity="0.10"/>
+    <circle cx="280" cy="230" r="4" fill="#6DB33F" opacity="0.15"/>
+    <circle cx="1320" cy="300" r="4" fill="#F59E0B" opacity="0.13"/>
+
+    <!-- Central proxy object -->
+    <rect x="580" y="300" width="440" height="260" rx="22" stroke="#6DB33F" stroke-width="8" fill="#F7FEE7"/>
+
+    <!-- Inner target -->
+    <rect x="640" y="360" width="320" height="140" rx="12" stroke="#6DB33F" stroke-width="4" opacity="0.35"/>
+    <text x="800" y="425" text-anchor="middle" font-size="28" font-weight="900" fill="#6DB33F" font-family="sans-serif" opacity="0.45">代理对象</text>
+    <text x="800" y="460" text-anchor="middle" font-size="15" font-weight="700" fill="#6B7280" font-family="sans-serif" opacity="0.55">Proxy</text>
+
+    <!-- Boundary wall (left side) - represents AOP boundary -->
+    <line x1="360" y1="220" x2="360" y2="640" stroke="#F59E0B" stroke-width="5" opacity="0.5"/>
+
+    <!-- Cross marks (X) - what CANNOT pass -->
+    <g stroke="#EF4444" stroke-width="5" opacity="0.7">
+      <!-- Cross 1: self-invocation -->
+      <line x1="540" y1="250" x2="570" y2="280"/>
+      <line x1="570" y1="250" x2="540" y2="280"/>
+      <!-- Cross 2: final class -->
+      <line x1="540" y1="350" x2="570" y2="380"/>
+      <line x1="570" y1="350" x2="540" y2="380"/>
+      <!-- Cross 3: private method -->
+      <line x1="540" y1="450" x2="570" y2="480"/>
+      <line x1="570" y1="450" x2="540" y2="480"/>
+      <!-- Cross 4: new object -->
+      <line x1="540" y1="550" x2="570" y2="580"/>
+      <line x1="570" y1="550" x2="540" y2="580"/>
+    </g>
+
+    <!-- Labels for blocked items -->
+    <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" font-size="14" font-weight="700">
+      <text x="510" y="272" fill="#EF4444" text-anchor="end">自调用 this.</text>
+      <text x="510" y="372" fill="#EF4444" text-anchor="end">final 类/方法</text>
+      <text x="510" y="472" fill="#EF4444" text-anchor="end">private 方法</text>
+      <text x="510" y="572" fill="#EF4444" text-anchor="end">new 对象</text>
+    </g>
+
+    <!-- Check marks (✓) - what CAN pass through proxy -->
+    <g stroke="#34D399" stroke-width="5" opacity="0.75">
+      <!-- Check 1: Spring Bean -->
+      <path d="M1050 280 L1070 300 L1120 255"/>
+    </g>
+
+    <!-- Arrow from right entering proxy -->
+    <path d="M1100 280 L1060 320" stroke="#34D399" stroke-width="5" opacity="0.5"/>
+    <polygon points="1055,325 1065,318 1058,328" fill="#34D399"/>
+
+    <!-- Arrow exiting proxy -->
+    <path d="M1060 540 L1100 580" stroke="#34D399" stroke-width="5" opacity="0.5"/>
+    <polygon points="1105,585 1093,578 1100,588" fill="#34D399"/>
+
+    <!-- Labels for allowed items -->
+    <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" font-size="14" font-weight="700">
+      <text x="1130" y="278" fill="#34D399">Spring Bean 注入</text>
+      <text x="1130" y="598" fill="#34D399">AOP 增强生效</text>
+    </g>
+
+    <!-- Bottom: limitation categories as badges -->
+    <rect x="240" y="650" width="200" height="42" rx="10" stroke="#EF4444" stroke-width="3" fill="#FEF2F2"/>
+    <text x="340" y="676" text-anchor="middle" font-size="15" font-weight="700" fill="#EF4444" font-family="sans-serif">JDK 类型限制</text>
+
+    <rect x="480" y="650" width="200" height="42" rx="10" stroke="#F59E0B" stroke-width="3" fill="#FFFBEB"/>
+    <text x="580" y="676" text-anchor="middle" font-size="15" font-weight="700" fill="#F59E0B" font-family="sans-serif">CGLIB final 限制</text>
+
+    <rect x="720" y="650" width="200" height="42" rx="10" stroke="#EF4444" stroke-width="3" fill="#FEF2F2"/>
+    <text x="820" y="676" text-anchor="middle" font-size="15" font-weight="700" fill="#EF4444" font-family="sans-serif">Pointcut 不匹配</text>
+
+    <rect x="960" y="650" width="200" height="42" rx="10" stroke="#F59E0B" stroke-width="3" fill="#FFFBEB"/>
+    <text x="1060" y="676" text-anchor="middle" font-size="15" font-weight="700" fill="#F59E0B" font-family="sans-serif">异常被吞</text>
+
+    <rect x="1200" y="650" width="200" height="42" rx="10" stroke="#EF4444" stroke-width="3" fill="#FEF2F2"/>
+    <text x="1300" y="676" text-anchor="middle" font-size="15" font-weight="700" fill="#EF4444" font-family="sans-serif">切面顺序</text>
+
+    <!-- Diagnose path arrow -->
+    <path d="M280 720 Q340 760 400 740" stroke="#6DB33F" stroke-width="3" opacity="0.4"/>
+    <path d="M520 720 Q580 760 640 740" stroke="#6DB33F" stroke-width="3" opacity="0.4"/>
+    <path d="M760 720 Q820 760 880 740" stroke="#6DB33F" stroke-width="3" opacity="0.4"/>
+    <path d="M1000 720 Q1060 760 1120 740" stroke="#6DB33F" stroke-width="3" opacity="0.4"/>
+
+    <text x="800" y="765" text-anchor="middle" font-size="14" font-weight="700" fill="#6B7280" font-family="sans-serif">排查路径: Advisor → Bean 代理 → Pointcut 匹配 → 调用链 → 异常传播</text>
+
+    <!-- Decorative -->
+    <circle cx="1150" cy="720" r="5" fill="#34D399" opacity="0.14"/>
+  </g>
+
+  <!-- Title section -->
+  <g font-family="'Segoe UI','Noto Sans','Arial',sans-serif" fill="#111827">
+    <text x="800" y="815" font-size="78" text-anchor="middle" font-weight="800">Spring AOP 限制与排查</text>
+    <text x="800" y="865" font-size="28" text-anchor="middle" font-weight="600" fill="#6B7280">代理边界 · 失效场景 · 问题定位路径</text>
+  </g>
+</svg>
