@@ -3,4 +3,3 @@ Allow: /
 Disallow: /search/
 
 Sitemap: https://suxi.love/sitemap.xml
-Sitemap: https://suxi.love/sitemap-baidu.xml
