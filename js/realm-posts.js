@@ -184,6 +184,7 @@
     }
 
     function currentList() {
+      if (!activeCategory) return base.slice().sort(rankSort)
       return catPosts(activeCategory).sort(rankSort)
     }
 

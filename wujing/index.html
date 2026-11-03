@@ -55,11 +55,6 @@
     .eyebrow{font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.55rem}
     h1{font-family:"Noto Serif SC",serif;font-size:clamp(2.4rem,7vw,5rem);line-height:1;letter-spacing:0;color:var(--deep)}
     .tagline{font-family:"Noto Serif SC",serif;font-size:1.05rem;color:var(--muted);margin-top:.75rem}
-    .cat-tabs{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.1rem}
-    .cat-tab{border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.72);color:var(--muted);padding:.28rem .72rem;font:inherit;font-size:.8rem;cursor:pointer;transition:all .15s}
-    .cat-tab:hover,
-    .cat-tab[aria-pressed=true]{border-color:var(--accent);background:var(--deep);color:#fff}
-    .cat-count{opacity:.6;font-size:.75rem}
     .article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
     .article-card{min-height:150px;display:flex;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.82);text-decoration:none;box-shadow:0 14px 34px rgba(31,59,73,.07);transition:transform .15s,border-color .15s,box-shadow .15s}
     .article-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 18px 42px rgba(31,59,73,.11)}
@@ -103,7 +98,6 @@
       </div>
     </section>
 
-    <section class="cat-tabs" id="articleTabs" aria-label="分类切换"></section>
     <section class="article-grid" id="articleGrid"></section>
     <div class="load-sentinel" id="autoLoadSentinel" aria-hidden="true"></div>
   </main>
@@ -114,9 +108,7 @@
     RealmPosts.fetch().then(function(data){
         RealmPosts.renderManagedRealmPage(data, {
           realm: 'wujing',
-        fallbackCategory: ['Spring', 'Mybatis'],
         fallbackPath: '/物境/',
-          tabId: 'articleTabs',
         sentinelId: 'autoLoadSentinel',
         pageSize: 12,
         listId: 'articleGrid',
